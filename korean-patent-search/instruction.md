@@ -25,7 +25,7 @@ v1 범위:
 - KIPRIS Plus에서 발급받은 API 키
   - helper 환경변수: `KIPRIS_PLUS_API_KEY`
   - 실제 요청 쿼리 파라미터명: `ServiceKey`
-- 설치된 skill payload 안에 `scripts/patent_search.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/patent_search.py` helper
 
 ## Inputs
 
@@ -51,9 +51,9 @@ v1 범위:
 
 ```bash
 export KIPRIS_PLUS_API_KEY=your-service-key
-python3 scripts/patent_search.py --query "배터리"
-python3 scripts/patent_search.py --query "배터리" --year 2024 --num-rows 5
-python3 scripts/patent_search.py --application-number 1020240001234
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리"
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리" --year 2024 --num-rows 5
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --application-number 1020240001234
 ```
 
 ## Response policy

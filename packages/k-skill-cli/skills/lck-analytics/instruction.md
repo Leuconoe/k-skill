@@ -115,21 +115,21 @@ JS
 직접 API를 호출해도 되지만, local skill pipeline에서는 아래 스크립트 사용을 우선 권장한다.
 
 ```bash
-node ./lck-analytics/scripts/sync-oracle.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/sync-oracle.js -- \
   --csv ./lck-analytics/samples/oracle-lck-sample.csv
 ```
 
 ### 3. Match analysis via local pipeline script
 
 ```bash
-node ./lck-analytics/scripts/build-match-report.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/build-match-report.js -- \
   --date 2026-04-01
 ```
 
 필요하면 팀 필터도 같이 준다.
 
 ```bash
-node ./lck-analytics/scripts/build-match-report.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/build-match-report.js -- \
   --date 2026-04-01 \
   --team 한화
 ```
@@ -137,7 +137,7 @@ node ./lck-analytics/scripts/build-match-report.js \
 ### 4. Game analysis with turning points via local pipeline script
 
 ```bash
-node ./lck-analytics/scripts/analyze-live-game.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/analyze-live-game.js -- \
   --game game-id
 ```
 

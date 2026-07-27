@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When submission is requested, continue past lookup: open the exact official form, prefill every safe field, and attach prepared documents without submitting.
 - Immediately before final submission (or any payment/cancellation it triggers), call `clarify` with the form target, key field values, and effect. After approval, submit and verify the receipt/confirmation.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec nts-tax-delinquency scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path nts-tax-delinquency <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 국세청 고액·상습체납자 명단공개 검색
 
 ## What this skill does
@@ -54,7 +59,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## CLI examples
 
 ```bash
-python3 nts-tax-delinquency/scripts/nts_tax_delinquency.py --name "○○건설"
+npx -y @nomadamas/k-skill@0 exec nts-tax-delinquency scripts/nts_tax_delinquency.py -- --name "○○건설"
 ```
 
 ## Failure modes

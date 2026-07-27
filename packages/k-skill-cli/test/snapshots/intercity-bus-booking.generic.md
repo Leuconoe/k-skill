@@ -12,6 +12,12 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Complete search and reversible reservation steps that the documented portable workflow supports, then report the confirmation, purchase deadline, and the exact official surface where the user finishes payment. Do not automate payment here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path intercity-bus-booking <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read intercity-bus-booking references/<file>`.
+
 # Intercity Bus Booking (Tmoney 시외버스)
 
 ## Overview
@@ -42,7 +48,7 @@ Do **not** use this for:
 
 ## Known HTTP Flow
 
-See `references/tmoney-intercity-http-flow.md` for session-proven endpoint details and parameter examples.
+See `npx -y @nomadamas/k-skill@0 read intercity-bus-booking references/tmoney-intercity-http-flow.md` for session-proven endpoint details and parameter examples.
 
 ### 1. Start a Session
 
@@ -124,7 +130,7 @@ A successful response lands on the official `카드정보 입력` page and inclu
 For read-only timetable lookup, use the bundled helper before attempting browser automation:
 
 ```bash
-python3 intercity-bus-booking/scripts/intercity_bus_search.py \
+npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/intercity_bus_search.py -- \
   --depart-code 0511601 \
   --arrive-code 2482701 \
   --depart-name 동서울 \
@@ -139,7 +145,7 @@ The helper starts a cookie-backed session, posts the browser-required timetable 
 To create a temporary hold and save the official card-information page:
 
 ```bash
-python3 intercity-bus-booking/scripts/intercity_bus_search.py \
+npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/intercity_bus_search.py -- \
   --depart-code 0511601 \
   --arrive-code 2482701 \
   --depart-name 동서울 \

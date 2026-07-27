@@ -5,6 +5,7 @@
 - 모든 top-level 스킬의 원본은 `skill.json`(frontmatter/profile)과 `instruction.md`(사이트별 workflow)다.
 - `SKILL.md`는 생성된 CLI adapter stub이므로 직접 수정하지 않는다.
 - source 변경 후 `npm run generate:skill-stubs`와 `npm run sync:cli-skills`를 실행한다.
+- 번들 helper는 `k-skill exec`, reference는 `k-skill read`로 접근한다. 상대 `scripts/`·`references/` 경로는 `npm run migrate:cli-assets`로 정규화한다.
 - 공통 runtime 규칙은 `packages/k-skill-cli/templates/*.md`에서 profile 단위로 관리하고 `instruction.md`에 복제하지 않는다.
 - 돌쇠 credential mode는 `DOLSHOI_ACTION_BROKER_URL`과 실행 가능한 `vault-run`이 모두 있을 때만 활성화한다. 이 모드에서는 평문 credential을 묻거나 읽지 말고 `vault-run`, 누락 시 `request_vault_credential`을 사용한다.
 - CloakBrowser 감지는 credential mode와 독립적이다. 내장 browser tool이 CloakBrowser를 제공하거나 `CLOAKBROWSER_PEEK_TOKEN`이 있으면 내장 browser tool을 최우선으로 사용한다.

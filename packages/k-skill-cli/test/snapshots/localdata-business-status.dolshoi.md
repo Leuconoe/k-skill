@@ -10,6 +10,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec localdata-business-status scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path localdata-business-status <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 지방행정 인허가 영업상태 조회 (동네 사업장)
 
 ## What this skill does
@@ -57,11 +62,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## CLI examples
 
 ```bash
-python3 localdata-business-status/scripts/localdata_business_status.py \
+npx -y @nomadamas/k-skill@0 exec localdata-business-status scripts/localdata_business_status.py -- \
   --name "호텔샬롬" --region 제주제주시 --industry 숙박업
 
 # 업종 여러 개
-python3 localdata-business-status/scripts/localdata_business_status.py \
+npx -y @nomadamas/k-skill@0 exec localdata-business-status scripts/localdata_business_status.py -- \
   --name "○○약국" --region 서울종로구 --industry 약국
 ```
 

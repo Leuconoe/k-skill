@@ -28,7 +28,7 @@ v1은 공식 XML API를 직접 호출하며, 별도 API key·로그인·프록�
 
 - 인터넷 연결
 - Python 3.10+
-- 설치된 skill payload 안에 `scripts/korean_heritage_search.py` helper가 포함되어 있다.
+- `@nomadamas/k-skill` CLI에 `scripts/korean_heritage_search.py` helper가 번들되어 있다.
 - 별도 API key나 로그인은 필요 없다.
 
 ## Inputs
@@ -68,10 +68,10 @@ v1은 공식 XML API를 직접 호출하며, 별도 API key·로그인·프록�
 ## CLI examples
 
 ```bash
-python3 scripts/korean_heritage_search.py search --query "경복궁" --region 서울 --limit 5
-python3 scripts/korean_heritage_search.py search --region 전북 --limit 10
-python3 scripts/korean_heritage_search.py detail --ccba-kdcd 11 --ccba-asno 0000010000000 --ccba-ctcd 11
-python3 scripts/korean_heritage_search.py events --year 2026 --month 7 --region 서울 --limit 10
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- search --query "경복궁" --region 서울 --limit 5
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- search --region 전북 --limit 10
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- detail --ccba-kdcd 11 --ccba-asno 0000010000000 --ccba-ctcd 11
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- events --year 2026 --month 7 --region 서울 --limit 10
 ```
 
 ## Response policy

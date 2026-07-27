@@ -15,6 +15,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Do not evade CAPTCHA, impersonate the user, forge identity evidence, or bypass an authentication/security control. If the official flow presents a user-presence-only verification or electronic-signature prompt, open the exact prompt and let the user complete that control, then resume the same workflow immediately afterward.
 - Immediately before filing, bidding, paying a government fee, signing, cancelling, or another irreversible legal effect, call `clarify` with the exact case/form, parties, documents, amount, and legal effect. Execute after approval and verify the official receipt or resulting status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path g2b-order-plan-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 나라장터 발주계획 검색
 
 ## What this skill does
@@ -85,7 +90,7 @@ CLI flags:
 ### 1. Search order plans
 
 ```bash
-python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
+npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/g2b_order_plan.py -- \
   --kind service \
   --keyword 청소 \
   --order-from 2025-01 \
@@ -98,7 +103,7 @@ python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
 ### 2. Narrow by institution or location
 
 ```bash
-python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
+npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/g2b_order_plan.py -- \
   --kind goods \
   --institution 조달청 \
   --region 대전 \

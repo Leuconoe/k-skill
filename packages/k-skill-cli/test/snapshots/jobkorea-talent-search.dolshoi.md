@@ -13,6 +13,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Use the official employer account surface to search and compare candidates, keeping masked/private data protected until the requested candidate is fixed.
 - Paid resume unlocks, contact-detail reveals, credit use, proposal delivery, shortlist mutation, and candidate-status changes are separate external effects. Immediately before each such action, call `clarify` with the candidate, cost/credit impact, disclosed data, message payload, and resulting state; execute only the approved action and verify it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec jobkorea-talent-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path jobkorea-talent-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # jobkorea-talent-search
 
 ## Use when
@@ -88,7 +93,7 @@ If detail pages are inaccessible or paid-walled, label results as `목록 기반
 Use only when the user cannot or will not log in. It is low-confidence because it cannot inspect resume details.
 
 ```bash
-python3 jobkorea-talent-search/scripts/jobkorea_talent_search.py   --keyword "퍼포먼스 마케터 GA4"   --work-area "서울"   --career-min 3   --career-max 7   --limit 20
+npx -y @nomadamas/k-skill@0 exec jobkorea-talent-search scripts/jobkorea_talent_search.py --   --keyword "퍼포먼스 마케터 GA4"   --work-area "서울"   --career-min 3   --career-max 7   --limit 20
 ```
 
 ## URL extraction guidance

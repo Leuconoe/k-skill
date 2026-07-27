@@ -33,16 +33,16 @@ KSKILL_POPBILL_USER_ID=
 ## 사용 예
 
 ```bash
-uv run popbill/scripts/popbill_cli.py config-check
-uv run popbill/scripts/popbill_cli.py methods taxinvoice
-uv run popbill/scripts/popbill_cli.py health taxinvoice
-uv run popbill/scripts/popbill_cli.py object-template taxinvoice
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- config-check
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- methods taxinvoice
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- health taxinvoice
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- object-template taxinvoice
 ```
 
 전체 SDK method는 generic call로 호출한다.
 
 ```bash
-uv run popbill/scripts/popbill_cli.py call taxinvoice getInfo \
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- call taxinvoice getInfo \
   --args-json '["@corp", "SELL", "MGT-KEY-001"]'
 ```
 

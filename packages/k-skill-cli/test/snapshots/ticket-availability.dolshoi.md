@@ -13,6 +13,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When booking is requested, continue past search results: use vault-backed login on the official surface, select the requested date/slot/seat, and complete reversible reservation or hold steps instead of stopping at a link.
 - A successful reversible reservation or seat hold is a completed booking step: report the confirmation and any purchase deadline. If payment is required, call `clarify` with the exact itinerary/slot, party, seat/option, and total, then pay after approval and verify the receipt.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path ticket-availability <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Ticket Availability
 
 ## What this skill does
@@ -74,7 +79,7 @@ pip install httpx
 ### 2. 일정 조회 (`schedule`)
 
 ```bash
-python3 scripts/ticket_availability.py schedule "https://tickets.interpark.com/goods/26000541"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- schedule "https://tickets.interpark.com/goods/26000541"
 ```
 
 응답 — Interpark:
@@ -105,7 +110,7 @@ YES24 는 기본 3주 윈도우. 6개월 전체는 `--all-dates` 추가.
 ### 3. 잔여석 조회 (`seats`)
 
 ```bash
-python3 scripts/ticket_availability.py seats "interpark:26000541"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- seats "interpark:26000541"
 ```
 
 응답:
@@ -135,7 +140,7 @@ YES24 응답은 등급별 `price` (노출가) 도 포함:
 ### 4. 헬스체크 (`health`)
 
 ```bash
-python3 scripts/ticket_availability.py health
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- health
 ```
 
 응답:

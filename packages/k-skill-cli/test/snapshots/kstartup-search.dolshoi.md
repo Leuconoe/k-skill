@@ -14,6 +14,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When submission is requested, continue past lookup: open the exact official form, prefill every safe field, and attach prepared documents without submitting.
 - Immediately before final submission (or any payment/cancellation it triggers), call `clarify` with the form target, key field values, and effect. After approval, submit and verify the receipt/confirmation.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path kstartup-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 창업진흥원 K-Startup 조회
 
 ## What this skill does
@@ -117,7 +122,7 @@ API helper는 조회 전용이다. 돌쇠에서 사용자가 사업 신청을 �
 `--per-page 10` 정도로 먼저 한 페이지를 받아 응답 스키마를 확인한 뒤, 필터를 좁히거나 페이지를 넘긴다.
 
 ```bash
-python3 scripts/run_kstartup.py announcements \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- announcements \
   --supt-regin 서울특별시 --rcrt-prgs-yn Y --per-page 5 --text
 ```
 
@@ -138,23 +143,23 @@ API는 단순 필드 매칭만 지원하고, **그중 `supt_regin` 같은 일부
 
 ```bash
 # 서울 모집 중 공고 5건
-python3 scripts/run_kstartup.py announcements \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- announcements \
   --supt-regin 서울특별시 --rcrt-prgs-yn Y --per-page 5 --text
 
 # 2024년 사업화 분야 통합공고
-python3 scripts/run_kstartup.py business-info \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- business-info \
   --biz-yr 2024 --biz-category-cd cmrczn_Tab3 --json
 
 # 정책·공지 최신 콘텐츠
-python3 scripts/run_kstartup.py contents \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- contents \
   --clss-cd notice_matr --per-page 10 --text
 
 # 창업기업 실태조사 통계보고서
-python3 scripts/run_kstartup.py statistics \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- statistics \
   --titl-nm "창업기업 실태조사" --per-page 5 --json
 
 # 인증키 없이 dry-run 으로 요청 점검
-python3 scripts/run_kstartup.py announcements \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- announcements \
   --supt-regin 부산광역시 --dry-run
 ```
 
@@ -187,8 +192,8 @@ K-Startup 인증키 없이도 다음 검증이 가능하다.
 
 - `./scripts/validate-skills.sh`
 - `python3 -m py_compile kstartup-search/scripts/run_kstartup.py kstartup-search/tests/test_run_kstartup.py`
-- `python3 kstartup-search/scripts/run_kstartup.py --help`
-- `python3 kstartup-search/scripts/run_kstartup.py announcements --supt-regin 서울특별시 --dry-run`
+- `npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- --help`
+- `npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- announcements --supt-regin 서울특별시 --dry-run`
 - `PYTHONPATH=kstartup-search/scripts python3 -m unittest discover -s kstartup-search/tests -p 'test_*.py' -v`
 - `node --test packages/k-skill-proxy/test/server.test.js` (K-Startup 라우트 5개 신규 케이스 포함)
 - `npm run ci`

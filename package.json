@@ -20,7 +20,8 @@
     "version-packages": "changeset version",
     "release:npm": "changeset publish",
     "sync:cli-skills": "node scripts/sync-cli-skills.js",
-    "generate:skill-stubs": "node scripts/generate-skill-stubs.js"
+    "generate:skill-stubs": "node scripts/generate-skill-stubs.js",
+    "migrate:cli-assets": "node scripts/migrate-cli-asset-instructions.js"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",

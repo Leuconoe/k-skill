@@ -20,7 +20,7 @@
 ## 예시
 
 ```bash
-python3 national-pension-workplace/scripts/national_pension_workplace.py \
+npx -y @nomadamas/k-skill@0 exec national-pension-workplace scripts/national_pension_workplace.py -- \
   --name "삼성전자(주)" --b-no 124-81-00998
 ```
 

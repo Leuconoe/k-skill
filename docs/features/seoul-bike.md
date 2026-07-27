@@ -48,8 +48,8 @@ curl -fsS --get "${BASE}/v1/seoul-bike/nearby" \
 스킬 CLI 사용 예시:
 
 ```bash
-python3 seoul-bike/scripts/seoul_bike.py nearby --lat 37.5717 --lon 126.9763 --radius-m 500
-python3 seoul-bike/scripts/seoul_bike.py search "광화문" --limit 5
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- nearby --lat 37.5717 --lon 126.9763 --radius-m 500
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- search "광화문" --limit 5
 ```
 
 예상 응답 요약:

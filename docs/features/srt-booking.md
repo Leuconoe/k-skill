@@ -52,31 +52,31 @@
 ## 예시
 
 ```bash
-python3 scripts/srt_booking.py search 수서 부산 20260328 080000 --time-limit 120000 --limit 5
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- search 수서 부산 20260328 080000 --time-limit 120000 --limit 5
 ```
 
 상세 좌석 확인:
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 --train-id <train_id>
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id>
 ```
 
 특정 호차의 빈 좌석만 확인:
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --available-only
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --available-only
 ```
 
 특정 좌석이 비었는지 확인:
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --seat 11A
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --seat 11A
 ```
 
 탐색 순서 조정:
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 \
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 \
   --train-id <train_id> \
   --car-priority center \
   --seat-priority window-forward \

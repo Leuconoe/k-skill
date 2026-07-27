@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - Complete search, comparison, and link preparation that the documented portable workflow supports, then hand off to the official surface for login, cart, and payment. Do not automate purchase here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-realty-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Realty Search
 
 ## What this skill does
@@ -75,7 +80,7 @@ ArticleFeedConnection.edges → ArticleFeedEdge.node → ArticleFeedCard.article
 
 ```bash
 # 기본 검색 (상위 5개 제목·층수 보강)
-python3 daangn-realty-search/scripts/daangn_realty.py search --region "매교동" --limit 20
+npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/daangn_realty.py -- search --region "매교동" --limit 20
 
 # 거래/용도 필터
 python3 ... search --region "매교동" --trade-type BUY            # 매매만

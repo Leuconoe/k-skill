@@ -47,7 +47,7 @@ LOST112 검색 폼에서 확인되는 핵심 필드는 아래와 같다.
 repo helper를 그대로 써도 된다.
 
 ```bash
-python3 scripts/subway_lost_property.py \
+npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/subway_lost_property.py -- \
   --station 강남역 \
   --item 지갑 \
   --days 14
@@ -58,7 +58,7 @@ helper는 기본적으로 `SITE=V` 를 사용하고, 역명/물품명/기간을 
 ### 3) Optionally verify live reachability
 
 ```bash
-python3 scripts/subway_lost_property.py \
+npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/subway_lost_property.py -- \
   --station 강남역 \
   --item 지갑 \
   --days 14 \

@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When purchase or cart is requested, continue past search results: open the official product page, verify live price/seller/option/stock, use vault-backed login, and complete reversible cart or checkout preparation.
 - Immediately before the final order or payment, call `clarify` with merchant, item/options, quantity, delivery summary, and total amount. After approval, submit and verify the order number and payment status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-realty-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Realty Search
 
 ## What this skill does
@@ -76,7 +81,7 @@ ArticleFeedConnection.edges → ArticleFeedEdge.node → ArticleFeedCard.article
 
 ```bash
 # 기본 검색 (상위 5개 제목·층수 보강)
-python3 daangn-realty-search/scripts/daangn_realty.py search --region "매교동" --limit 20
+npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/daangn_realty.py -- search --region "매교동" --limit 20
 
 # 거래/용도 필터
 python3 ... search --region "매교동" --trade-type BUY            # 매매만

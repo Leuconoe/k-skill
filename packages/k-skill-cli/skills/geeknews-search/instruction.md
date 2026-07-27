@@ -31,13 +31,13 @@ GeekNews 공개 RSS/Atom 피드(`https://feeds.feedburner.com/geeknews-feed`)를
 ### 1) List recent entries
 
 ```bash
-python3 scripts/geeknews_search.py list --limit 10
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- list --limit 10
 ```
 
 ### 2) Search the feed conservatively
 
 ```bash
-python3 scripts/geeknews_search.py search --query Claude --limit 5
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- search --query Claude --limit 5
 ```
 
 검색은 제목, 요약, 작성자, 링크/id 기준으로만 동작한다.
@@ -45,7 +45,7 @@ python3 scripts/geeknews_search.py search --query Claude --limit 5
 ### 3) Inspect a specific item
 
 ```bash
-python3 scripts/geeknews_search.py detail --id 28439
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- detail --id 28439
 ```
 
 상세 조회는 RSS 피드에 포함된 `content`/요약과 원문 링크를 함께 돌려준다.

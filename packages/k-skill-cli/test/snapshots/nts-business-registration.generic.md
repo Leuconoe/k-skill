@@ -12,6 +12,11 @@ Runtime mode: generic
 - Resolve credentials in this order: already-injected environment variables, then the host vault, then `~/.config/k-skill/secrets.env` (mode `0600`). If the value is missing, request it through the safest input surface the host provides and store it in the vault or dotenv; never echo it back.
 - Prepare form data, documents, and the exact official form link that the documented portable workflow supports, then hand the final submission to the user. Do not automate submission here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path nts-business-registration <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 국세청 사업자등록정보 진위확인 및 상태조회
 
 ## What this skill does
@@ -32,7 +37,7 @@ Runtime mode: generic
 
 - 인터넷 연결
 - `python3`
-- 설치된 skill payload 안에 `scripts/nts_business_registration.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/nts_business_registration.py` helper
 - hosted/self-host `k-skill-proxy`의 `/v1/nts-business/status`, `/v1/nts-business/validate` route 접근 가능
 
 ## Credential requirements
@@ -92,12 +97,12 @@ Runtime mode: generic
 ## CLI examples
 
 ```bash
-python3 scripts/nts_business_registration.py status \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- status \
   --b-no 123-45-67890
 ```
 
 ```bash
-python3 scripts/nts_business_registration.py validate \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- validate \
   --business-json '{"b_no":"123-45-67890","start_dt":"2020-01-31","p_nm":"홍길동","b_nm":"테스트상사"}'
 ```
 

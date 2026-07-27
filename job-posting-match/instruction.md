@@ -69,13 +69,13 @@ Do not block on missing fields when a reasonable first search is possible. If th
 3. Run both public sources by default:
 
 ```bash
-python3 job-posting-match/scripts/job_posting_match.py   --resume-text "퍼포먼스 마케터 5년. GA4, Google Ads, Meta Ads, SQL, 커머스 경험. 서울 희망."   --location 서울   --negative 보험영업   --limit 10
+npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/job_posting_match.py --   --resume-text "퍼포먼스 마케터 5년. GA4, Google Ads, Meta Ads, SQL, 커머스 경험. 서울 희망."   --location 서울   --negative 보험영업   --limit 10
 ```
 
 Use explicit keywords when the user already knows target roles:
 
 ```bash
-python3 job-posting-match/scripts/job_posting_match.py   --resume-file /path/to/resume.txt   --keyword "CRM 마케터 Braze"   --keyword "그로스 마케터 SQL"   --location 서울   --json
+npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/job_posting_match.py --   --resume-file /path/to/resume.txt   --keyword "CRM 마케터 Braze"   --keyword "그로스 마케터 SQL"   --location 서울   --json
 ```
 
 4. Score postings conservatively.

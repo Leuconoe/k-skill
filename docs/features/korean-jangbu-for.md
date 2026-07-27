@@ -35,13 +35,13 @@
 홈 디렉터리 wrapper 에는 재실행 가능한 `scripts/install.sh`, `scripts/upstream.pin`, `LICENSE.upstream`, `DISCLAIMER.md`, `NOTICE` 까지 함께 복사된다. Promoted `jangbu-*` top-level 스킬은 wrapper 가 이전에 설치한 managed copy 만 자동 갱신하며, 같은 이름의 unrelated/user-authored 스킬이 있으면 덮어쓰지 않고 중단한다. 의도적으로 교체해야 하는 경우에만 `KOREAN_JANGBU_FOR_OVERWRITE_SKILLS=1` 로 재실행한다.
 
 ```bash
-bash korean-jangbu-for/scripts/install.sh
+npx -y @nomadamas/k-skill@0 exec korean-jangbu-for scripts/install.sh --
 ```
 
 설치 확인:
 
 ```bash
-cat korean-jangbu-for/scripts/upstream.pin
+npx -y @nomadamas/k-skill@0 read korean-jangbu-for scripts/upstream.pin
 git -C ~/.claude/skills/korean-jangbu-for/upstream rev-parse HEAD
 git -C ~/.agents/skills/korean-jangbu-for/upstream rev-parse HEAD
 ```

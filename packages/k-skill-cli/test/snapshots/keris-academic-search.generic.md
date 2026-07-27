@@ -12,6 +12,11 @@ Runtime mode: generic
 - Resolve credentials in this order: already-injected environment variables, then the host vault, then `~/.config/k-skill/secrets.env` (mode `0600`). If the value is missing, request it through the safest input surface the host provides and store it in the vault or dotenv; never echo it back.
 - Complete search and reversible reservation steps that the documented portable workflow supports, then report the confirmation, purchase deadline, and the exact official surface where the user finishes payment. Do not automate payment here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path keris-academic-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # KERIS Academic Search
 
 ## What this skill does
@@ -40,9 +45,9 @@ RISS 검색 Open API 키는 **공익 목적의 비영리 기관/대학에만** �
 ## Commands
 
 ```bash
-python3 scripts/keris_academic.py search --keyword '인공지능 교육'
-python3 scripts/keris_academic.py search --title '대학도서관' --author '김연구' --resource-type T
-python3 scripts/keris_academic.py search --keyword '한국어 교육' --resource-type D --page 2 --page-size 20 --json
+npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/keris_academic.py -- search --keyword '인공지능 교육'
+npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/keris_academic.py -- search --title '대학도서관' --author '김연구' --resource-type T
+npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/keris_academic.py -- search --keyword '한국어 교육' --resource-type D --page 2 --page-size 20 --json
 ```
 
 검색 필드는 `keyword`, `title`, `author`, `subject`, `publisher`이며 하나 이상 필요하다. `page`는 1 이상, `pageSize`는 1~100이다. RISS의 `rsnum`은 `(page-1)*pageSize+1`로 계산한다. 실제 호출에는 사용자 RISS 키가 필요하다.
@@ -62,7 +67,7 @@ python3 scripts/keris_academic.py search --keyword '한국어 교육' --resource
 ## Credentials
 
 ```bash
-python3 scripts/keris_academic.py search --keyword '교육 데이터' --resource-type ALL --dry-run
+npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/keris_academic.py -- search --keyword '교육 데이터' --resource-type ALL --dry-run
 ```
 
 - RISS 키: `KSKILL_RISS_API_KEY`, 없으면 compatibility `RISS_API_KEY`, 이후 `~/.config/k-skill/secrets.env`

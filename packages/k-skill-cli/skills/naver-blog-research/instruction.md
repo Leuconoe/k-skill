@@ -35,7 +35,7 @@
 ### 1. 네이버 블로그 검색
 
 ```bash
-python3 scripts/naver_search.py "검색어" --count 10 --sort sim
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_search.py -- "검색어" --count 10 --sort sim
 ```
 
 | 인자 | 필수 | 설명 | 기본값 |
@@ -68,7 +68,7 @@ python3 scripts/naver_search.py "검색어" --count 10 --sort sim
 검색 결과에서 관심 있는 포스트의 URL을 선택하여 원문을 읽는다.
 
 ```bash
-python3 scripts/naver_read.py "https://blog.naver.com/user123/224212849946"
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_read.py -- "https://blog.naver.com/user123/224212849946"
 ```
 
 | 인자 | 필수 | 설명 | 기본값 |
@@ -83,13 +83,13 @@ PC URL을 넣어도 자동으로 모바일 URL로 변환하여 요청한다.
 ### 3. 이미지 다운로드 (필요 시)
 
 ```bash
-python3 scripts/naver_download_images.py --urls "url1,url2,url3" --output ./images/
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_download_images.py -- --urls "url1,url2,url3" --output ./images/
 ```
 
 또는 `naver_read.py` 결과를 파이프로 전달:
 
 ```bash
-python3 scripts/naver_read.py "https://..." | python3 scripts/naver_download_images.py --output ./images/
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_read.py -- "https://..." | npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_download_images.py -- --output ./images/
 ```
 
 | 인자 | 필수 | 설명 | 기본값 |

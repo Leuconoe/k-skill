@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When purchase or cart is requested, continue past search results: open the official product page, verify live price/seller/option/stock, use vault-backed login, and complete reversible cart or checkout preparation.
 - Immediately before the final order or payment, call `clarify` with merchant, item/options, quantity, delivery summary, and total amount. After approval, submit and verify the order number and payment status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path danawa-price-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Danawa Price Search
 
 ## What this skill does
@@ -59,9 +64,9 @@ AJAX endpoint는 HTML fragment를 반환한다. helper는 `.diff_item`, 쇼핑�
 스킬 디렉터리에서 실행한다.
 
 ```bash
-python scripts/danawa_search.py search "에어팟 프로 2세대" --limit 8
-python scripts/danawa_search.py offers 28208783 --limit 10
-python scripts/danawa_search.py compare "에어팟 프로 2세대" --limit 5 --offers 5
+npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- search "에어팟 프로 2세대" --limit 8
+npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- offers 28208783 --limit 10
+npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- compare "에어팟 프로 2세대" --limit 5 --offers 5
 ```
 
 helper는 JSON만 출력한다. 결과를 확인한 뒤 사용자에게는 한국어 표와 짧은 결론으로 정리한다.
@@ -170,7 +175,7 @@ Discord/Telegram/chat 응답에서는 표 형식을 우선한다.
 ## Workflow
 
 1. 검색어를 확인한다.
-2. `python scripts/danawa_search.py search "<검색어>" --limit 5`로 후보를 확인한다.
+2. `npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- search "<검색어>" --limit 5`로 후보를 확인한다.
 3. 후보가 명확하면 해당 `pcode`로 `offers`를 실행한다.
 4. 후보가 애매하면 상위 3~5개 상품명/가격/`pcode`를 보여주고 선택을 요청한다.
 5. 오퍼는 **`total_price` 오름차순 단일 기준으로 정렬한다 (결제조건 분리 그룹화하지 않음).** 결제조건은 표의 "결제조건" 컬럼과 row 단위 플래그로만 표기하고, 1위가 현금/쿠폰가여도 그대로 1위로 노출한다.

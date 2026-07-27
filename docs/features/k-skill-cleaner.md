@@ -5,7 +5,7 @@
 ## 기본 흐름
 
 1. 먼저 인터뷰로 보존할 스킬, 절대 쓰지 않는 스킬, 주로 쓰는 에이전트, 분석 기간을 확인한다.
-2. 설치된 단독 스킬에서는 `python3 scripts/k_skill_cleaner.py`를 `k-skill-cleaner` 스킬 디렉터리 안에서 실행한다. 전체 저장소 checkout에서는 `python3 k-skill-cleaner/scripts/k_skill_cleaner.py` 또는 호환 wrapper `python3 scripts/k_skill_cleaner.py`를 사용할 수 있다.
+2. 설치된 단독 스킬에서는 `npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py --`를 `k-skill-cleaner` 스킬 디렉터리 안에서 실행한다. 전체 저장소 checkout에서는 `npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py --` 또는 호환 wrapper `npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py --`를 사용할 수 있다.
 3. helper는 root-level `SKILL.md` 디렉터리를 찾고, 사용자가 제공한 usage JSON 또는 로컬 로그를 스캔한다.
 4. 결과 JSON의 `candidates`를 읽어 `remove`와 `review`를 분리한다.
 5. 삭제는 추천 이후 사용자가 명시적으로 승인한 경우에만 진행한다.
@@ -23,7 +23,7 @@
 ## 예시
 
 ```bash
-python3 scripts/k_skill_cleaner.py \
+npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py -- \
   --skills-root . \
   --scan-default-logs \
   --days 90 \

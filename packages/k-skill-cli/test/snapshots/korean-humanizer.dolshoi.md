@@ -10,6 +10,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill produces local artifacts (documents, conversions, corrections, generated text). Completion means the requested artifact is actually created/edited and its location or content is reported. No external side effects are involved unless explicitly documented.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-humanizer scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-humanizer <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read korean-humanizer references/<file>`.
+
 # Korean Humanizer: AI 한국어 글 흔적 지우기
 
 ## 4대 철칙 (먼저 새긴다)
@@ -107,7 +113,7 @@ AI 패턴을 지우는 건 절반이다. 영혼 없는 글은 슬롭(slop)만큼
 
 # 패턴 카탈로그 (A ~ J)
 
-각 패턴은 `분류 ID · 심각도`로 표시한다. 전체 60+ 서브 패턴 표는 [`references/ai-tell-taxonomy.md`](references/ai-tell-taxonomy.md)에 있다. 아래는 한국어 AI 글에서 가장 자주, 가장 강하게 드러나는 핵심만 추렸다.
+각 패턴은 `분류 ID · 심각도`로 표시한다. 전체 60+ 서브 패턴 표는 `npx -y @nomadamas/k-skill@0 read korean-humanizer references/ai-tell-taxonomy.md`에 있다. 아래는 한국어 AI 글에서 가장 자주, 가장 강하게 드러나는 핵심만 추렸다.
 
 ## A. 번역체 (한국어 AI 글의 1순위 정체)
 

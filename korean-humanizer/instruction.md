@@ -95,7 +95,7 @@ AI 패턴을 지우는 건 절반이다. 영혼 없는 글은 슬롭(slop)만큼
 
 # 패턴 카탈로그 (A ~ J)
 
-각 패턴은 `분류 ID · 심각도`로 표시한다. 전체 60+ 서브 패턴 표는 [`references/ai-tell-taxonomy.md`](references/ai-tell-taxonomy.md)에 있다. 아래는 한국어 AI 글에서 가장 자주, 가장 강하게 드러나는 핵심만 추렸다.
+각 패턴은 `분류 ID · 심각도`로 표시한다. 전체 60+ 서브 패턴 표는 `npx -y @nomadamas/k-skill@0 read korean-humanizer references/ai-tell-taxonomy.md`에 있다. 아래는 한국어 AI 글에서 가장 자주, 가장 강하게 드러나는 핵심만 추렸다.
 
 ## A. 번역체 (한국어 AI 글의 1순위 정체)
 

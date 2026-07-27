@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path mfds-food-safety <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 식품 안전 체크
 
 ## What this skill does
@@ -48,7 +53,7 @@ red flag 가 있으면 식품 조회보다 **즉시 응급실·119·의료진 �
 
 - 인터넷 연결
 - `python3`
-- 설치된 skill payload 안에 `scripts/mfds_food_safety.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/mfds_food_safety.py` helper
 - `k-skill-proxy`의 food-safety route들이 있는 hosted/self-host 프록시에 접근 가능할 것
 
 ## Credential requirements
@@ -102,25 +107,25 @@ red flag 가 있으면 식품 조회보다 **즉시 응급실·119·의료진 �
 ## CLI examples
 
 ```bash
-python3 scripts/mfds_food_safety.py interview \
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- interview \
   --question "이 김밥 먹어도 되나요?" \
   --symptoms "복통과 설사"
 ```
 
 ```bash
-python3 scripts/mfds_food_safety.py search --query "김밥" --limit 5
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- search --query "김밥" --limit 5
 ```
 
 ```bash
-python3 scripts/mfds_food_safety.py product-report --query "차전자피" --limit 5
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- product-report --query "차전자피" --limit 5
 ```
 
 ```bash
-python3 scripts/mfds_food_safety.py health-food-ingredient --query "스타놀" --limit 5
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- health-food-ingredient --query "스타놀" --limit 5
 ```
 
 ```bash
-python3 scripts/mfds_food_safety.py inspection-fail --query "쪽갓" --limit 5
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- inspection-fail --query "쪽갓" --limit 5
 ```
 
 ## Response policy

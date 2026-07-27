@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Never ask for, print, read, or store plaintext secrets in chat or files. Use a provisioned `vault-run` capability; if the needed credential is missing, call `request_vault_credential` and retry the intended action in the same turn when provisioned.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec building-register-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path building-register-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Building Register Search
 
 ## What this skill does
@@ -31,10 +36,10 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## Commands
 
 ```bash
-python3 scripts/building_register.py title --address '서울 강남구 역삼동 123-4'
-python3 scripts/building_register.py title --pnu 1168010100101230004
-python3 scripts/building_register.py title --sigungu-cd 11680 --bjdong-cd 10100 --plat-gb-cd 0 --bun 123 --ji 4
-python3 scripts/building_register.py title --pnu 1168010100101230004 --json
+npx -y @nomadamas/k-skill@0 exec building-register-search scripts/building_register.py -- title --address '서울 강남구 역삼동 123-4'
+npx -y @nomadamas/k-skill@0 exec building-register-search scripts/building_register.py -- title --pnu 1168010100101230004
+npx -y @nomadamas/k-skill@0 exec building-register-search scripts/building_register.py -- title --sigungu-cd 11680 --bjdong-cd 10100 --plat-gb-cd 0 --bun 123 --ji 4
+npx -y @nomadamas/k-skill@0 exec building-register-search scripts/building_register.py -- title --pnu 1168010100101230004 --json
 ```
 
 PNU는 `sigunguCd(5) + bjdongCd(5) + 토지구분(1) + bun(4) + ji(4)`의 19자리다. PNU 토지구분 `1`(일반 토지)은 건축물대장 API `platGbCd=0`, `2`(산)는 `platGbCd=1`로 변환한다. 개별 필드나 주소 결과로 PNU를 구성할 때도 API 값 `0`은 PNU `1`, API 값 `1`은 PNU `2`로 역변환한다. `--plat-gb-cd`를 직접 입력할 때는 PNU 값이 아니라 건축물대장 API 값이며 공식 값 `0`, `1`, `2`를 허용한다. API 값 `2`는 그대로 조회에 전달하되 대응하는 표준 PNU 토지구분이 없으므로 PNU를 구성하지 않는다. 개별 입력의 `bun`, `ji`는 4자리로 왼쪽 zero-padding되며 `ji` 생략 시 `0000`이다. `pageNo` 기본값은 1, `numOfRows` 기본값은 10이고 최대 100이다.
@@ -44,8 +49,8 @@ PNU는 `sigunguCd(5) + bjdongCd(5) + 토지구분(1) + bun(4) + ji(4)`의 19자�
 ## Direct mode
 
 ```bash
-python3 scripts/building_register.py title --pnu 1168010100101230004 --direct
-python3 scripts/building_register.py title --pnu 1168010100101230004 --direct --dry-run
+npx -y @nomadamas/k-skill@0 exec building-register-search scripts/building_register.py -- title --pnu 1168010100101230004 --direct
+npx -y @nomadamas/k-skill@0 exec building-register-search scripts/building_register.py -- title --pnu 1168010100101230004 --direct --dry-run
 ```
 
 `--direct`는 주소를 받지 않는다. `KSKILL_BUILDING_REGISTER_API_KEY`, 그다음 `DATA_GO_KR_API_KEY`, 마지막으로 `~/.config/k-skill/secrets.env`의 같은 키 순서로 찾는다. Kakao direct credential은 사용하지 않는다. `--dry-run`은 실제 키를 `REDACTED`로 가린다.

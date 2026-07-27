@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path ev-charger-nearby <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # EV Charger Nearby
 
 ## What this skill does
@@ -32,9 +37,9 @@ Runtime mode: dolshoi (CloakBrowser available)
 설치된 skill 디렉터리에서 실행한다.
 
 ```bash
-python3 scripts/ev_charger.py info --location '서울 강남구' --num-of-rows 10
-python3 scripts/ev_charger.py status --stat-id ME000001 --num-of-rows 10
-python3 scripts/ev_charger.py status --zcode 11 --limit-yn Y --period 10 --json
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- info --location '서울 강남구' --num-of-rows 10
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- status --stat-id ME000001 --num-of-rows 10
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- status --zcode 11 --limit-yn Y --period 10 --json
 ```
 
 공통 필터는 `zcode`, `zscode`, `statId`, `chgerId`다. hosted proxy의 `info`는 고유하게 식별되는 `location`을 행정구역 코드로 변환하며, 모호하거나 찾을 수 없는 위치와 충돌하는 명시적 코드는 거부한다. `status`는 `limitYn`과 `period`를 추가로 허용한다. 페이지 기본값은 `pageNo=1`, `numOfRows=10`이며 `numOfRows` 범위는 10~9999다.
@@ -42,8 +47,8 @@ python3 scripts/ev_charger.py status --zcode 11 --limit-yn Y --period 10 --json
 직접 호출:
 
 ```bash
-python3 scripts/ev_charger.py info --zcode 11 --zscode 11680 --direct
-python3 scripts/ev_charger.py status --stat-id ME000001 --direct --dry-run
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- info --zcode 11 --zscode 11680 --direct
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- status --stat-id ME000001 --direct --dry-run
 ```
 
 직접 호출은 위치 텍스트를 행정구역 코드로 변환하지 않으므로 `--location` 대신 `--zcode`/`--zscode`를 사용한다. `--dry-run`은 URL을 보여주되 키를 `REDACTED`로 가린다.

@@ -12,6 +12,12 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Complete search and reversible reservation steps that the documented portable workflow supports, then report the confirmation, purchase deadline, and the exact official surface where the user finishes payment. Do not automate payment here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec express-bus-booking scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path express-bus-booking <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read express-bus-booking references/<file>`.
+
 # Express Bus Booking (KOBUS)
 
 ## Overview
@@ -42,7 +48,7 @@ Do **not** use this for:
 
 ## Known HTTP Flow
 
-See `references/kobus-http-flow.md` for session-proven endpoint details and parameter examples.
+See `npx -y @nomadamas/k-skill@0 read express-bus-booking references/kobus-http-flow.md` for session-proven endpoint details and parameter examples.
 
 ### 1. Start a Session
 
@@ -140,7 +146,7 @@ Use the same relevant form fields plus the returned `pcpyNoAll` and `satsNoAll`.
 Use the bundled helper for KOBUS lookup and optional temporary holds:
 
 ```bash
-python3 express-bus-booking/scripts/kobus_express_booking.py \
+npx -y @nomadamas/k-skill@0 exec express-bus-booking scripts/kobus_express_booking.py -- \
   --depart-code 021 \
   --arrive-code 500 \
   --date 20260520 \

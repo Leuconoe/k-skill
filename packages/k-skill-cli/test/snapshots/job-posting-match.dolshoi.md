@@ -10,6 +10,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path job-posting-match <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # job-posting-match
 
 ## What this skill does
@@ -81,13 +86,13 @@ Do not block on missing fields when a reasonable first search is possible. If th
 3. Run both public sources by default:
 
 ```bash
-python3 job-posting-match/scripts/job_posting_match.py   --resume-text "퍼포먼스 마케터 5년. GA4, Google Ads, Meta Ads, SQL, 커머스 경험. 서울 희망."   --location 서울   --negative 보험영업   --limit 10
+npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/job_posting_match.py --   --resume-text "퍼포먼스 마케터 5년. GA4, Google Ads, Meta Ads, SQL, 커머스 경험. 서울 희망."   --location 서울   --negative 보험영업   --limit 10
 ```
 
 Use explicit keywords when the user already knows target roles:
 
 ```bash
-python3 job-posting-match/scripts/job_posting_match.py   --resume-file /path/to/resume.txt   --keyword "CRM 마케터 Braze"   --keyword "그로스 마케터 SQL"   --location 서울   --json
+npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/job_posting_match.py --   --resume-file /path/to/resume.txt   --keyword "CRM 마케터 Braze"   --keyword "그로스 마케터 SQL"   --location 서울   --json
 ```
 
 4. Score postings conservatively.

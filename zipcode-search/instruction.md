@@ -98,8 +98,8 @@ PY
 저장소에는 같은 흐름을 감싼 실행 가능한 helper가 포함되어 있다.
 
 ```bash
-python3 scripts/zipcode_search.py "서울특별시 강남구 테헤란로 123"
-./scripts/zipcode_search.py "서울특별시 강남구 테헤란로 123"
+npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/zipcode_search.py -- "서울특별시 강남구 테헤란로 123"
+npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/zipcode_search.py -- "서울특별시 강남구 테헤란로 123"
 ```
 
 예시 출력:

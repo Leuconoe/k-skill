@@ -10,6 +10,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill produces local artifacts (documents, conversions, corrections, generated text). Completion means the requested artifact is actually created/edited and its location or content is reported. No external side effects are involved unless explicitly documented.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-privacy-terms scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-privacy-terms <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Korean Privacy & Terms (thin wrapper)
 
 ## What this skill does
@@ -52,7 +57,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 업스트림을 `~/.claude/skills/korean-privacy-terms/upstream/` 와 `~/.agents/skills/korean-privacy-terms/upstream/` 양쪽에 pinned SHA 로 체크아웃한다. 레포 내부에 업스트림 payload 를 커밋하지 않으므로 실사용 전 반드시 이 단계를 거친다.
 
 ```bash
-bash korean-privacy-terms/scripts/install.sh
+npx -y @nomadamas/k-skill@0 exec korean-privacy-terms scripts/install.sh --
 ```
 
 레포를 로컬에 clone 하지 않고 이미 홈 디렉토리 스킬 번들만 가진 상태에서도 설치할 수 있다 (installer 는 `${BASH_SOURCE[0]}` 로 절대경로를 해석하므로 cwd 에 구애받지 않는다):
@@ -89,7 +94,7 @@ bash ~/.agents/skills/korean-privacy-terms/scripts/install.sh
 ## Workflow
 
 1. 사용자가 트리거 문구를 말하면 먼저 위 인터뷰 게이트를 실행한다.
-2. `bash korean-privacy-terms/scripts/install.sh` 로 업스트림을 dual-install 한다 (이미 설치돼 있으면 pin 확인만 한다).
+2. `npx -y @nomadamas/k-skill@0 exec korean-privacy-terms scripts/install.sh --` 로 업스트림을 dual-install 한다 (이미 설치돼 있으면 pin 확인만 한다).
 3. 업스트림이 제공하는 순서를 따른다: `scripts/interview.md` → `scripts/render.md` → `scripts/install.md`.
 4. 업스트림은 Next.js 감지 → MDX/shadcn 의존성 설치 → 템플릿 치환 → `src/app/privacy/page.tsx` · `src/app/terms/page.tsx` · `src/components/legal/*` 등 파일 생성 → 법정 필수 11개 항목 검증 → 면책 주석 삽입 을 순차 실행한다.
 5. 생성이 끝나면 사용자에게 보고하되, 아래 **Response policy** 의 고정 블록을 반드시 포함한다.
@@ -97,9 +102,9 @@ bash ~/.agents/skills/korean-privacy-terms/scripts/install.sh
 ## CLI examples
 
 ```bash
-cat korean-privacy-terms/scripts/upstream.pin
+npx -y @nomadamas/k-skill@0 read korean-privacy-terms scripts/upstream.pin
 
-bash korean-privacy-terms/scripts/install.sh
+npx -y @nomadamas/k-skill@0 exec korean-privacy-terms scripts/install.sh --
 
 git -C ~/.claude/skills/korean-privacy-terms/upstream rev-parse HEAD
 git -C ~/.agents/skills/korean-privacy-terms/upstream rev-parse HEAD

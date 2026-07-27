@@ -13,6 +13,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When purchase or cart is requested, continue past search results: open the official product page, verify live price/seller/option/stock, use vault-backed login, and complete reversible cart or checkout preparation.
 - Immediately before the final order or payment, call `clarify` with merchant, item/options, quantity, delivery summary, and total amount. After approval, submit and verify the order number and payment status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path coupang-product-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Coupang Product Search
 
 ## What this skill does
@@ -100,18 +105,18 @@ local://coupang-mcp
 래퍼는 기본적으로 `~/.cache/k-skill/coupang_partners`에 upstream 저장소를 clone한다. 이미 clone되어 있으면 그대로 사용하고, 최신화가 필요할 때만 `--update`를 붙인다.
 
 ```bash
-python3 coupang-product-search/scripts/coupang_partners_mcp.py tools
-python3 coupang-product-search/scripts/coupang_partners_mcp.py init
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- tools
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- init
 ```
 
 기존 checkout을 명시하거나 CI/검증에서 네트워크 clone을 막으려면:
 
 ```bash
-python3 coupang-product-search/scripts/coupang_partners_mcp.py \
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- \
   --repo-dir /path/to/coupang_partners \
   --no-clone \
   tools
-python3 coupang-product-search/scripts/coupang_partners_mcp.py \
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- \
   --repo-dir /path/to/coupang_partners \
   --no-clone \
   init
@@ -123,19 +128,19 @@ python3 coupang-product-search/scripts/coupang_partners_mcp.py \
 
 ```bash
 # 일반 검색 (키 없이도 hosted fallback으로 작동)
-python3 coupang-product-search/scripts/coupang_partners_mcp.py search "32인치 4K 모니터"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- search "32인치 4K 모니터"
 
 # 로켓배송 필터
-python3 coupang-product-search/scripts/coupang_partners_mcp.py rocket "에어팟"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- rocket "에어팟"
 
 # 가격대 검색
-python3 coupang-product-search/scripts/coupang_partners_mcp.py budget "키보드" --max-price 100000
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- budget "키보드" --max-price 100000
 
 # 비교
-python3 coupang-product-search/scripts/coupang_partners_mcp.py compare "아이패드 vs 갤럭시탭"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- compare "아이패드 vs 갤럭시탭"
 
 # 골드박스 (운영자 키가 필요한 upstream 경로)
-python3 coupang-product-search/scripts/coupang_partners_mcp.py goldbox
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- goldbox
 ```
 
 ### 4. (optional) hosted fallback 강제
@@ -144,7 +149,7 @@ python3 coupang-product-search/scripts/coupang_partners_mcp.py goldbox
 
 ```bash
 export OPENCLAW_SHOPPING_FORCE_HOSTED=1
-python3 coupang-product-search/scripts/coupang_partners_mcp.py search "에어팟"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- search "에어팟"
 ```
 
 ### 5. Continue from discovery to cart and checkout in Dolshoi

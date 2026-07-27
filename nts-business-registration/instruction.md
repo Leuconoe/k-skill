@@ -18,7 +18,7 @@
 
 - 인터넷 연결
 - `python3`
-- 설치된 skill payload 안에 `scripts/nts_business_registration.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/nts_business_registration.py` helper
 - hosted/self-host `k-skill-proxy`의 `/v1/nts-business/status`, `/v1/nts-business/validate` route 접근 가능
 
 ## Credential requirements
@@ -78,12 +78,12 @@
 ## CLI examples
 
 ```bash
-python3 scripts/nts_business_registration.py status \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- status \
   --b-no 123-45-67890
 ```
 
 ```bash
-python3 scripts/nts_business_registration.py validate \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- validate \
   --business-json '{"b_no":"123-45-67890","start_dt":"2020-01-31","p_nm":"홍길동","b_nm":"테스트상사"}'
 ```
 

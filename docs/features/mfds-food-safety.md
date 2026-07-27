@@ -42,7 +42,7 @@ red flag 가 있으면 **즉시 응급실·119·의료진** 안내가 우선이�
 
 ## 기본 흐름
 
-1. `python3 scripts/mfds_food_safety.py interview ...` 로 되묻기 질문 세트를 준비한다.
+1. `npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- interview ...` 로 되묻기 질문 세트를 준비한다.
 2. `search` 로 프록시 route를 조회한다.
 3. 프록시가 준비된 upstream key에 따라 부적합 식품 live 결과와 식품안전나라 회수 live/sample 결과를 합쳐 준다.
 4. 제품명/업체명/사유 기준으로 로컬 필터링 후 짧게 정리한다.
@@ -51,13 +51,13 @@ red flag 가 있으면 **즉시 응급실·119·의료진** 안내가 우선이�
 ## CLI 예시
 
 ```bash
-python3 scripts/mfds_food_safety.py interview \
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- interview \
   --question "이 김밥 먹어도 되나요?" \
   --symptoms "복통과 설사"
 ```
 
 ```bash
-python3 scripts/mfds_food_safety.py search --query "김밥" --limit 5
+npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- search --query "김밥" --limit 5
 ```
 
 ## 출력 예시 포맷
@@ -86,8 +86,8 @@ python3 scripts/mfds_food_safety.py search --query "김밥" --limit 5
 
 2026-04-13 기준 로컬에서 아래를 실제 실행해 helper 동작을 확인했다.
 
-- `python3 scripts/mfds_food_safety.py --help`
-- `python3 scripts/mfds_food_safety.py interview --question "이 김밥 먹어도 되나요?" --symptoms "복통과 설사"`
+- `npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- --help`
+- `npx -y @nomadamas/k-skill@0 exec mfds-food-safety scripts/mfds_food_safety.py -- interview --question "이 김밥 먹어도 되나요?" --symptoms "복통과 설사"`
 - 프록시 route 기준으로 `search` 호출 URL 구성이 `/v1/mfds/food-safety/search` 로 향하는지 검증
 
 즉, helper 자체와 인터뷰 흐름은 검증했고, live 성공 경로는 프록시 서버에 `DATA_GO_KR_API_KEY` / `FOODSAFETYKOREA_API_KEY` 가 준비된 환경에서 바로 이어서 검증할 수 있다.

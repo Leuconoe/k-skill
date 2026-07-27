@@ -13,6 +13,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When booking is requested, continue past search results: use vault-backed login on the official surface, select the requested date/slot/seat, and complete reversible reservation or hold steps instead of stopping at a link.
 - A successful reversible reservation or seat hold is a completed booking step: report the confirmation and any purchase deadline. If payment is required, call `clarify` with the exact itinerary/slot, party, seat/option, and total, then pay after approval and verify the receipt.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec srt-booking scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path srt-booking <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # SRT Booking
 
 ## What this skill does
@@ -81,7 +86,7 @@ python3 -m pip install SRTrain
 먼저 helper 로 조회해서 후보를 요약한다.
 
 ```bash
-python3 scripts/srt_booking.py search 수서 부산 20260328 080000 --time-limit 120000 --limit 5
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- search 수서 부산 20260328 080000 --time-limit 120000 --limit 5
 ```
 
 ### 3. Summarize options before side effects
@@ -97,19 +102,19 @@ python3 scripts/srt_booking.py search 수서 부산 20260328 080000 --time-limit
 `search` 의 좌석 가능 여부는 열차 단위 플래그다. 사용자가 "남은 좌석 번호", "호차별 좌석", "특정 좌석", "창측/순방향 자리", "예약 전에 자리 확인"처럼 구체적인 좌석을 물으면 예약 전에 `seats` 를 호출한다.
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 --train-id <train_id>
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id>
 ```
 
 특정 호차의 빈 좌석만 확인하려면 `--car-no` 와 `--available-only` 를 쓴다.
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --available-only
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --available-only
 ```
 
 특정 좌석이 비었는지 확인하려면 `--seat` 를 붙인다.
 
 ```bash
-python3 scripts/srt_booking.py seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --seat 11A
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --seat 11A
 ```
 
 특정 호차를 지정하지 않으면 가운데 호차부터 탐색한다. `--car-priority center|low|high` 로 호차 탐색 순서를 바꾸고, `--seat-priority forward-window|window-forward|row-low` 로 좌석 정렬 우선순위를 바꾼다.

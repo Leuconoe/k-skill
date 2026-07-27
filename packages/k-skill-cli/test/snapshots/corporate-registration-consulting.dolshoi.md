@@ -14,6 +14,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Do not evade CAPTCHA, impersonate the user, forge identity evidence, or bypass an authentication/security control. If the official flow presents a user-presence-only verification or electronic-signature prompt, open the exact prompt and let the user complete that control, then resume the same workflow immediately afterward.
 - Immediately before filing, bidding, paying a government fee, signing, cancelling, or another irreversible legal effect, call `clarify` with the exact case/form, parties, documents, amount, and legal effect. Execute after approval and verify the official receipt or resulting status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec corporate-registration-consulting scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path corporate-registration-consulting <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 법인등기 신청 컨설팅
 
 ## 가장 중요한 면책

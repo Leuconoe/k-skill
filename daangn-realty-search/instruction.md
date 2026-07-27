@@ -63,7 +63,7 @@ ArticleFeedConnection.edges → ArticleFeedEdge.node → ArticleFeedCard.article
 
 ```bash
 # 기본 검색 (상위 5개 제목·층수 보강)
-python3 daangn-realty-search/scripts/daangn_realty.py search --region "매교동" --limit 20
+npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/daangn_realty.py -- search --region "매교동" --limit 20
 
 # 거래/용도 필터
 python3 ... search --region "매교동" --trade-type BUY            # 매매만

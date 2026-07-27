@@ -10,6 +10,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill produces local artifacts (documents, conversions, corrections, generated text). Completion means the requested artifact is actually created/edited and its location or content is reported. No external side effects are involved unless explicitly documented.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-spell-check <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Korean Spell Check
 
 ## What this skill does
@@ -45,7 +50,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 - 인터넷 연결
 - `python3` 3.10+
-- 이 스킬 디렉토리의 `scripts/korean_spell_check.py` (설치 시 자동 포함)
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/korean_spell_check.py`
 
 ## Verified surface notes
 
@@ -70,7 +75,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 ### 3. Run the helper
 
 ```bash
-python3 scripts/korean_spell_check.py \
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- \
   --file README.md \
   --format json
 ```
@@ -78,7 +83,7 @@ python3 scripts/korean_spell_check.py \
 짧은 문장은 `--text` 로 바로 넣을 수 있다.
 
 ```bash
-python3 scripts/korean_spell_check.py \
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- \
   --text "아버지가방에들어가신다." \
   --format text
 ```

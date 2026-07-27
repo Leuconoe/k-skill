@@ -182,12 +182,12 @@ python iros_wizard.py
 ```bash
 # 텍스트 레이어가 있는 일반 등기 PDF (기본) — pypdf 또는 pdfplumber 필요
 pip install pypdf   # 또는 pip install pdfplumber (표 추출에 유리)
-python iros-registry-automation/scripts/iros_pdf_summary.py \
+npx -y @nomadamas/k-skill@0 exec iros-registry-automation scripts/iros_pdf_summary.py -- \
   "$workdir/downloads/등기.pdf" --out "$workdir/output"
 
 # 스캔(이미지) PDF인 경우: 사용자가 로컬에 self-host한 변환기(예: marker)로 먼저
 # 텍스트/마크다운으로 바꾼 뒤 그 결과를 요약한다 (원격 전송 없이 로컬 파일만).
-python iros-registry-automation/scripts/iros_pdf_summary.py 변환결과.md --from-text --out "$workdir/output"
+npx -y @nomadamas/k-skill@0 exec iros-registry-automation scripts/iros_pdf_summary.py -- 변환결과.md --from-text --out "$workdir/output"
 ```
 
 출력(모두 사실 나열, 판단 없음): 등기 종류(부동산/법인), 열람·발급 일시, 소유권 변동 건수, 근저당권 목록(채권최고액·설정일·말소여부), 가압류/가처분/압류 건수. 추출 텍스트 구조에 따라 부정확할 수 있으니 **원문 대조를 권한다.**

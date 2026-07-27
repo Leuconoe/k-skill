@@ -13,6 +13,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When booking is requested, continue past search results: use vault-backed login on the official surface, select the requested date/slot/seat, and complete reversible reservation or hold steps instead of stopping at a link.
 - A successful reversible reservation or seat hold is a completed booking step: report the confirmation and any purchase deadline. If payment is required, call `clarify` with the exact itinerary/slot, party, seat/option, and total, then pay after approval and verify the receipt.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec express-bus-booking scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path express-bus-booking <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read express-bus-booking references/<file>`.
+
 # Express Bus Booking (KOBUS)
 
 ## Overview
@@ -43,7 +49,7 @@ Do **not** use this for:
 
 ## Known HTTP Flow
 
-See `references/kobus-http-flow.md` for session-proven endpoint details and parameter examples.
+See `npx -y @nomadamas/k-skill@0 read express-bus-booking references/kobus-http-flow.md` for session-proven endpoint details and parameter examples.
 
 ### 1. Start a Session
 
@@ -141,7 +147,7 @@ Use the same relevant form fields plus the returned `pcpyNoAll` and `satsNoAll`.
 Use the bundled helper for KOBUS lookup and optional temporary holds:
 
 ```bash
-python3 express-bus-booking/scripts/kobus_express_booking.py \
+npx -y @nomadamas/k-skill@0 exec express-bus-booking scripts/kobus_express_booking.py -- \
   --depart-code 021 \
   --arrive-code 500 \
   --date 20260520 \

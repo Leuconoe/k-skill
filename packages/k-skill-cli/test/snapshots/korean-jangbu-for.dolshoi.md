@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When submission is requested, continue past lookup: open the exact official form, prefill every safe field, and attach prepared documents without submitting.
 - Immediately before final submission (or any payment/cancellation it triggers), call `clarify` with the form target, key field values, and effect. After approval, submit and verify the receipt/confirmation.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-jangbu-for scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-jangbu-for <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Korean Jangbu For (thin wrapper)
 
 ## What this skill does
@@ -54,7 +59,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 홈 디렉터리 wrapper 에는 `SKILL.md`, `scripts/install.sh`, `scripts/upstream.pin`, `LICENSE.upstream`, `DISCLAIMER.md`, `NOTICE` 를 함께 설치한다. Promoted `jangbu-*` top-level 경로에 사용자가 만든 다른 스킬이 이미 있으면 installer 는 덮어쓰지 않고 중단한다. wrapper 가 이전에 설치한 managed 스킬만 자동 갱신하며, 의도적으로 교체해야 할 때만 `KOREAN_JANGBU_FOR_OVERWRITE_SKILLS=1` 을 설정한다.
 
 ```bash
-bash korean-jangbu-for/scripts/install.sh
+npx -y @nomadamas/k-skill@0 exec korean-jangbu-for scripts/install.sh --
 ```
 
 레포를 로컬에 clone 하지 않고 이미 홈 디렉토리 스킬 번들만 가진 상태에서도 설치할 수 있다:
@@ -68,7 +73,7 @@ bash ~/.agents/skills/korean-jangbu-for/scripts/install.sh
 설치 확인:
 
 ```bash
-cat korean-jangbu-for/scripts/upstream.pin
+npx -y @nomadamas/k-skill@0 read korean-jangbu-for scripts/upstream.pin
 git -C ~/.claude/skills/korean-jangbu-for/upstream rev-parse HEAD
 git -C ~/.agents/skills/korean-jangbu-for/upstream rev-parse HEAD
 ```
@@ -97,7 +102,7 @@ bash ~/.claude/skills/korean-jangbu-for/upstream/scripts/verify.sh
 ## Workflow
 
 1. 위 intake 로 목표와 입력 자료를 확정한다.
-2. `bash korean-jangbu-for/scripts/install.sh` 로 업스트림을 dual-install 한다.
+2. `npx -y @nomadamas/k-skill@0 exec korean-jangbu-for scripts/install.sh --` 로 업스트림을 dual-install 한다.
 3. 사용 목적에 맞게 업스트림 스킬을 선택한다:
    - `/korean-jangbu-for` — 전체 메뉴 라우팅
    - `/jangbu-connect` — CODEF API 자격증명 설정(BYOK, 홈택스·은행·카드 자동 수집)

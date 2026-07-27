@@ -10,6 +10,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill produces local artifacts (documents, conversions, corrections, generated text). Completion means the requested artifact is actually created/edited and its location or content is reported. No external side effects are involved unless explicitly documented.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-character-count <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 한국어 글자 수 세기
 
 ## What this skill does
@@ -58,24 +63,24 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## Prerequisites
 
 - `node` 18+
-- 설치된 skill payload 안에 `scripts/korean_character_count.js` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/korean_character_count.js` helper
 - 별도 API 키 없음
 
 ## Workflow
 
 1. 텍스트를 직접 받거나 파일/STDIN으로 읽는다.
-2. `node scripts/korean_character_count.js` 로 결정론적 카운트를 실행한다.
+2. `npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js --` 로 결정론적 카운트를 실행한다.
 3. 필요한 프로필(`default`/`neis`)과 출력 형식(`json`/`text`)을 고른다.
 4. 결과를 그대로 반환하고, 어떤 계약으로 셌는지 함께 알려준다.
 
 ## CLI examples
 
 ```bash
-node scripts/korean_character_count.js --text "가나다"
-node scripts/korean_character_count.js --text $'첫 줄\r\n둘째 줄🙂'
-node scripts/korean_character_count.js --text $'첫 줄\n둘째 줄🙂' --profile neis --format text
-node scripts/korean_character_count.js --file ./essay.txt --profile default
-cat essay.txt | node scripts/korean_character_count.js --stdin --profile neis
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text "가나다"
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text $'첫 줄\r\n둘째 줄🙂'
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text $'첫 줄\n둘째 줄🙂' --profile neis --format text
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --file ./essay.txt --profile default
+cat essay.txt | npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --stdin --profile neis
 ```
 
 ## Response policy
@@ -89,7 +94,7 @@ cat essay.txt | node scripts/korean_character_count.js --stdin --profile neis
 
 - 글자 수, 줄 수, byte 수가 함께 반환된다.
 - `default` 와 `neis` 계약 차이가 문서에 명시된다.
-- `node scripts/korean_character_count.js --help` 가 동작한다.
+- `npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --help` 가 동작한다.
 - 혼합 한국어/영문/공백/개행/emoji 입력에 대한 테스트가 있다.
 
 ## Notes

@@ -59,7 +59,7 @@ pip install httpx
 ### 2. 일정 조회 (`schedule`)
 
 ```bash
-python3 scripts/ticket_availability.py schedule "https://tickets.interpark.com/goods/26000541"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- schedule "https://tickets.interpark.com/goods/26000541"
 ```
 
 응답 — Interpark:
@@ -90,7 +90,7 @@ YES24 는 기본 3주 윈도우. 6개월 전체는 `--all-dates` 추가.
 ### 3. 잔여석 조회 (`seats`)
 
 ```bash
-python3 scripts/ticket_availability.py seats "interpark:26000541"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- seats "interpark:26000541"
 ```
 
 응답:
@@ -120,7 +120,7 @@ YES24 응답은 등급별 `price` (노출가) 도 포함:
 ### 4. 헬스체크 (`health`)
 
 ```bash
-python3 scripts/ticket_availability.py health
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- health
 ```
 
 응답:

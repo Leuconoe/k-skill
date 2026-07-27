@@ -12,6 +12,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When purchase or cart is requested, continue past search results: open the official product page, verify live price/seller/option/stock, use vault-backed login, and complete reversible cart or checkout preparation.
 - Immediately before the final order or payment, call `clarify` with merchant, item/options, quantity, delivery summary, and total amount. After approval, submit and verify the order number and payment status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-used-goods-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Used-Goods Search
 
 ## What this skill does
@@ -55,8 +60,8 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## Commands
 
 ```bash
-python3 daangn-used-goods-search/scripts/daangn_used_goods.py search "맥북" --region "합정동" --limit 5
-python3 daangn-used-goods-search/scripts/daangn_used_goods.py detail "https://www.daangn.com/kr/buy-sell/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/daangn_used_goods.py -- search "맥북" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/daangn_used_goods.py -- detail "https://www.daangn.com/kr/buy-sell/.../"
 ```
 
 ## Output fields

@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path bok-ecos-stats <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 한국은행 ECOS 경제통계 조회
 
 ## What this skill does
@@ -53,9 +58,9 @@ Runtime mode: generic
 ### 1. 자주 쓰는 지표는 alias로 바로 조회
 
 ```bash
-python3 bok-ecos-stats/scripts/bok_ecos.py search --alias 기준금리 --start 20260101 --end 20260721 --text
-python3 bok-ecos-stats/scripts/bok_ecos.py search --alias 원달러환율 --start 20260701 --end 20260721 --text
-python3 bok-ecos-stats/scripts/bok_ecos.py search --alias 소비자물가지수 --start 202501 --end 202606 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- search --alias 기준금리 --start 20260101 --end 20260721 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- search --alias 원달러환율 --start 20260701 --end 20260721 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- search --alias 소비자물가지수 --start 202501 --end 202606 --text
 ```
 
 지원 alias: `기준금리`, `원달러환율`, `소비자물가지수`(=`cpi`), `M2`(=`통화량`), `국고채3년`.
@@ -65,22 +70,22 @@ python3 bok-ecos-stats/scripts/bok_ecos.py search --alias 소비자물가지수 
 ### 2. 최신 핵심지표 한 번에 보기
 
 ```bash
-python3 bok-ecos-stats/scripts/bok_ecos.py key --limit 10 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- key --limit 10 --text
 ```
 
 ### 3. 임의 통계표 탐색 → 항목 확인 → 시계열 조회
 
 ```bash
-python3 bok-ecos-stats/scripts/bok_ecos.py tables --text
-python3 bok-ecos-stats/scripts/bok_ecos.py items --stat-code 722Y001 --text
-python3 bok-ecos-stats/scripts/bok_ecos.py search --stat-code 722Y001 --cycle D \
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- tables --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- items --stat-code 722Y001 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- search --stat-code 722Y001 --cycle D \
   --start 20260101 --end 20260721 --item-code 0101000 --text
 ```
 
 ### 4. 용어가 낯설면 사전 검색
 
 ```bash
-python3 bok-ecos-stats/scripts/bok_ecos.py word --query 소비자물가지수 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- word --query 소비자물가지수 --text
 ```
 
 `--text` 없이 실행하면 구조화 JSON(`result`, `rows`, `source`)을 출력한다.

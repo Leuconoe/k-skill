@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Never ask for, print, read, or store plaintext secrets in chat or files. Use a provisioned `vault-run` capability; if the needed credential is missing, call `request_vault_credential` and retry the intended action in the same turn when provisioned.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path lck-analytics <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # LCK Results + Advanced Analysis
 
 ## What this skill does
@@ -128,21 +133,21 @@ JS
 직접 API를 호출해도 되지만, local skill pipeline에서는 아래 스크립트 사용을 우선 권장한다.
 
 ```bash
-node ./lck-analytics/scripts/sync-oracle.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/sync-oracle.js -- \
   --csv ./lck-analytics/samples/oracle-lck-sample.csv
 ```
 
 ### 3. Match analysis via local pipeline script
 
 ```bash
-node ./lck-analytics/scripts/build-match-report.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/build-match-report.js -- \
   --date 2026-04-01
 ```
 
 필요하면 팀 필터도 같이 준다.
 
 ```bash
-node ./lck-analytics/scripts/build-match-report.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/build-match-report.js -- \
   --date 2026-04-01 \
   --team 한화
 ```
@@ -150,7 +155,7 @@ node ./lck-analytics/scripts/build-match-report.js \
 ### 4. Game analysis with turning points via local pipeline script
 
 ```bash
-node ./lck-analytics/scripts/analyze-live-game.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/analyze-live-game.js -- \
   --game game-id
 ```
 

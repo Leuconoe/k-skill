@@ -39,19 +39,19 @@
 
 ```bash
 export KIPRIS_PLUS_API_KEY=your-service-key
-python3 scripts/patent_search.py --query "배터리"
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리"
 ```
 
 ### 연도 + 페이지 지정
 
 ```bash
-python3 scripts/patent_search.py --query "배터리" --year 2024 --page-no 1 --num-rows 5
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리" --year 2024 --page-no 1 --num-rows 5
 ```
 
 ### 출원번호 상세 조회
 
 ```bash
-python3 scripts/patent_search.py --application-number 1020240001234
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --application-number 1020240001234
 ```
 
 ## 응답 예시 포맷
@@ -90,8 +90,8 @@ python3 scripts/patent_search.py --application-number 1020240001234
 
 ## Done when
 
-- `python3 scripts/patent_search.py --query "배터리"` 형태의 검색 명령이 준비된다.
-- `python3 scripts/patent_search.py --application-number 1020240001234` 형태의 상세 조회 명령이 준비된다.
+- `npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리"` 형태의 검색 명령이 준비된다.
+- `npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --application-number 1020240001234` 형태의 상세 조회 명령이 준비된다.
 - 키가 없거나 잘못됐을 때 `KIPRIS_PLUS_API_KEY` / `ServiceKey` 안내가 분명하다.
 - 출력 JSON에 출원번호와 발명의명칭이 포함된다.
 
@@ -99,7 +99,7 @@ python3 scripts/patent_search.py --application-number 1020240001234
 
 2026-04-05 기준 로컬에서 아래 항목을 실제 실행해 helper 동작을 검증했다.
 
-- `python3 scripts/patent_search.py --help`
+- `npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --help`
 - dummy `ServiceKey` 로 KIPRIS Plus endpoint 호출 시 인증 오류가 명시적으로 surfaced 되는지 확인
 - 단위 테스트로 `getWordSearch` / `getBibliographyDetailInfoSearch` XML 파싱 회귀 검증
 

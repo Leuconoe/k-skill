@@ -68,7 +68,7 @@ CLI flags:
 ### 1. Search order plans
 
 ```bash
-python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
+npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/g2b_order_plan.py -- \
   --kind service \
   --keyword 청소 \
   --order-from 2025-01 \
@@ -81,7 +81,7 @@ python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
 ### 2. Narrow by institution or location
 
 ```bash
-python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
+npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/g2b_order_plan.py -- \
   --kind goods \
   --institution 조달청 \
   --region 대전 \

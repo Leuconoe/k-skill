@@ -33,7 +33,7 @@
 ## read-only 조회 helper
 
 ```bash
-python3 intercity-bus-booking/scripts/intercity_bus_search.py \
+npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/intercity_bus_search.py -- \
   --depart-code 0511601 \
   --arrive-code 2482701 \
   --depart-name 동서울 \
@@ -46,7 +46,7 @@ python3 intercity-bus-booking/scripts/intercity_bus_search.py \
 ### 임시 선점 예시
 
 ```bash
-python3 intercity-bus-booking/scripts/intercity_bus_search.py \
+npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/intercity_bus_search.py -- \
   --depart-code 0511601 \
   --arrive-code 2482701 \
   --depart-name 동서울 \

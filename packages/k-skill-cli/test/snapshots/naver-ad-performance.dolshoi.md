@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Never ask for, print, read, or store plaintext secrets in chat or files. Use a provisioned `vault-run` capability; if the needed credential is missing, call `request_vault_credential` and retry the intended action in the same turn when provisioned.
 - Perform supported account operations on the official surface with vault-backed login. Reversible changes proceed directly; immediately before any irreversible account mutation, call `clarify` with the exact change and effect, then execute after approval and verify the resulting state.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path naver-ad-performance <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 네이버 검색광고 성과 조회
 
 ## What this skill does
@@ -49,7 +54,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 ### 1. 진단
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py doctor
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- doctor
 ```
 
 키 3개 존재 여부와 `api.searchad.naver.com` 도달 가능 여부를 보여준다. `reachable: false`면 로컬(클로드 코드/코덱스 CLI) 환경에서 다시 실행하도록 안내한다.
@@ -57,16 +62,16 @@ python3 naver-ad-performance/scripts/naver_ad_performance.py doctor
 ### 2. 구조 조회 (id가 필요할 때)
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py campaigns
-python3 naver-ad-performance/scripts/naver_ad_performance.py adgroups --campaign <nccCampaignId>
-python3 naver-ad-performance/scripts/naver_ad_performance.py keywords --adgroup <nccAdgroupId>
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- campaigns
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- adgroups --campaign <nccCampaignId>
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- keywords --adgroup <nccAdgroupId>
 ```
 
 ### 3. 성과 조회 (핵심)
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py stats --ids <id1,id2> --since 2026-06-01 --until 2026-06-30
-python3 naver-ad-performance/scripts/naver_ad_performance.py stats --ids <id> --since 2026-06-01 --until 2026-06-30 --by day
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- stats --ids <id1,id2> --since 2026-06-01 --until 2026-06-30
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- stats --ids <id> --since 2026-06-01 --until 2026-06-30 --by day
 ```
 
 `ids`는 캠페인/광고그룹/키워드 id를 콤마로 구분해 섞어 넣을 수 있다. `--since`/`--until`을 생략하면 네이버 기본 기간(최근)으로 조회된다.
@@ -74,7 +79,7 @@ python3 naver-ad-performance/scripts/naver_ad_performance.py stats --ids <id> --
 ### 4. 키워드 도구
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py keywordtool --keywords "제주여행,게스트하우스"
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- keywordtool --keywords "제주여행,게스트하우스"
 ```
 
 ## Signing (참고)

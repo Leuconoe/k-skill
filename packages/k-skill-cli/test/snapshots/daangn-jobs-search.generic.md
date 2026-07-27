@@ -13,6 +13,11 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Prepare form data, documents, and the exact official form link that the documented portable workflow supports, then hand the final submission to the user. Do not automate submission here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-jobs-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Jobs Search
 
 ## What this skill does
@@ -56,8 +61,8 @@ Runtime mode: generic
 ## Commands
 
 ```bash
-python3 daangn-jobs-search/scripts/daangn_jobs.py search "카페" --region "합정동" --limit 5
-python3 daangn-jobs-search/scripts/daangn_jobs.py detail "https://www.daangn.com/kr/jobs/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/daangn_jobs.py -- search "카페" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/daangn_jobs.py -- detail "https://www.daangn.com/kr/jobs/.../"
 ```
 
 ## Output fields

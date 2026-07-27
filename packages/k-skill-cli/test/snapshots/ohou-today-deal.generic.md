@@ -11,6 +11,11 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Complete search, comparison, and link preparation that the documented portable workflow supports, then hand off to the official surface for login, cart, and payment. Do not automate purchase here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path ohou-today-deal <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 오늘의집 오늘의딜 조회
 
 ## What this skill does
@@ -66,7 +71,7 @@ Runtime mode: generic
 오늘의집 오늘의딜 공개 페이지에서 상품 목록을 가져온다. 기본 정렬은 할인율 높은 순이다.
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list --limit 10
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list --limit 10
 ```
 
 응답 예시:
@@ -108,7 +113,7 @@ python3 ohou-today-deal/scripts/ohou_today_deal.py list --limit 10
 `bestDiscountPrice.discountRate`(쿠폰/결제혜택 반영 할인율)가 있으면 우선 사용하고, 없으면 상품 기본 `discountRate`를 사용한다.
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --sort discount \
   --limit 5
 ```
@@ -120,7 +125,7 @@ python3 ohou-today-deal/scripts/ohou_today_deal.py list \
 상품명 또는 브랜드에 키워드가 포함된 상품만 걸러내고, 최소 할인율과 무료배송 조건을 조합할 수 있다.
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --query 러그 \
   --min-discount 30 \
   --free-delivery \
@@ -132,7 +137,7 @@ python3 ohou-today-deal/scripts/ohou_today_deal.py list \
 실제 네트워크 없이 저장된 HTML/JSON 파일로 동일한 파싱을 테스트한다.
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --html-file ./today-deals.html \
   --limit 3
 ```

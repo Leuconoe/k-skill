@@ -73,7 +73,7 @@ If detail pages are inaccessible or paid-walled, label results as `목록 기반
 Use only when the user cannot or will not log in. It is low-confidence because it cannot inspect resume details.
 
 ```bash
-python3 jobkorea-talent-search/scripts/jobkorea_talent_search.py   --keyword "퍼포먼스 마케터 GA4"   --work-area "서울"   --career-min 3   --career-max 7   --limit 20
+npx -y @nomadamas/k-skill@0 exec jobkorea-talent-search scripts/jobkorea_talent_search.py --   --keyword "퍼포먼스 마케터 GA4"   --work-area "서울"   --career-min 3   --career-max 7   --limit 20
 ```
 
 ## URL extraction guidance

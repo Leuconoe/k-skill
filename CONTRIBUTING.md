@@ -22,6 +22,7 @@
 - `SKILL.md`는 `scripts/generate-skill-stubs.js`가 생성하는 CLI adapter stub입니다. 직접 수정하지 않습니다.
 - 공통 runtime 규칙은 `packages/k-skill-cli/templates/*.md`에서 profile 단위로 관리합니다. vault/browser/action/legal/operations 규칙을 각 `instruction.md`에 복제하지 않습니다.
 - source를 수정한 뒤 `npm run generate:skill-stubs`와 `npm run sync:cli-skills`를 실행하고 두 명령의 `--check`가 통과하는지 확인합니다.
+- helper 실행은 `npx -y @nomadamas/k-skill@0 exec <skill> scripts/<file> -- ...`, reference 조회는 `... read <skill> references/<file>` 형식으로 작성합니다. `npm run migrate:cli-assets`와 `node scripts/migrate-cli-asset-instructions.js --check`로 상대경로가 남지 않았는지 확인합니다.
 - 액션이 가능한 스킬은 돌쇠에서 조회 링크만 반환하지 말고 공식 표면을 이용해 장바구니, 예약, 초안, 연락 준비 등 가역적 단계까지 실행합니다. 결제, 메시지 전송, 최종 제출, 취소 같은 비가역 외부 효과 직전에는 `clarify` 승인을 받습니다.
 - 법률상 금지, 현장 방문 필수, CAPTCHA, 본인인증, 전자서명, 공식 사이트 미지원 경계는 제거하지 않습니다. 이런 경우에는 가능한 가장 가까운 합법적 공식 단계까지 수행하도록 완료 기준을 씁니다.
 - 관련 기능 문서(`docs/features/<skill-name>.md`)를 추가하거나 업데이트합니다.

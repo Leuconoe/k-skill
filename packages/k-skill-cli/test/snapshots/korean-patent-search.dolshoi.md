@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Never ask for, print, read, or store plaintext secrets in chat or files. Use a provisioned `vault-run` capability; if the needed credential is missing, call `request_vault_credential` and retry the intended action in the same turn when provisioned.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-patent-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 한국 특허 정보 검색
 
 ## What this skill does
@@ -38,7 +43,7 @@ v1 범위:
 - KIPRIS Plus에서 발급받은 API 키
   - helper 환경변수: `KIPRIS_PLUS_API_KEY`
   - 실제 요청 쿼리 파라미터명: `ServiceKey`
-- 설치된 skill payload 안에 `scripts/patent_search.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/patent_search.py` helper
 
 ## Inputs
 
@@ -64,9 +69,9 @@ v1 범위:
 
 ```bash
 export KIPRIS_PLUS_API_KEY=your-service-key
-python3 scripts/patent_search.py --query "배터리"
-python3 scripts/patent_search.py --query "배터리" --year 2024 --num-rows 5
-python3 scripts/patent_search.py --application-number 1020240001234
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리"
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리" --year 2024 --num-rows 5
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --application-number 1020240001234
 ```
 
 ## Response policy

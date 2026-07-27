@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path seoul-bike <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Seoul Bike (따릉이)
 
 ## What this skill does
@@ -35,7 +40,7 @@ Runtime mode: generic
 ## Single entrypoint
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_bike.py" <subcommand> [args]
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- <subcommand> [args]
 ```
 
 첫 사용 시 `Bash(python3 *seoul_bike.py:*)` 패턴 한 번만 승인하면 이후 호출은 모두 자동 허용된다.
@@ -53,7 +58,7 @@ python3 "$SKILL_DIR/scripts/seoul_bike.py" <subcommand> [args]
 ### 1. 현재 위치 주변 대여소 조회
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_bike.py" nearby --lat 37.5717 --lon 126.9763 --radius-m 500
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- nearby --lat 37.5717 --lon 126.9763 --radius-m 500
 ```
 
 요약 항목:
@@ -67,7 +72,7 @@ python3 "$SKILL_DIR/scripts/seoul_bike.py" nearby --lat 37.5717 --lon 126.9763 -
 ### 2. 대여소 이름 검색
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_bike.py" search "광화문" --limit 5
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- search "광화문" --limit 5
 ```
 
 ### 3. Proxy endpoints

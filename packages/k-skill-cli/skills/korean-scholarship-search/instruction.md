@@ -51,7 +51,7 @@
 4. 기업 공식 CSR/재단/채용·공지 페이지
 5. 비공식 모음글/블로그/커뮤니티는 **lead source** 로만 사용하고, 공식 공고로 교차검증되지 않으면 제외
 
-소스별 검색 패턴은 `references/source-patterns.md` 를 보고, 검색 누락을 줄이려면 `references/search-clues.md` 의 키워드와 제목 단서를 같이 쓴다.
+소스별 검색 패턴은 `npx -y @nomadamas/k-skill@0 read korean-scholarship-search references/source-patterns.md` 를 보고, 검색 누락을 줄이려면 `npx -y @nomadamas/k-skill@0 read korean-scholarship-search references/search-clues.md` 의 키워드와 제목 단서를 같이 쓴다.
 
 ## Inputs
 
@@ -114,12 +114,12 @@
 5. 첨부 PDF/HWP가 있으면 같이 열어 조건을 확인
 6. 교내 장학과 외부 추천 장학을 분리해서 정리
 
-학교 완전 탐색 체크리스트는 `references/school-discovery.md` 를 본다.
+학교 완전 탐색 체크리스트는 `npx -y @nomadamas/k-skill@0 read korean-scholarship-search references/school-discovery.md` 를 본다.
 
 학교별 search plan을 만들 때는:
 
 ```bash
-python3 scripts/university_search_plan.py \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/university_search_plan.py -- \
   --school-name "부산대학교" \
   --department "컴퓨터공학과" \
   --year 2026
@@ -128,7 +128,7 @@ python3 scripts/university_search_plan.py \
 전국 대학 sweep query를 만들 때는:
 
 ```bash
-python3 scripts/university_search_plan.py --nationwide --year 2026
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/university_search_plan.py -- --nationwide --year 2026
 ```
 
 ### 3. 각 후보를 정규화한다
@@ -175,7 +175,7 @@ python3 scripts/university_search_plan.py --nationwide --year 2026
 여러 장학금 후보를 JSON으로 정리한 뒤:
 
 ```bash
-python3 scripts/scholarship_filter.py filter \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- filter \
   --input scholarships.json \
   --org-type foundation \
   --student-level undergraduate \
@@ -186,7 +186,7 @@ python3 scripts/scholarship_filter.py filter \
 지원 가능 여부 판정:
 
 ```bash
-python3 scripts/scholarship_filter.py eligibility \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- eligibility \
   --input scholarships.json \
   --school-name "서울대학교" \
   --student-level undergraduate \
@@ -198,7 +198,7 @@ python3 scripts/scholarship_filter.py eligibility \
 KST 기준 현재 날짜로 열린 공고만 readable 하게 보기:
 
 ```bash
-python3 scripts/scholarship_filter.py report \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- report \
   --input scholarships.json \
   --today 2026-04-14 \
   --only-open-now \
@@ -208,7 +208,7 @@ python3 scripts/scholarship_filter.py report \
 마감 임박 공고만 보기:
 
 ```bash
-python3 scripts/scholarship_filter.py report \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- report \
   --input scholarships.json \
   --today 2026-04-14 \
   --deadline-within-days 7
@@ -238,7 +238,7 @@ python3 scripts/scholarship_filter.py report \
 - 공식 공고 링크
 - 신청 링크
 
-더 자세한 form 규칙은 `references/report-format.md` 를 본다.
+더 자세한 form 규칙은 `npx -y @nomadamas/k-skill@0 read korean-scholarship-search references/report-format.md` 를 본다.
 
 ## Response policy
 
@@ -311,7 +311,7 @@ python3 scripts/scholarship_filter.py report \
 
 ## Notes
 
-- 한국장학재단 공식 장학·지원구간 표면은 `references/source-patterns.md` 참고
+- 한국장학재단 공식 장학·지원구간 표면은 `npx -y @nomadamas/k-skill@0 read korean-scholarship-search references/source-patterns.md` 참고
 - 학교별 장학 공지는 HTML 구조가 제각각이므로, 공고 제목/본문/첨부를 같이 읽어야 한다.
 - 장학금 "조건" 과 "우대사항" 을 섞지 않는다.
 - "등록금 전액" 같은 비정액 장학금은 `amount.text` 를 유지하고 수치가 없으면 `*_krw` 는 비워둔다.

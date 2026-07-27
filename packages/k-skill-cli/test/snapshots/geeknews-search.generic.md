@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path geeknews-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # GeekNews Search
 
 ## What this skill does
@@ -43,13 +48,13 @@ GeekNews 공개 RSS/Atom 피드(`https://feeds.feedburner.com/geeknews-feed`)를
 ### 1) List recent entries
 
 ```bash
-python3 scripts/geeknews_search.py list --limit 10
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- list --limit 10
 ```
 
 ### 2) Search the feed conservatively
 
 ```bash
-python3 scripts/geeknews_search.py search --query Claude --limit 5
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- search --query Claude --limit 5
 ```
 
 검색은 제목, 요약, 작성자, 링크/id 기준으로만 동작한다.
@@ -57,7 +62,7 @@ python3 scripts/geeknews_search.py search --query Claude --limit 5
 ### 3) Inspect a specific item
 
 ```bash
-python3 scripts/geeknews_search.py detail --id 28439
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- detail --id 28439
 ```
 
 상세 조회는 RSS 피드에 포함된 `content`/요약과 원문 링크를 함께 돌려준다.

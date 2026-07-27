@@ -96,7 +96,7 @@ gemini mcp add -t http -s user myrealtrip https://mcp-servers.myrealtrip.com/mcp
 ### 2. 도구 목록과 입력 스키마를 확인한다
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py tools
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- tools
 ```
 
 ### 3. 항공권 검색
@@ -104,7 +104,7 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py tools
 국내선은 두 공항이 모두 한국일 때만 사용한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchDomesticFlights \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchDomesticFlights \
   --arg origin=GMP \
   --arg destination=CJU \
   --arg departDate=2026-05-20 \
@@ -114,14 +114,14 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchDomesticFlights \
 국제선은 해외 목적지일 때 사용한다. 사용자가 출발 공항을 말하지 않으면 인천(`ICN`)을 기본값으로 둔다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchInternationalFlights \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchInternationalFlights \
   --json '{"tripType":"ROUND_TRIP","origin":"ICN","destination":"KIX","departDate":"2026-06-10","returnDate":"2026-06-14","passengers":{"adults":1,"children":0,"infants":0},"maxResults":5}'
 ```
 
 날짜가 유동적인 최저가 요청은 캘린더를 먼저 본다. 캘린더 가격은 캐시/추정값이므로, 최종 답변 전에 실제 검색 도구로 후보 날짜를 다시 확인한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call flightsFareCalendar \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call flightsFareCalendar \
   --arg from=ICN \
   --arg to=NRT \
   --arg departureDate=2026-06-01 \
@@ -132,20 +132,20 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py call flightsFareCalendar \
 특가/할인 항공사 요청은 프로모션 항공사를 먼저 확인한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getPromotionAirlines
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call getPromotionAirlines
 ```
 
 ### 4. 숙소 검색과 상세 조회
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchStays \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchStays \
   --json '{"keyword":"부산 해운대","checkIn":"2026-06-10","checkOut":"2026-06-12","adultCount":2,"childCount":0,"isDomestic":true,"order":"recommended","minReviewRating":4.0}'
 ```
 
 사용자가 특정 숙소의 객실, 가격, 편의시설, 리뷰, 취소정책을 묻거나 "자세히"를 요청하면 `searchStays` 결과의 `gid`로 상세를 이어서 호출한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getStayDetail \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call getStayDetail \
   --json '{"gid":123456,"checkIn":"2026-06-10","checkOut":"2026-06-12","adultCount":2,"childCount":0}'
 ```
 
@@ -154,13 +154,13 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getStayDetail \
 도시별 카테고리 필터를 쓰려면 카테고리 값을 추측하지 말고 먼저 조회한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getCategoryList --arg city=Osaka
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call getCategoryList --arg city=Osaka
 ```
 
 검색어는 한국어가 가장 잘 맞는다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchTnas \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchTnas \
   --arg query="오사카 유니버설 스튜디오" \
   --arg perPage=5
 ```
@@ -168,14 +168,14 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchTnas \
 상세는 검색 결과의 `gid`와 `url`을 같이 넘긴다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getTnaDetail \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call getTnaDetail \
   --json '{"gid":"123456","url":"https://www.myrealtrip.com/offers/123456"}'
 ```
 
 날짜별 예약 가능 여부와 실제 가격은 `getTnaOptions`로 확인한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getTnaOptions \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call getTnaOptions \
   --json '{"gid":"123456","url":"https://www.myrealtrip.com/offers/123456","selectedDate":"2026-06-10"}'
 ```
 

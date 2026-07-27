@@ -13,15 +13,15 @@
 
 ```bash
 # 기준금리 시계열
-python3 bok-ecos-stats/scripts/bok_ecos.py search --alias 기준금리 --start 20260101 --end 20260721 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- search --alias 기준금리 --start 20260101 --end 20260721 --text
 
 # 최신 핵심지표 (환율/금리/물가)
-python3 bok-ecos-stats/scripts/bok_ecos.py key --limit 10 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- key --limit 10 --text
 
 # 통계표 탐색 → 항목 → 시계열
-python3 bok-ecos-stats/scripts/bok_ecos.py tables --text
-python3 bok-ecos-stats/scripts/bok_ecos.py items --stat-code 722Y001 --text
-python3 bok-ecos-stats/scripts/bok_ecos.py search --stat-code 722Y001 --cycle D --start 20260101 --end 20260721 --item-code 0101000
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- tables --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- items --stat-code 722Y001 --text
+npx -y @nomadamas/k-skill@0 exec bok-ecos-stats scripts/bok_ecos.py -- search --stat-code 722Y001 --cycle D --start 20260101 --end 20260721 --item-code 0101000
 ```
 
 ## 허용 입력

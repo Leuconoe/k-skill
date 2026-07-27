@@ -14,6 +14,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When submission is requested, continue past lookup: open the exact official form, prefill every safe field, and attach prepared documents without submitting.
 - Immediately before final submission (or any payment/cancellation it triggers), call `clarify` with the form target, key field values, and effect. After approval, submit and verify the receipt/confirmation.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-jobs-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Jobs Search
 
 ## What this skill does
@@ -57,8 +62,8 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## Commands
 
 ```bash
-python3 daangn-jobs-search/scripts/daangn_jobs.py search "카페" --region "합정동" --limit 5
-python3 daangn-jobs-search/scripts/daangn_jobs.py detail "https://www.daangn.com/kr/jobs/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/daangn_jobs.py -- search "카페" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/daangn_jobs.py -- detail "https://www.daangn.com/kr/jobs/.../"
 ```
 
 ## Output fields

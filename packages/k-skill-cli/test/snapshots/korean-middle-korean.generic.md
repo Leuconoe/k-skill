@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill produces local artifacts (documents, conversions, corrections, generated text). Completion means the requested artifact is actually created/edited and its location or content is reported. No external side effects are involved unless explicitly documented.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path korean-middle-korean <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Korean Middle Korean Style Converter
 
 ## What this skill does
@@ -48,7 +53,7 @@ Runtime mode: generic
 ## Workflow
 
 1. 변환할 한국어 텍스트를 받는다.
-2. 설치된 `korean-middle-korean` skill 디렉터리를 기준으로 `node scripts/korean_middle_korean.js` 를 실행한다.
+2. CLI에 번들된 `scripts/korean_middle_korean.js`를 `k-skill exec` 표면으로 실행한다.
    - URL, 이메일, Markdown 링크, inline/fenced code span은 보호되어 원문 그대로 복원된다.
 3. 기본 JSON 출력에서 `output`을 사용자에게 반환한다.
 4. 사용자가 근거를 원하면 `replacements` 배열의 규칙 적용 내역을 요약한다.
@@ -57,10 +62,10 @@ Runtime mode: generic
 ## CLI examples
 
 ```bash
-node scripts/korean_middle_korean.js --text "민수는 3월 5일 학교에서 공부했다."
-node scripts/korean_middle_korean.js --text "열애설을 인정했다." --format text
-cat input.txt | node scripts/korean_middle_korean.js --stdin --format json
-node scripts/korean_middle_korean.js --file ./input.txt --format text
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --text "민수는 3월 5일 학교에서 공부했다."
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --text "열애설을 인정했다." --format text
+cat input.txt | npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --stdin --format json
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --file ./input.txt --format text
 ```
 
 ## Response policy
@@ -85,7 +90,7 @@ node scripts/korean_middle_korean.js --file ./input.txt --format text
 
 ## Done when
 
-- `node scripts/korean_middle_korean.js --help` 가 동작한다.
+- `npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --help` 가 동작한다.
 - `--text`, `--file`, `--stdin` 입력이 모두 동작한다.
 - JSON과 text 출력이 모두 동작한다.
 - 이슈 #270의 예시처럼 날짜/Hanja/중세국어풍 조사·어미·성조점이 나타난다.

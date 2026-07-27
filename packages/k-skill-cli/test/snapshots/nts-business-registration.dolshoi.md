@@ -13,6 +13,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When submission is requested, continue past lookup: open the exact official form, prefill every safe field, and attach prepared documents without submitting.
 - Immediately before final submission (or any payment/cancellation it triggers), call `clarify` with the form target, key field values, and effect. After approval, submit and verify the receipt/confirmation.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path nts-business-registration <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 국세청 사업자등록정보 진위확인 및 상태조회
 
 ## What this skill does
@@ -33,7 +38,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 - 인터넷 연결
 - `python3`
-- 설치된 skill payload 안에 `scripts/nts_business_registration.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/nts_business_registration.py` helper
 - hosted/self-host `k-skill-proxy`의 `/v1/nts-business/status`, `/v1/nts-business/validate` route 접근 가능
 
 ## Credential requirements
@@ -93,12 +98,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## CLI examples
 
 ```bash
-python3 scripts/nts_business_registration.py status \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- status \
   --b-no 123-45-67890
 ```
 
 ```bash
-python3 scripts/nts_business_registration.py validate \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- validate \
   --business-json '{"b_no":"123-45-67890","start_dt":"2020-01-31","p_nm":"홍길동","b_nm":"테스트상사"}'
 ```
 

@@ -40,28 +40,15 @@
 - `bigdata` 또는 `--direct`: KOSIS Open API 인증키 (무료, https://kosis.kr/openapi/ 에서 회원가입 후 활용신청)
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py --help
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- --help
 ```
 
-### Supporting files (단일 SKILL.md 설치 복구)
+### Bundled helper and reference
 
-이 스킬은 `SKILL.md` 외에 helper(`scripts/run_kosis_stats.py`)와 레퍼런스 문서(`references/kosis-openapi-guide.md`)에 의존하는 **디렉터리 패키지형 스킬**이다. raw `SKILL.md` URL만 받는 설치 도구(Hermes 등)로 설치하면 `scripts/`·`references/`가 누락되어 helper 실행이 실패한다.
-
-helper 실행 전에 파일 존재를 확인하고, 없으면 아래로 복구한다. `<skill-dir>`은 이 `SKILL.md`가 설치된 디렉터리다.
-
-```bash
-skill_dir="<skill-dir>"   # 예: ~/.hermes/skills/kosis-stats, ~/.claude/skills/kosis-stats
-if [ ! -f "$skill_dir/scripts/run_kosis_stats.py" ]; then
-  mkdir -p "$skill_dir/scripts" "$skill_dir/references"
-  curl -fsSL https://raw.githubusercontent.com/NomaDamas/k-skill/main/kosis-stats/scripts/run_kosis_stats.py \
-    -o "$skill_dir/scripts/run_kosis_stats.py"
-  curl -fsSL https://raw.githubusercontent.com/NomaDamas/k-skill/main/kosis-stats/references/kosis-openapi-guide.md \
-    -o "$skill_dir/references/kosis-openapi-guide.md"
-fi
-python3 "$skill_dir/scripts/run_kosis_stats.py" --help
-```
-
-근본적으로는 디렉터리 단위로 설치하는 방식(`npx --yes skills add NomaDamas/k-skill --skill kosis-stats -g` 또는 repo clone)을 권장한다.
+KOSIS helper와 OpenAPI guide reference는 `@nomadamas/k-skill` CLI 패키지에
+함께 번들된다. raw `SKILL.md`만 설치된 환경에서도 별도로 다운로드하거나
+복구하지 않는다. 조립된 instruction의 `k-skill exec`와 `k-skill read` 명령을
+사용한다.
 
 ## Required environment variables
 
@@ -69,7 +56,7 @@ python3 "$skill_dir/scripts/run_kosis_stats.py" --help
 - `KSKILL_PROXY_BASE_URL` — self-host·별도 프록시를 쓸 때만 설정. 비우면 기본 hosted proxy를 사용한다.
 - `KSKILL_KOSIS_API_KEY` — `bigdata` 또는 `--direct`로 KOSIS를 직접 호출할 때만 필요하다.
 
-발급 절차와 호출 한도, 에러 코드 등 자세한 내용은 [`references/kosis-openapi-guide.md`](references/kosis-openapi-guide.md) 참고.
+발급 절차와 호출 한도, 에러 코드 등 자세한 내용은 `npx -y @nomadamas/k-skill@0 read kosis-stats references/kosis-openapi-guide.md` 참고.
 
 ### Credential resolution order (`bigdata` 또는 `--direct` 전용)
 
@@ -138,7 +125,7 @@ python3 "$skill_dir/scripts/run_kosis_stats.py" --help
 질문을 먼저 한국어 키워드로 좁히고 `search` 로 후보 통계표를 본다.
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py search --query "1인 가구" --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query "1인 가구" --text
 ```
 
 출력에서 `[ORG_ID/TBL_ID]`를 골라 다음 단계에 사용한다.
@@ -148,7 +135,7 @@ python3 kosis-stats/scripts/run_kosis_stats.py search --query "1인 가구" --te
 데이터를 받기 전에 분류/단위/주기를 확인한다.
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py meta --table-id DT_1JC1501 --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- meta --table-id DT_1JC1501 --text
 ```
 
 ### 4. Fetch a small bounded slice first
@@ -156,7 +143,7 @@ python3 kosis-stats/scripts/run_kosis_stats.py meta --table-id DT_1JC1501 --text
 `--prd-se`, `--start`, `--end`, `--obj-l` 으로 범위를 좁혀 작은 슬라이스를 먼저 조회한다.
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py data \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
   --table-id DT_1JC1501 --prd-se Y --start 2020 --end 2022 \
   --obj-l 1=ALL --json
 ```
@@ -172,7 +159,7 @@ python3 kosis-stats/scripts/run_kosis_stats.py data \
 `bigdata` 는 KOSIS 웹에서 미리 등록한 `userStatsId` 가 필요하다. 미등록 상태면 사용자에게 등록 안내만 하고 멈춘다.
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py bigdata \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- bigdata \
   --user-stats-id "openapisample/101/DT_1IN1502/2/1/20191106094026_1" \
   --format json --new-est-prd-cnt 5
 ```
@@ -217,8 +204,8 @@ python3 kosis-stats/scripts/run_kosis_stats.py bigdata \
 
 - `./scripts/validate-skills.sh`
 - `python3 -m py_compile kosis-stats/scripts/run_kosis_stats.py kosis-stats/tests/test_run_kosis_stats.py`
-- `python3 kosis-stats/scripts/run_kosis_stats.py --help`
-- `python3 kosis-stats/scripts/run_kosis_stats.py search --query 인구 --dry-run` (URL/파라미터 출력만)
+- `npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- --help`
+- `npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query 인구 --dry-run` (URL/파라미터 출력만)
 - `PYTHONPATH=kosis-stats/scripts python3 -m unittest discover -s kosis-stats/tests -p 'test_*.py' -v`
 - `npm run ci`
 

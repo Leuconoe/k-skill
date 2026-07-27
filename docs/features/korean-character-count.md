@@ -44,7 +44,7 @@
 ### 기본 JSON 출력
 
 ```bash
-node scripts/korean_character_count.js --text "가나다"
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text "가나다"
 ```
 
 예상 출력:
@@ -73,7 +73,7 @@ node scripts/korean_character_count.js --text "가나다"
 ### 줄바꿈 + 호환 byte 프로필
 
 ```bash
-node scripts/korean_character_count.js --text $'첫 줄\n둘째 줄🙂' --profile neis --format text
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text $'첫 줄\n둘째 줄🙂' --profile neis --format text
 ```
 
 예상 출력:
@@ -88,13 +88,13 @@ bytes: 23
 ### 파일 입력
 
 ```bash
-node scripts/korean_character_count.js --file ./essay.txt
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --file ./essay.txt
 ```
 
 ### stdin 입력
 
 ```bash
-cat essay.txt | node scripts/korean_character_count.js --profile neis
+cat essay.txt | npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --profile neis
 ```
 
 ## 구현 메모
@@ -108,9 +108,9 @@ cat essay.txt | node scripts/korean_character_count.js --profile neis
 
 2026-04-08 기준으로 아래 로컬 smoke run을 확인했다.
 
-- `node scripts/korean_character_count.js --text "가\r\n나"` 는 `characters=3`, `lines=2`, `bytes=8`을 반환한다.
-- `node scripts/korean_character_count.js --text $'첫 줄\n둘째 줄🙂' --profile neis --format text` 는 `bytes=23`을 반환한다.
-- `cat essay.txt | node scripts/korean_character_count.js` 경로도 JSON 출력이 동작한다.
+- `npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text "가\r\n나"` 는 `characters=3`, `lines=2`, `bytes=8`을 반환한다.
+- `npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text $'첫 줄\n둘째 줄🙂' --profile neis --format text` 는 `bytes=23`을 반환한다.
+- `cat essay.txt | npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js --` 경로도 JSON 출력이 동작한다.
 
 ## 참고 표면
 

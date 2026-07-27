@@ -24,7 +24,7 @@ v1 범위는 단순 스크래핑이다.
 - 인터넷 연결
 - `python3`
 - 별도 API 키 없음
-- 설치된 skill payload 안에 `scripts/sillok_search.py` helper가 함께 들어 있다.
+- `@nomadamas/k-skill` CLI에 `scripts/sillok_search.py` helper가 함께 번들되어 있다.
 
 ## Inputs
 
@@ -38,7 +38,7 @@ v1 범위는 단순 스크래핑이다.
 
 ## Workflow
 
-1. `python3 scripts/sillok_search.py --query "..."` 로 공식 검색 endpoint를 호출한다.
+1. `npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "..."` 로 공식 검색 endpoint를 호출한다.
 2. 검색 결과 HTML에서 결과 수, 왕별 분류, 기사 링크, 요약을 파싱한다.
 3. 필요하면 `--king`, `--year` 로 결과를 추가로 좁힌다.
 4. 선택된 기사마다 `/id/<article_id>` 상세 페이지를 열어 국역/원문 excerpt를 가져온다.
@@ -47,10 +47,10 @@ v1 범위는 단순 스크래핑이다.
 ## CLI examples
 
 ```bash
-python3 scripts/sillok_search.py --query "훈민정음"
-python3 scripts/sillok_search.py --query "훈민정음" --king "세종" --year 1443 --limit 3
-python3 scripts/sillok_search.py --query "측우기" --king "세종실록" --limit 5
-python3 scripts/sillok_search.py --query "임진왜란" --type w --limit 5
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "훈민정음"
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "훈민정음" --king "세종" --year 1443 --limit 3
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "측우기" --king "세종실록" --limit 5
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "임진왜란" --type w --limit 5
 ```
 
 ## Response policy

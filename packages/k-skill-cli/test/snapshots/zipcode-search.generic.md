@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path zipcode-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Zipcode Search
 
 ## What this skill does
@@ -110,8 +115,8 @@ PY
 저장소에는 같은 흐름을 감싼 실행 가능한 helper가 포함되어 있다.
 
 ```bash
-python3 scripts/zipcode_search.py "서울특별시 강남구 테헤란로 123"
-./scripts/zipcode_search.py "서울특별시 강남구 테헤란로 123"
+npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/zipcode_search.py -- "서울특별시 강남구 테헤란로 123"
+npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/zipcode_search.py -- "서울특별시 강남구 테헤란로 123"
 ```
 
 예시 출력:

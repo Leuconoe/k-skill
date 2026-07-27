@@ -11,6 +11,11 @@ Runtime mode: generic
 - Resolve credentials in this order: already-injected environment variables, then the host vault, then `~/.config/k-skill/secrets.env` (mode `0600`). If the value is missing, request it through the safest input surface the host provides and store it in the vault or dotenv; never echo it back.
 - Prepare form data, documents, and the exact official form link that the documented portable workflow supports, then hand the final submission to the user. Do not automate submission here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec popbill scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path popbill <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Popbill all-service k-skill
 
 ## 제공 범위
@@ -70,21 +75,21 @@ KSKILL_POPBILL_USER_ID=
 
 ```bash
 # 시크릿 파일 권한과 필수 env 존재 확인. 실제 secret 값은 출력하지 않는다.
-uv run popbill/scripts/popbill_cli.py config-check
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- config-check
 
 # 특정 SDK service method 목록과 approval 필요 여부 확인
-uv run popbill/scripts/popbill_cli.py methods taxinvoice
-uv run popbill/scripts/popbill_cli.py methods kakao
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- methods taxinvoice
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- methods kakao
 
 # 안전한 SDK 객체 템플릿 출력
-uv run popbill/scripts/popbill_cli.py object-template taxinvoice
-uv run popbill/scripts/popbill_cli.py object-template cashbill
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- object-template taxinvoice
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- object-template cashbill
 
 # 테스트 환경에서 안전한 회원/파트너 잔액 smoke test
-uv run popbill/scripts/popbill_cli.py health taxinvoice
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- health taxinvoice
 
 # 휴폐업 단건 조회
-uv run popbill/scripts/popbill_cli.py closedown-check --target-corp-num 123-45-67890
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- closedown-check --target-corp-num 123-45-67890
 ```
 
 ## Generic SDK call
@@ -92,7 +97,7 @@ uv run popbill/scripts/popbill_cli.py closedown-check --target-corp-num 123-45-6
 전체 Popbill SDK 기능은 아래 형태로 호출한다.
 
 ```bash
-uv run popbill/scripts/popbill_cli.py call <service> <method> \
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- call <service> <method> \
   --args-json '["@corp", "arg2"]' \
   --kwargs-json '{"UserID":"optional-user"}'
 ```
@@ -129,7 +134,7 @@ uv run popbill/scripts/popbill_cli.py call <service> <method> \
 발행·전송·삭제·취소처럼 되돌리기 어려운 동작은 사용자의 현재 턴 승인을 받은 뒤에만 실행한다.
 
 ```bash
-uv run popbill/scripts/popbill_cli.py call taxinvoice registIssue \
+npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- call taxinvoice registIssue \
   --args-json '["@corp", {"__kind__":"taxinvoice", "...":"..."}]' \
   --yes-i-understand
 ```

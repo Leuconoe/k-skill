@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec seoul-density scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path seoul-density <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Seoul Density
 
 ## What this skill does
@@ -39,7 +44,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 ```bash
 # macOS / Linux / Git-bash
-python3 "$SKILL_DIR/scripts/seoul_density.py" <subcommand> [args]
+npx -y @nomadamas/k-skill@0 exec seoul-density scripts/seoul_density.py -- <subcommand> [args]
 
 # Windows (PowerShell): py 런처 또는 python
 py -3 "$env:SKILL_DIR\scripts\seoul_density.py" <subcommand> [args]
@@ -64,7 +69,7 @@ py -3 "$env:SKILL_DIR\scripts\seoul_density.py" <subcommand> [args]
 사용자가 "홍대 인파"처럼 모호하게 말하면 먼저 후보를 확인한다.
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_density.py" match "홍대" --json
+npx -y @nomadamas/k-skill@0 exec seoul-density scripts/seoul_density.py -- match "홍대" --json
 # → ["홍대 관광특구", "홍대입구역(2호선)"]
 ```
 
@@ -76,7 +81,7 @@ python3 "$SKILL_DIR/scripts/seoul_density.py" match "홍대" --json
 
 ```bash
 # macOS / Linux / Git-bash
-python3 "$SKILL_DIR/scripts/seoul_density.py" query "강남역"
+npx -y @nomadamas/k-skill@0 exec seoul-density scripts/seoul_density.py -- query "강남역"
 
 # Windows PowerShell
 py -3 "$env:SKILL_DIR\scripts\seoul_density.py" query "강남역"
@@ -95,7 +100,7 @@ py -3 "$env:SKILL_DIR\scripts\seoul_density.py" query "강남역"
 기계적 후처리가 필요하면 `--json` 플래그를 쓴다:
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_density.py" query "강남역" --json
+npx -y @nomadamas/k-skill@0 exec seoul-density scripts/seoul_density.py -- query "강남역" --json
 ```
 
 자동 매칭을 끄고 싶으면 `--no-auto`를 쓴다.

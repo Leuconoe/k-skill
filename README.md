@@ -54,7 +54,8 @@ CLI를 직접 확인하려면:
 ```bash
 npx -y @nomadamas/k-skill@0 list
 npx -y @nomadamas/k-skill@0 instruct srt-booking
-npx -y @nomadamas/k-skill@0 files kosis-stats
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- --help
+npx -y @nomadamas/k-skill@0 read kosis-stats references/kosis-openapi-guide.md
 ```
 
 반복 사용이나 npm 접근이 제한되는 환경에서는 선택적으로 major 버전을
@@ -63,6 +64,7 @@ npx -y @nomadamas/k-skill@0 files kosis-stats
 ```bash
 npm install -g @nomadamas/k-skill@0
 k-skill instruct srt-booking
+k-skill exec kosis-stats scripts/run_kosis_stats.py -- --help
 ```
 
 `@0`은 호환되는 최신 `0.x` CLI를 사용한다는 의미입니다. 스킬 디렉터리를

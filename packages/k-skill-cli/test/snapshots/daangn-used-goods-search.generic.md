@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - Complete search, comparison, and link preparation that the documented portable workflow supports, then hand off to the official surface for login, cart, and payment. Do not automate purchase here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-used-goods-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Used-Goods Search
 
 ## What this skill does
@@ -54,8 +59,8 @@ Runtime mode: generic
 ## Commands
 
 ```bash
-python3 daangn-used-goods-search/scripts/daangn_used_goods.py search "맥북" --region "합정동" --limit 5
-python3 daangn-used-goods-search/scripts/daangn_used_goods.py detail "https://www.daangn.com/kr/buy-sell/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/daangn_used_goods.py -- search "맥북" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/daangn_used_goods.py -- detail "https://www.daangn.com/kr/buy-sell/.../"
 ```
 
 ## Output fields

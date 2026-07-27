@@ -107,8 +107,10 @@ source를 수정한 뒤 반드시 실행한다.
 
 ```bash
 npm run generate:skill-stubs
+npm run migrate:cli-assets
 npm run sync:cli-skills
 node scripts/generate-skill-stubs.js --check
+node scripts/migrate-cli-asset-instructions.js --check
 node scripts/sync-cli-skills.js --check
 ```
 
@@ -161,8 +163,20 @@ upstream API 키를 사용자에게 노출하지 않으려면 `k-skill-proxy`를
 
 ### D. Python 스크립트 스킬
 
-스킬 디렉토리의 `scripts/my_skill.py`를 만들고 `instruction.md`에서 helper를
-호출한다. `npm run sync:cli-skills`가 helper를 통합 CLI 패키지에도 동봉한다.
+스킬 디렉토리의 `scripts/my_skill.py`를 만들고 `instruction.md`에서는 다음처럼
+호출한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec my-new-skill scripts/my_skill.py -- <args>
+```
+
+reference는 상대 Markdown 링크 대신 CLI로 읽는다.
+
+```bash
+npx -y @nomadamas/k-skill@0 read my-new-skill references/guide.md
+```
+
+`npm run sync:cli-skills`가 helper와 reference를 통합 CLI 패키지에 동봉한다.
 
 ---
 

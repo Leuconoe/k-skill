@@ -37,8 +37,8 @@ https://www.epost.kr/search.RetrieveIntegrationNewZipCdList.comm
 ## 예시
 
 ```bash
-python3 scripts/zipcode_search.py "서울특별시 강남구 테헤란로 123"
-./scripts/zipcode_search.py "서울특별시 강남구 테헤란로 123"
+npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/zipcode_search.py -- "서울특별시 강남구 테헤란로 123"
+npx -y @nomadamas/k-skill@0 exec zipcode-search scripts/zipcode_search.py -- "서울특별시 강남구 테헤란로 123"
 ```
 
 ```json

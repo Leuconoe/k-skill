@@ -28,7 +28,7 @@ generic runtime에서 helper는 조회 전용이다. 돌쇠에서는 조회 결�
 ```bash
 python3 -m pip install playwright
 python3 -m playwright install chromium
-python3 scripts/run_foresttrip_vacancy.py --check-deps
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --check-deps
 ```
 
 ## Required environment variables
@@ -91,25 +91,25 @@ API는 `srchDate` 단일 일자만 요청해도 응답에 5일 윈도우를 포�
 전체 자연휴양림에서 특정 날짜 조회:
 
 ```bash
-python3 scripts/run_foresttrip_vacancy.py --all --text --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --text --dates 20260504
 ```
 
 JSON 출력:
 
 ```bash
-python3 scripts/run_foresttrip_vacancy.py --all --json --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --json --dates 20260504
 ```
 
 캠핑/야영만 조회:
 
 ```bash
-python3 scripts/run_foresttrip_vacancy.py --all --text --dates 20260504 --categories 02
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --text --dates 20260504 --categories 02
 ```
 
 특정 휴양림명으로 조회:
 
 ```bash
-python3 scripts/run_foresttrip_vacancy.py --forest-name 유명산 --text --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --forest-name 유명산 --text --dates 20260504
 ```
 
 ### 4. Summarize results conservatively
@@ -154,8 +154,8 @@ python3 scripts/run_foresttrip_vacancy.py --forest-name 유명산 --text --dates
 
 - `./scripts/validate-skills.sh`
 - `python3 -m py_compile foresttrip-vacancy/scripts/run_foresttrip_vacancy.py`
-- `python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --help`
-- `python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --check-deps`
+- `npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --help`
+- `npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --check-deps`
 - `npm run ci`
 
 실제 live smoke는 기여자 또는 이미 숲나들e 계정을 가진 사용자가 선택적으로 수행한다. PR에는 `forests_scanned`, `fetch_failures`, `filter_hits` 같은 비민감 요약만 남기고 계정 정보, 세션 쿠키, 개인 조회 세부 내역은 공유하지 않는다.

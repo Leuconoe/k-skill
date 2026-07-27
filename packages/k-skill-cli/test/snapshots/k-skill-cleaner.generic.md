@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill produces local artifacts (documents, conversions, corrections, generated text). Completion means the requested artifact is actually created/edited and its location or content is reported. No external side effects are involved unless explicitly documented.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path k-skill-cleaner <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # k-skill-cleaner
 
 ## Safety contract
@@ -44,7 +49,7 @@ Ask a compact interview before scanning or recommending deletion:
 From an installed standalone skill, run the deterministic helper from the `k-skill-cleaner` skill directory. In a full repository checkout, the compatibility wrapper at `scripts/k_skill_cleaner.py` accepts the same options.
 
 ```bash
-python3 scripts/k_skill_cleaner.py \
+npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py -- \
   --skills-root . \
   --scan-default-logs \
   --days 90 \
@@ -55,7 +60,7 @@ python3 scripts/k_skill_cleaner.py \
 For agent exports or hand-curated counts, pass a JSON object mapping skill name to trigger count:
 
 ```bash
-python3 scripts/k_skill_cleaner.py --skills-root . --usage-json usage-counts.json --days 90
+npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py -- --skills-root . --usage-json usage-counts.json --days 90
 ```
 
 `--days` and `--since` filter scanned log records only. `--usage-json` values are already-aggregated counts, so prepare/export that JSON for the same time window before passing it to the helper.

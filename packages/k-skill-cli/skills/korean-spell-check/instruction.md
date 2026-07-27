@@ -33,7 +33,7 @@
 
 - 인터넷 연결
 - `python3` 3.10+
-- 이 스킬 디렉토리의 `scripts/korean_spell_check.py` (설치 시 자동 포함)
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/korean_spell_check.py`
 
 ## Verified surface notes
 
@@ -58,7 +58,7 @@
 ### 3. Run the helper
 
 ```bash
-python3 scripts/korean_spell_check.py \
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- \
   --file README.md \
   --format json
 ```
@@ -66,7 +66,7 @@ python3 scripts/korean_spell_check.py \
 짧은 문장은 `--text` 로 바로 넣을 수 있다.
 
 ```bash
-python3 scripts/korean_spell_check.py \
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- \
   --text "아버지가방에들어가신다." \
   --format text
 ```

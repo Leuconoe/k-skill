@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path subway-lost-property <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Subway Lost Property
 
 ## What this skill does
@@ -59,7 +64,7 @@ LOST112 검색 폼에서 확인되는 핵심 필드는 아래와 같다.
 repo helper를 그대로 써도 된다.
 
 ```bash
-python3 scripts/subway_lost_property.py \
+npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/subway_lost_property.py -- \
   --station 강남역 \
   --item 지갑 \
   --days 14
@@ -70,7 +75,7 @@ helper는 기본적으로 `SITE=V` 를 사용하고, 역명/물품명/기간을 
 ### 3) Optionally verify live reachability
 
 ```bash
-python3 scripts/subway_lost_property.py \
+npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/subway_lost_property.py -- \
   --station 강남역 \
   --item 지갑 \
   --days 14 \

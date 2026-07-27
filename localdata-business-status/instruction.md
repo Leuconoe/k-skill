@@ -45,11 +45,11 @@
 ## CLI examples
 
 ```bash
-python3 localdata-business-status/scripts/localdata_business_status.py \
+npx -y @nomadamas/k-skill@0 exec localdata-business-status scripts/localdata_business_status.py -- \
   --name "호텔샬롬" --region 제주제주시 --industry 숙박업
 
 # 업종 여러 개
-python3 localdata-business-status/scripts/localdata_business_status.py \
+npx -y @nomadamas/k-skill@0 exec localdata-business-status scripts/localdata_business_status.py -- \
   --name "○○약국" --region 서울종로구 --industry 약국
 ```
 

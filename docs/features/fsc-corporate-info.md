@@ -18,7 +18,7 @@
 ## 예시
 
 ```bash
-python3 fsc-corporate-info/scripts/fsc_corporate_info.py --name "삼성전자" --b-no 124-81-00998
+npx -y @nomadamas/k-skill@0 exec fsc-corporate-info scripts/fsc_corporate_info.py -- --name "삼성전자" --b-no 124-81-00998
 ```
 
 ## 실패 모드

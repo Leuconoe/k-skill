@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec fsc-corporate-info scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path fsc-corporate-info <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 금융위 기업기본정보(법인 개요) 조회
 
 ## What this skill does
@@ -52,7 +57,7 @@ Runtime mode: generic
 ## CLI examples
 
 ```bash
-python3 fsc-corporate-info/scripts/fsc_corporate_info.py \
+npx -y @nomadamas/k-skill@0 exec fsc-corporate-info scripts/fsc_corporate_info.py -- \
   --name "삼성전자" --b-no 124-81-00998
 ```
 

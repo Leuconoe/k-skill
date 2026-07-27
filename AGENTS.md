@@ -34,6 +34,7 @@ These rules are repo-specific and apply to everything under this directory.
 - Every top-level skill uses `skill.json` (frontmatter + profiles) and `instruction.md` (site-specific workflow) as its source of truth.
 - Top-level `SKILL.md` files are generated CLI adapter stubs. Do not edit them directly; run `npm run generate:skill-stubs` after changing `skill.json`.
 - Run `npm run sync:cli-skills` after changing `skill.json`, `instruction.md`, `scripts/`, or `references/` so `packages/k-skill-cli/skills/` stays aligned.
+- Instruction commands must execute bundled helpers through `npx -y @nomadamas/k-skill@0 exec <skill> scripts/<file> -- ...` and read references through `... read <skill> references/<file>`. Run `npm run migrate:cli-assets` to normalize legacy relative paths.
 - Shared runtime behavior belongs in `packages/k-skill-cli/templates/*.md`, selected by profiles such as `proxy`, `vault`, `browser`, `action:booking`, `action:commerce`, `legal`, `operations`, `local`, and `lookup`.
 - Do not duplicate shared runtime blocks in `instruction.md`. Keep only the skill's site-dependent navigation, commands, inputs/outputs, action details, and failure modes there.
 - Runtime detection is capability-based. Credential action mode requires both `DOLSHOI_ACTION_BROKER_URL` and a usable `vault-run`; CloakBrowser mode is detected independently through the bundled browser tool or `CLOAKBROWSER_PEEK_TOKEN`.

@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec g2b-sanctioned-supplier scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path g2b-sanctioned-supplier <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 나라장터 부정당제재업체정보 조회
 
 ## What this skill does
@@ -56,7 +61,7 @@ upstream 명세상 다음은 **제공되지 않는다** — 과거 이력 조회
 ## CLI examples
 
 ```bash
-python3 g2b-sanctioned-supplier/scripts/g2b_sanctioned_supplier.py --bizno 124-81-00998
+npx -y @nomadamas/k-skill@0 exec g2b-sanctioned-supplier scripts/g2b_sanctioned_supplier.py -- --bizno 124-81-00998
 ```
 
 ## Failure modes

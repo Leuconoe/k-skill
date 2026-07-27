@@ -36,18 +36,18 @@
 우선 저장소 helper를 사용한다.
 
 ```bash
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py providers
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider nec --max-pages 5
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider acrc --max-pages 2
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider open_portal --keyword 국외출장
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider daegu_council
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider daejeon_council
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider gyeonggi_council
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider gyeongbuk_council --keyword 국외출장
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py detail --provider nec --id 303199
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py search --keyword 몰디브 --providers nec,acrc,open_portal,daejeon_council
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py discover --keyword 국외출장
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py discover --keyword 공무국외출장 --urls https://www.ptcouncil.go.kr/,https://council.chungnam.go.kr/
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- providers
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider nec --max-pages 5
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider acrc --max-pages 2
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider open_portal --keyword 국외출장
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider daegu_council
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider daejeon_council
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider gyeonggi_council
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider gyeongbuk_council --keyword 국외출장
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- detail --provider nec --id 303199
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- search --keyword 몰디브 --providers nec,acrc,open_portal,daejeon_council
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- discover --keyword 국외출장
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- discover --keyword 공무국외출장 --urls https://www.ptcouncil.go.kr/,https://council.chungnam.go.kr/
 ```
 
 ## Official access path

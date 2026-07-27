@@ -22,7 +22,7 @@
 ## Single entrypoint
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_bike.py" <subcommand> [args]
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- <subcommand> [args]
 ```
 
 첫 사용 시 `Bash(python3 *seoul_bike.py:*)` 패턴 한 번만 승인하면 이후 호출은 모두 자동 허용된다.
@@ -40,7 +40,7 @@ python3 "$SKILL_DIR/scripts/seoul_bike.py" <subcommand> [args]
 ### 1. 현재 위치 주변 대여소 조회
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_bike.py" nearby --lat 37.5717 --lon 126.9763 --radius-m 500
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- nearby --lat 37.5717 --lon 126.9763 --radius-m 500
 ```
 
 요약 항목:
@@ -54,7 +54,7 @@ python3 "$SKILL_DIR/scripts/seoul_bike.py" nearby --lat 37.5717 --lon 126.9763 -
 ### 2. 대여소 이름 검색
 
 ```bash
-python3 "$SKILL_DIR/scripts/seoul_bike.py" search "광화문" --limit 5
+npx -y @nomadamas/k-skill@0 exec seoul-bike scripts/seoul_bike.py -- search "광화문" --limit 5
 ```
 
 ### 3. Proxy endpoints

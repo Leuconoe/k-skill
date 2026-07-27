@@ -12,6 +12,11 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Search and compare visible candidate information through the documented logged-in browser workflow. Prepare the shortlist and proposal draft, then hand paid unlocks, private-data reveals, credit use, and proposal delivery to the user on the official surface.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec jobkorea-talent-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path jobkorea-talent-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # jobkorea-talent-search
 
 ## Use when
@@ -87,7 +92,7 @@ If detail pages are inaccessible or paid-walled, label results as `목록 기반
 Use only when the user cannot or will not log in. It is low-confidence because it cannot inspect resume details.
 
 ```bash
-python3 jobkorea-talent-search/scripts/jobkorea_talent_search.py   --keyword "퍼포먼스 마케터 GA4"   --work-area "서울"   --career-min 3   --career-max 7   --limit 20
+npx -y @nomadamas/k-skill@0 exec jobkorea-talent-search scripts/jobkorea_talent_search.py --   --keyword "퍼포먼스 마케터 GA4"   --work-area "서울"   --career-min 3   --career-max 7   --limit 20
 ```
 
 ## URL extraction guidance

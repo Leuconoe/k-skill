@@ -28,7 +28,7 @@ Do **not** use this for:
 
 ## Known HTTP Flow
 
-See `references/tmoney-intercity-http-flow.md` for session-proven endpoint details and parameter examples.
+See `npx -y @nomadamas/k-skill@0 read intercity-bus-booking references/tmoney-intercity-http-flow.md` for session-proven endpoint details and parameter examples.
 
 ### 1. Start a Session
 
@@ -110,7 +110,7 @@ A successful response lands on the official `카드정보 입력` page and inclu
 For read-only timetable lookup, use the bundled helper before attempting browser automation:
 
 ```bash
-python3 intercity-bus-booking/scripts/intercity_bus_search.py \
+npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/intercity_bus_search.py -- \
   --depart-code 0511601 \
   --arrive-code 2482701 \
   --depart-name 동서울 \
@@ -125,7 +125,7 @@ The helper starts a cookie-backed session, posts the browser-required timetable 
 To create a temporary hold and save the official card-information page:
 
 ```bash
-python3 intercity-bus-booking/scripts/intercity_bus_search.py \
+npx -y @nomadamas/k-skill@0 exec intercity-bus-booking scripts/intercity_bus_search.py -- \
   --depart-code 0511601 \
   --arrive-code 2482701 \
   --depart-name 동서울 \

@@ -37,7 +37,7 @@
 ### 1. 실시간 소통/교통량 조회
 
 ```bash
-python3 highway-traffic-status/scripts/highway_traffic.py traffic --route 경부 --text
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- traffic --route 경부 --text
 ```
 
 - `--route`: 노선명 일부(`경부`, `서해안`) 또는 노선번호(`0010`)
@@ -52,7 +52,7 @@ JSON 출력 필드: `route_name`, `route_no`, `conzone_name`, `direction`(상행
 좌표 범위(경도 `--min-x`/`--max-x`, 위도 `--min-y`/`--max-y`)가 필수다. 사용자가 지명을 말하면 대략적인 bounding box로 변환해 호출한다.
 
 ```bash
-python3 highway-traffic-status/scripts/highway_traffic.py cctv \
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- cctv \
   --min-x 126.9 --max-x 127.2 --min-y 37.3 --max-y 37.6 --text
 ```
 

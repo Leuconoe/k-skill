@@ -157,14 +157,25 @@ npx -y @nomadamas/k-skill@0 list
 # 현재 환경에 맞는 instruction 확인
 npx -y @nomadamas/k-skill@0 instruct srt-booking
 
-# npm 패키지에 동봉된 helper 파일 경로 확인
-npx -y @nomadamas/k-skill@0 files kosis-stats
+# npm 패키지에 동봉된 helper 실행
+npx -y @nomadamas/k-skill@0 exec \
+  kosis-stats scripts/run_kosis_stats.py -- --help
+
+# 번들 reference 읽기
+npx -y @nomadamas/k-skill@0 read \
+  kosis-stats references/kosis-openapi-guide.md
+
+# 다른 도구가 절대경로를 요구할 때만 경로 조회
+npx -y @nomadamas/k-skill@0 path \
+  kosis-stats scripts/run_kosis_stats.py
 ```
 
 CLI는 Dolshoi capability가 있으면 vault/CloakBrowser/action profile을
 Dolshoi 방식으로 조립하고, 그 밖의 환경에서는 generic instruction만
 출력한다. `scripts/`와 `references/`는 CLI npm 패키지에도 동봉되므로
-`SKILL.md`만 설치되는 환경에서도 helper가 누락되지 않는다.
+`SKILL.md`만 설치되는 환경에서도 helper가 누락되지 않는다. helper 실행은
+`exec`, reference 조회는 `read`를 사용하며 npm cache 내부 경로를 직접
+추측하지 않는다.
 
 npm 접근이 제한되거나 반복 호출 비용을 피해야 하면 선택적으로 전역
 설치한다.
@@ -173,6 +184,8 @@ npm 접근이 제한되거나 반복 호출 비용을 피해야 하면 선택적
 npm install -g @nomadamas/k-skill@0
 k-skill list
 k-skill instruct srt-booking
+k-skill exec kosis-stats scripts/run_kosis_stats.py -- --help
+k-skill read kosis-stats references/kosis-openapi-guide.md
 ```
 
 전역 설치는 필수가 아니다. 전역 설치를 사용하면 최신 호환 버전으로
@@ -188,12 +201,12 @@ npm install -g @nomadamas/k-skill@0
 
 `real-estate-search` 는 별도 설치 없이 기본 hosted proxy(`k-skill-proxy.nomadamas.org`)를 통해 바로 사용할 수 있다. 사용자 쪽 `DATA_GO_KR_API_KEY` 가 불필요하다. 원본 참고: `https://github.com/tae0y/real-estate-mcp/tree/main`. 자세한 사용법은 [한국 부동산 실거래가 조회 가이드](features/real-estate-search.md)를 본다.
 
-`korean-scholarship-search` 는 스킬 이름 `장학금 검색 및 조회` 로 동작한다. 별도 API key 없이 최신 웹 검색과 공식 공고 확인으로 장학금을 찾고, 한국장학재단·전국 대학교 본부·단과대·학과·재단·기업·공공기관 공고를 모아 금액/지원자격/지원구간/공식 링크를 정리한다. 설치된 helper `python3 scripts/scholarship_filter.py` 로 사용자 조건 필터링, KST(`Asia/Seoul`) 현재 날짜 기준 마감 상태 분류, readable report, 지원 가능 여부 확인을 할 수 있고, `python3 scripts/university_search_plan.py` 로 학교별 또는 전국 대학 검색 쿼리 팩을 만들 수 있다. 자세한 사용법은 [장학금 검색 및 조회 가이드](features/korean-scholarship-search.md)를 본다.
+`korean-scholarship-search` 는 스킬 이름 `장학금 검색 및 조회` 로 동작한다. 별도 API key 없이 최신 웹 검색과 공식 공고 확인으로 장학금을 찾고, 한국장학재단·전국 대학교 본부·단과대·학과·재단·기업·공공기관 공고를 모아 금액/지원자격/지원구간/공식 링크를 정리한다. 설치된 helper `npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py --` 로 사용자 조건 필터링, KST(`Asia/Seoul`) 현재 날짜 기준 마감 상태 분류, readable report, 지원 가능 여부 확인을 할 수 있고, `npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/university_search_plan.py --` 로 학교별 또는 전국 대학 검색 쿼리 팩을 만들 수 있다. 자세한 사용법은 [장학금 검색 및 조회 가이드](features/korean-scholarship-search.md)를 본다.
 
 
-`korean-jangbu-for` 는 `kimlawtech/korean-jangbu-for` (Apache-2.0, 원저작자 @kimlawtech / SpeciAI) 업스트림을 중심으로 사용하는 thin wrapper 다. 별도 hosted proxy 없이 `bash korean-jangbu-for/scripts/install.sh` 로 pinned upstream 을 `~/.claude/skills/korean-jangbu-for/upstream/` 와 `~/.agents/skills/korean-jangbu-for/upstream/` 양쪽에 설치하고, 업스트림 `jangbu-*` 하위 스킬을 양쪽 홈 디렉터리의 top-level skill 로 함께 등록한다. CODEF 자동 수집은 사용자가 직접 발급한 키를 쓰는 BYOK 방식이며, 장부·재무제표·세무사 전달 CSV 는 참고용 초안이므로 신고 전 세무사 검토 및 외감 대상 공인회계사 감사가 필요하다. 자세한 사용법은 [한국 사업자 장부 자동화 가이드](features/korean-jangbu-for.md)를 본다.
+`korean-jangbu-for` 는 `kimlawtech/korean-jangbu-for` (Apache-2.0, 원저작자 @kimlawtech / SpeciAI) 업스트림을 중심으로 사용하는 thin wrapper 다. 별도 hosted proxy 없이 `npx -y @nomadamas/k-skill@0 exec korean-jangbu-for scripts/install.sh --` 로 pinned upstream 을 `~/.claude/skills/korean-jangbu-for/upstream/` 와 `~/.agents/skills/korean-jangbu-for/upstream/` 양쪽에 설치하고, 업스트림 `jangbu-*` 하위 스킬을 양쪽 홈 디렉터리의 top-level skill 로 함께 등록한다. CODEF 자동 수집은 사용자가 직접 발급한 키를 쓰는 BYOK 방식이며, 장부·재무제표·세무사 전달 CSV 는 참고용 초안이므로 신고 전 세무사 검토 및 외감 대상 공인회계사 감사가 필요하다. 자세한 사용법은 [한국 사업자 장부 자동화 가이드](features/korean-jangbu-for.md)를 본다.
 
-`popbill` 은 사용자별 과금/권한 API인 팝빌 SDK를 로컬 BYOK 방식으로 호출한다. `KSKILL_POPBILL_LINK_ID`, `KSKILL_POPBILL_SECRET_KEY`, `KSKILL_POPBILL_CORP_NUM` 을 `~/.config/k-skill/secrets.env` 또는 환경변수로 공급하고, 기본 테스트 환경에서 `uv run popbill/scripts/popbill_cli.py config-check`, `methods taxinvoice`, `health taxinvoice` 순서로 확인한다. 전자세금계산서 발행은 테스트/운영 환경 각각 공동인증서 등록이 필요하고, 문자·카카오·팩스는 발신번호/채널/템플릿 사전 등록이 필요하다. 발행·전송·취소·삭제·계좌조회는 사용자 현재 턴 승인 후에만 `--yes-i-understand` 로 실행한다. 자세한 사용법은 [팝빌 all-service API helper](features/popbill.md)를 본다.
+`popbill` 은 사용자별 과금/권한 API인 팝빌 SDK를 로컬 BYOK 방식으로 호출한다. `KSKILL_POPBILL_LINK_ID`, `KSKILL_POPBILL_SECRET_KEY`, `KSKILL_POPBILL_CORP_NUM` 을 `~/.config/k-skill/secrets.env` 또는 환경변수로 공급하고, 기본 테스트 환경에서 `npx -y @nomadamas/k-skill@0 exec popbill scripts/popbill_cli.py -- config-check`, `methods taxinvoice`, `health taxinvoice` 순서로 확인한다. 전자세금계산서 발행은 테스트/운영 환경 각각 공동인증서 등록이 필요하고, 문자·카카오·팩스는 발신번호/채널/템플릿 사전 등록이 필요하다. 발행·전송·취소·삭제·계좌조회는 사용자 현재 턴 승인 후에만 `--yes-i-understand` 로 실행한다. 자세한 사용법은 [팝빌 all-service API helper](features/popbill.md)를 본다.
 
 `korean-stock-search` 는 별도 설치 없이 기본 hosted proxy(`k-skill-proxy.nomadamas.org`)를 통해 바로 사용할 수 있다. 사용자 쪽 `KRX_API_KEY` 가 불필요하다. 원본 참고: `https://github.com/jjlabsio/korea-stock-mcp`. 자세한 사용법은 [한국 주식 정보 조회 가이드](features/korean-stock-search.md)를 본다.
 
@@ -335,8 +348,8 @@ npx --yes bunjang-cli --json chat send 84191651 --message "상품 상태 괜찮�
 
 ```bash
 export KIPRIS_PLUS_API_KEY=your-service-key
-python3 scripts/patent_search.py --query "배터리" --year 2024 --num-rows 5
-python3 scripts/patent_search.py --application-number 1020240001234
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리" --year 2024 --num-rows 5
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --application-number 1020240001234
 ```
 
 로컬 저장소에서 바로 전체 설치 테스트:
@@ -415,39 +428,39 @@ python3 -m pip install SRTrain korail2 pycryptodome
 조선왕조실록 검색 helper는 설치된 `joseon-sillok-search` skill 안의 `scripts/sillok_search.py` 를 그대로 쓰면 되고, 별도 외부 패키지 없이 표준 라이브러리 `python3` 만 있으면 된다.
 
 ```bash
-python3 scripts/sillok_search.py --query "훈민정음" --king 세종 --year 1443
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "훈민정음" --king 세종 --year 1443
 ```
 
 한국 특허 정보 검색 helper는 설치된 `korean-patent-search` skill 안의 `scripts/patent_search.py` 를 그대로 쓰면 되고, 별도 외부 패키지 없이 표준 라이브러리 `python3` 만 있으면 된다.
 
 ```bash
 export KIPRIS_PLUS_API_KEY=your-service-key
-python3 scripts/patent_search.py --query "배터리"
+npx -y @nomadamas/k-skill@0 exec korean-patent-search scripts/patent_search.py -- --query "배터리"
 ```
 
 장학금 검색 및 조회 helper는 설치된 `korean-scholarship-search` skill 안의 `scripts/scholarship_filter.py` 를 그대로 쓰면 되고, 별도 외부 패키지 없이 표준 라이브러리 `python3` 만 있으면 된다. `--today` 를 생략하거나 잘못 넣으면 host local time 이 아니라 KST 오늘 날짜를 기준으로 마감 상태를 계산한다.
 
 ```bash
-python3 scripts/scholarship_filter.py report --input scholarships.json --today 2026-04-14 --only-open-now
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- report --input scholarships.json --today 2026-04-14 --only-open-now
 ```
 
 국가데이터처 KOSIS 통계 조회 helper는 설치된 `kosis-stats` skill 안의 `scripts/run_kosis_stats.py` 를 그대로 쓰면 되고, 별도 외부 패키지 없이 표준 라이브러리 `python3` 만 있으면 된다. 일반 `search`/`meta`/`data`는 기본 hosted proxy를 쓰므로 사용자 KOSIS 키가 필요 없다.
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py search --query "1인 가구" --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query "1인 가구" --text
 ```
 
 한국어 맞춤법 검사 helper는 별도 외부 패키지 없이 표준 라이브러리 `python3` 만 있으면 된다.
 
 ```bash
-python3 scripts/korean_spell_check.py --text "아버지가방에들어가신다."
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- --text "아버지가방에들어가신다."
 ```
 
 한국어 글자 수 세기 helper는 별도 외부 패키지 없이 `node` 18+ 만 있으면 된다.
 
 ```bash
-node scripts/korean_character_count.js --text "가나다"
-node scripts/korean_character_count.js --text $'첫 줄\n둘째 줄🙂' --profile neis --format text
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text "가나다"
+npx -y @nomadamas/k-skill@0 exec korean-character-count scripts/korean_character_count.js -- --text $'첫 줄\n둘째 줄🙂' --profile neis --format text
 ```
 
 운영체제 정책이나 권한 때문에 전역 설치가 막히면, 임의의 대체 구현으로 넘어가지 말고 그 차단 사유를 사용자에게 설명한 뒤 다음 설치 단계를 정합니다.

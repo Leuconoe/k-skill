@@ -21,7 +21,7 @@
 - [보안/시크릿 정책](../security-and-secrets.md) 확인
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py --help
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- --help
 ```
 
 ## 필요한 환경변수
@@ -44,9 +44,9 @@ python3 kosis-stats/scripts/run_kosis_stats.py --help
 처음 쓰는 사용자는 proxy 기반 검색 → 메타 → 작은 슬라이스 순으로 점검한다. 사용자 KOSIS 키는 일반 조회에 필요 없다.
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py search --query "1인 가구" --text
-python3 kosis-stats/scripts/run_kosis_stats.py meta --table-id DT_1JC1501 --text
-python3 kosis-stats/scripts/run_kosis_stats.py data \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query "1인 가구" --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- meta --table-id DT_1JC1501 --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
   --table-id DT_1ES4I001S --prd-se Y --start 2020 --end 2023 --text
 ```
 
@@ -106,39 +106,39 @@ python3 kosis-stats/scripts/run_kosis_stats.py data \
 키워드 검색:
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py search --query "1인 가구" --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query "1인 가구" --text
 ```
 
 JSON 검색:
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py search --query "고령" --result-count 50 --json
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query "고령" --result-count 50 --json
 ```
 
 테이블 메타데이터:
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py meta --table-id DT_1IN0001 --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- meta --table-id DT_1IN0001 --text
 ```
 
 연간 데이터 작은 슬라이스:
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py data \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
   --table-id DT_1ES4I001S --prd-se Y --start 2020 --end 2023 --json
 ```
 
 월간 데이터:
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py data \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
   --table-id DT_1J22001 --prd-se M --start 202401 --end 202412 --json
 ```
 
 분류 필터:
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py data \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
   --table-id DT_1B040A3 --prd-se Y --start 2024 --end 2024 \
   --obj-l 1=ALL --json
 ```
@@ -146,7 +146,7 @@ python3 kosis-stats/scripts/run_kosis_stats.py data \
 대용량 자료 (사전 등록한 `userStatsId` 필요):
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py bigdata \
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- bigdata \
   --user-stats-id "<KOSIS에서 등록한 ID>" \
   --format json --new-est-prd-cnt 5
 ```
@@ -154,7 +154,7 @@ python3 kosis-stats/scripts/run_kosis_stats.py bigdata \
 URL/파라미터만 확인 (인증키 없이):
 
 ```bash
-python3 kosis-stats/scripts/run_kosis_stats.py search --query "인구" --dry-run --text
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- search --query "인구" --dry-run --text
 ```
 
 ## 주의할 점

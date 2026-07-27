@@ -11,6 +11,11 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Complete search and reversible reservation steps that the documented portable workflow supports, then report the confirmation, purchase deadline, and the exact official surface where the user finishes payment. Do not automate payment here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path flight-ticket-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Flight Ticket Search
 
 ## What this skill does
@@ -70,7 +75,7 @@ Runtime mode: generic
 이 skill은 저장소 내 helper를 직접 실행한다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py --help
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- --help
 ```
 
 최초 실행 시 `~/.cache/k-skill/flight-ticket-search/venv`에 `fast-flights==2.2`를 설치하고 그 venv로 재실행한다. 저장소에는 의존성 vendoring이나 API key를 넣지 않는다.
@@ -80,7 +85,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py --help
 편도:
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py search \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- search \
   --from ICN \
   --to NRT \
   --date 2026-06-01 \
@@ -93,7 +98,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py search \
 왕복:
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py search \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- search \
   --from ICN \
   --to NRT \
   --date 2026-06-01 \
@@ -118,7 +123,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py search \
 빠른 기본값은 주 1회 샘플링이다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-month \
   --from ICN \
   --to NRT \
   --month 2026-06 \
@@ -129,7 +134,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
 일별 전체 조회가 필요하면 `--sample daily`를 쓴다. 다만 28~31회 요청이 발생하므로 rate limit을 위해 `--sleep`을 1.5초 이상 유지한다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-month \
   --from ICN \
   --to NRT \
   --month 2026-06 \
@@ -151,7 +156,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
 사용자가 "다음주부터 2주간", "6월 1일부터 20일까지"처럼 범위를 주면 날짜 범위 비교를 사용한다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-range \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-range \
   --from ICN \
   --to BKK \
   --start-date 2026-06-01 \
@@ -167,7 +172,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py compare-range \
 연도 비교는 같은 월일을 여러 연도에 대해 조회한다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-years \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-years \
   --from ICN \
   --to NRT \
   --years 2026,2027 \

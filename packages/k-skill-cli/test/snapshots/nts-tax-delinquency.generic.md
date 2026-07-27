@@ -10,6 +10,11 @@ Runtime mode: generic
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - Prepare form data, documents, and the exact official form link that the documented portable workflow supports, then hand the final submission to the user. Do not automate submission here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec nts-tax-delinquency scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path nts-tax-delinquency <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 국세청 고액·상습체납자 명단공개 검색
 
 ## What this skill does
@@ -53,7 +58,7 @@ Runtime mode: generic
 ## CLI examples
 
 ```bash
-python3 nts-tax-delinquency/scripts/nts_tax_delinquency.py --name "○○건설"
+npx -y @nomadamas/k-skill@0 exec nts-tax-delinquency scripts/nts_tax_delinquency.py -- --name "○○건설"
 ```
 
 ## Failure modes

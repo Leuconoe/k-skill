@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path mfds-drug-safety <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 의약품 안전 체크
 
 ## What this skill does
@@ -38,7 +43,7 @@ red flag 가 있으면 API 조회보다 **즉시 119·응급실·의료진 연�
 
 - 인터넷 연결
 - `python3`
-- 설치된 skill payload 안에 `scripts/mfds_drug_safety.py` helper 포함
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/mfds_drug_safety.py` helper
 - `k-skill-proxy`의 `/v1/mfds/drug-safety/lookup` route가 있는 hosted/self-host 프록시에 접근 가능할 것
 
 ## Credential requirements
@@ -75,13 +80,13 @@ red flag 가 있으면 API 조회보다 **즉시 119·응급실·의료진 연�
 ## CLI examples
 
 ```bash
-python3 scripts/mfds_drug_safety.py interview \
+npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- interview \
   --question "타이레놀이랑 판콜 같이 먹어도 되나요?" \
   --symptoms "두드러기와 어지러움"
 ```
 
 ```bash
-python3 scripts/mfds_drug_safety.py lookup --item-name "타이레놀" --item-name "판콜"
+npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- lookup --item-name "타이레놀" --item-name "판콜"
 ```
 
 ## Response policy

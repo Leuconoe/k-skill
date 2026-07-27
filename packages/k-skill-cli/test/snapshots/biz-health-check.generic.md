@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec biz-health-check scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path biz-health-check <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 사업자 실사 복합 조회 (biz-health-check)
 
 ## What this skill does
@@ -61,10 +66,10 @@ Runtime mode: generic
 ## CLI examples
 
 ```bash
-python3 biz-health-check/scripts/biz_health_check.py 124-81-00998 --name "삼성전자"
+npx -y @nomadamas/k-skill@0 exec biz-health-check scripts/biz_health_check.py -- 124-81-00998 --name "삼성전자"
 
 # 동네 사업장까지 포함
-python3 biz-health-check/scripts/biz_health_check.py --name "호텔샬롬" --region 제주제주시 --industry 숙박업
+npx -y @nomadamas/k-skill@0 exec biz-health-check scripts/biz_health_check.py -- --name "호텔샬롬" --region 제주제주시 --industry 숙박업
 ```
 
 ## Output

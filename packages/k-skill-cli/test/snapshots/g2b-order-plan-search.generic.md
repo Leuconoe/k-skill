@@ -13,6 +13,11 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Navigate the official legal/government surface and complete every supported reversible preparation step. Keep login, identity verification, CAPTCHA, electronic signature, filing, bidding, payment, and cancellation on the official user-controlled surface unless the host provides an explicit capability for that step.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path g2b-order-plan-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 나라장터 발주계획 검색
 
 ## What this skill does
@@ -83,7 +88,7 @@ CLI flags:
 ### 1. Search order plans
 
 ```bash
-python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
+npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/g2b_order_plan.py -- \
   --kind service \
   --keyword 청소 \
   --order-from 2025-01 \
@@ -96,7 +101,7 @@ python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
 ### 2. Narrow by institution or location
 
 ```bash
-python3 g2b-order-plan-search/scripts/g2b_order_plan.py \
+npx -y @nomadamas/k-skill@0 exec g2b-order-plan-search scripts/g2b_order_plan.py -- \
   --kind goods \
   --institution 조달청 \
   --region 대전 \

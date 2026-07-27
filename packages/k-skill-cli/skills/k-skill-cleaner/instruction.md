@@ -32,7 +32,7 @@ Ask a compact interview before scanning or recommending deletion:
 From an installed standalone skill, run the deterministic helper from the `k-skill-cleaner` skill directory. In a full repository checkout, the compatibility wrapper at `scripts/k_skill_cleaner.py` accepts the same options.
 
 ```bash
-python3 scripts/k_skill_cleaner.py \
+npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py -- \
   --skills-root . \
   --scan-default-logs \
   --days 90 \
@@ -43,7 +43,7 @@ python3 scripts/k_skill_cleaner.py \
 For agent exports or hand-curated counts, pass a JSON object mapping skill name to trigger count:
 
 ```bash
-python3 scripts/k_skill_cleaner.py --skills-root . --usage-json usage-counts.json --days 90
+npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py -- --skills-root . --usage-json usage-counts.json --days 90
 ```
 
 `--days` and `--since` filter scanned log records only. `--usage-json` values are already-aggregated counts, so prepare/export that JSON for the same time window before passing it to the helper.

@@ -41,8 +41,8 @@
 ## Commands
 
 ```bash
-python3 daangn-jobs-search/scripts/daangn_jobs.py search "카페" --region "합정동" --limit 5
-python3 daangn-jobs-search/scripts/daangn_jobs.py detail "https://www.daangn.com/kr/jobs/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/daangn_jobs.py -- search "카페" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-jobs-search scripts/daangn_jobs.py -- detail "https://www.daangn.com/kr/jobs/.../"
 ```
 
 ## Output fields

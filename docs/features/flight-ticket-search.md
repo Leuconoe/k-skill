@@ -25,7 +25,7 @@
 편도:
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py search \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- search \
   --from ICN \
   --to NRT \
   --date 2026-06-01 \
@@ -38,7 +38,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py search \
 왕복:
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py search \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- search \
   --from ICN \
   --to NRT \
   --date 2026-06-01 \
@@ -53,7 +53,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py search \
 지정 월의 날짜들을 실제 검색해 각 날짜의 최저가·평균가를 비교합니다. 기본은 주 1회 샘플링입니다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-month \
   --from ICN \
   --to NRT \
   --month 2026-06 \
@@ -64,7 +64,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
 일별 전체 조회가 필요하면 `--sample daily` 를 씁니다. 28~31 회 요청이 발생하므로 rate limit 보호를 위해 `--sleep` 을 1.5 초 이상 유지합니다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-month \
   --from ICN \
   --to NRT \
   --month 2026-06 \
@@ -78,7 +78,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py compare-month \
 "다음주부터 2주간", "6월 1일부터 20일까지"처럼 범위를 받을 때 사용합니다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-range \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-range \
   --from ICN \
   --to BKK \
   --start-date 2026-06-01 \
@@ -94,7 +94,7 @@ python3 flight-ticket-search/scripts/flight_ticket_search.py compare-range \
 같은 월일을 여러 연도에 대해 조회합니다.
 
 ```bash
-python3 flight-ticket-search/scripts/flight_ticket_search.py compare-years \
+npx -y @nomadamas/k-skill@0 exec flight-ticket-search scripts/flight_ticket_search.py -- compare-years \
   --from ICN \
   --to NRT \
   --years 2026,2027 \

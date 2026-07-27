@@ -28,19 +28,19 @@
 
 ```bash
 # 서울 모집 중 공고 5건 (hosted proxy 사용, 사용자 키 불필요)
-python3 kstartup-search/scripts/run_kstartup.py announcements \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- announcements \
   --supt-regin 서울특별시 --rcrt-prgs-yn Y --per-page 5 --text
 
 # 2024년 사업화 분야 통합공고
-python3 kstartup-search/scripts/run_kstartup.py business-info \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- business-info \
   --biz-yr 2024 --biz-category-cd cmrczn_Tab3
 
 # 정책/공지 콘텐츠 dry-run (인증 호출 없이 URL 검증만)
-python3 kstartup-search/scripts/run_kstartup.py contents \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- contents \
   --clss-cd notice_matr --per-page 10 --dry-run
 
 # 본인 키로 직접 호출
-python3 kstartup-search/scripts/run_kstartup.py announcements \
+npx -y @nomadamas/k-skill@0 exec kstartup-search scripts/run_kstartup.py -- announcements \
   --supt-regin 부산광역시 --direct
 ```
 

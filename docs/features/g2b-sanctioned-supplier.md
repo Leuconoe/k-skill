@@ -23,7 +23,7 @@ upstream 명세상 다음은 제공되지 않는다(과거 이력 조회가 아�
 ## 예시
 
 ```bash
-python3 g2b-sanctioned-supplier/scripts/g2b_sanctioned_supplier.py --bizno 124-81-00998
+npx -y @nomadamas/k-skill@0 exec g2b-sanctioned-supplier scripts/g2b_sanctioned_supplier.py -- --bizno 124-81-00998
 ```
 
 ## 실패 모드

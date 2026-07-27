@@ -4,8 +4,18 @@ const fs = require("node:fs");
 const path = require("node:path");
 const childProcess = require("node:child_process");
 
-const { assemble, bundledFiles, listSkills, renderTemplate, KNOWN_PROFILES } = require("../src/assemble");
+const {
+  assemble,
+  assetRelativePaths,
+  bundledFiles,
+  listSkills,
+  readBundledAsset,
+  renderTemplate,
+  resolveBundledAsset,
+  KNOWN_PROFILES,
+} = require("../src/assemble");
 const { detectRuntime } = require("../src/detect");
+const { resolveRunner, runBundledScript } = require("../src/execute");
 
 const packageRoot = path.join(__dirname, "..");
 const binPath = path.join(packageRoot, "bin", "k-skill.js");
@@ -87,6 +97,80 @@ test("bundledFiles lists helper files for directory-package skills", () => {
   assert.ok(bundledFiles("srt-booking").some((f) => f.endsWith("scripts/srt_booking.py")));
 });
 
+test("all bundled assets are exposed through exec/read/path instructions", () => {
+  let assetSkills = 0;
+
+  for (const skillName of listSkills()) {
+    const assets = assetRelativePaths(skillName).filter(
+      (item) => item.startsWith("scripts/") || item.startsWith("references/"),
+    );
+    if (!assets.length) continue;
+    assetSkills += 1;
+
+    const output = assemble(skillName, DOLSHOI);
+    const scripts = assets.filter((item) => item.startsWith("scripts/"));
+    const references = assets.filter((item) => item.startsWith("references/"));
+
+    if (scripts.length) {
+      assert.match(output, new RegExp(`exec ${skillName} scripts/<file> --`));
+      assert.doesNotMatch(
+        output,
+        new RegExp(
+          `(?:python3?|node|bash|uv\\s+run)\\s+(?:\"?\\$SKILL_DIR/|\\./${skillName}/|${skillName}/|\\./)?scripts/`,
+        ),
+        `${skillName} assembled instructions must not execute a relative bundled script`,
+      );
+      assert.doesNotMatch(
+        output,
+        /(^|[|;&]\s*)\.\/scripts\//m,
+        `${skillName} assembled instructions must not directly execute ./scripts`,
+      );
+    }
+
+    if (references.length) {
+      assert.match(output, new RegExp(`read ${skillName} references/<file>`));
+      assert.doesNotMatch(
+        output,
+        /\]\((?:\.\/)?references\//,
+        `${skillName} assembled instructions must not publish unresolved relative reference links`,
+      );
+    }
+  }
+
+  // 56 source skill directories own assets; srt-booking additionally bundles
+  // its two legacy root helpers through skill.json's bundle mapping.
+  assert.equal(assetSkills, 57);
+});
+
+test("asset resolution rejects traversal and reads bundled references", () => {
+  assert.ok(resolveBundledAsset("kosis-stats", "scripts/run_kosis_stats.py").endsWith("run_kosis_stats.py"));
+  assert.match(readBundledAsset("kosis-stats", "references/kosis-openapi-guide.md"), /KOSIS/);
+  assert.throws(
+    () => resolveBundledAsset("kosis-stats", "../../package.json"),
+    (error) => error.code === "EASSETPATH",
+  );
+  assert.throws(
+    () => resolveBundledAsset("kosis-stats", "scripts/missing.py"),
+    (error) => error.code === "EASSETNOTFOUND",
+  );
+});
+
+test("runner selection honors shebangs and executes bundled Node helpers", () => {
+  const popbill = resolveBundledAsset("popbill", "scripts/popbill_cli.py");
+  const runner = resolveRunner(popbill);
+  assert.equal(runner.command, "uv");
+  assert.deepEqual(runner.args.slice(0, 2), ["run", "--script"]);
+
+  const result = runBundledScript(
+    "korean-character-count",
+    "scripts/korean_character_count.js",
+    ["--text", "가나다", "--format", "json"],
+    { encoding: "utf8", stdio: "pipe" },
+  );
+  assert.equal(result.status, 0);
+  assert.equal(JSON.parse(result.stdout).counts.characters, 3);
+});
+
 test("assembled instructions match committed snapshots", () => {
   const snapshotDir = path.join(__dirname, "snapshots");
   const update = process.env.UPDATE_SNAPSHOTS === "1";
@@ -134,7 +218,33 @@ test("CLI binary handles instruct, files, list, and errors", () => {
   assert.equal(unknown.status, 1);
   assert.match(unknown.stderr, /unknown skill/);
 
+  const exec = run([
+    "exec",
+    "korean-character-count",
+    "scripts/korean_character_count.js",
+    "--",
+    "--text",
+    "가나다",
+    "--format",
+    "json",
+  ]);
+  assert.equal(exec.status, 0);
+  assert.equal(JSON.parse(exec.stdout).counts.characters, 3);
+
+  const read = run(["read", "kosis-stats", "references/kosis-openapi-guide.md"]);
+  assert.equal(read.status, 0);
+  assert.match(read.stdout, /KOSIS/);
+
+  const pathResult = run(["path", "kosis-stats", "scripts/run_kosis_stats.py"]);
+  assert.equal(pathResult.status, 0);
+  assert.match(pathResult.stdout, /run_kosis_stats\.py/);
+
+  const traversal = run(["path", "kosis-stats", "../../package.json"]);
+  assert.equal(traversal.status, 1);
+  assert.match(traversal.stderr, /must stay inside/);
+
   const help = run(["--help"]);
   assert.equal(help.status, 0);
-  assert.match(help.stdout, /Usage: k-skill/);
+  assert.match(help.stdout, /exec <skill> <script>/);
+  assert.match(help.stdout, /read <skill> <file>/);
 });

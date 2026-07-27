@@ -12,6 +12,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Use the built-in browser tool backed by CloakBrowser first. Fall back to `k-skill-browser-runtime` providers only when CloakBrowser is unavailable.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path highway-traffic-status <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 고속도로 교통량·소통·CCTV 조회
 
 ## What this skill does
@@ -51,7 +56,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 ### 1. 실시간 소통/교통량 조회
 
 ```bash
-python3 highway-traffic-status/scripts/highway_traffic.py traffic --route 경부 --text
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- traffic --route 경부 --text
 ```
 
 - `--route`: 노선명 일부(`경부`, `서해안`) 또는 노선번호(`0010`)
@@ -66,7 +71,7 @@ JSON 출력 필드: `route_name`, `route_no`, `conzone_name`, `direction`(상행
 좌표 범위(경도 `--min-x`/`--max-x`, 위도 `--min-y`/`--max-y`)가 필수다. 사용자가 지명을 말하면 대략적인 bounding box로 변환해 호출한다.
 
 ```bash
-python3 highway-traffic-status/scripts/highway_traffic.py cctv \
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- cctv \
   --min-x 126.9 --max-x 127.2 --min-y 37.3 --max-y 37.6 --text
 ```
 

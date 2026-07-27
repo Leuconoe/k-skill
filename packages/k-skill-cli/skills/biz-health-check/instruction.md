@@ -48,10 +48,10 @@
 ## CLI examples
 
 ```bash
-python3 biz-health-check/scripts/biz_health_check.py 124-81-00998 --name "삼성전자"
+npx -y @nomadamas/k-skill@0 exec biz-health-check scripts/biz_health_check.py -- 124-81-00998 --name "삼성전자"
 
 # 동네 사업장까지 포함
-python3 biz-health-check/scripts/biz_health_check.py --name "호텔샬롬" --region 제주제주시 --industry 숙박업
+npx -y @nomadamas/k-skill@0 exec biz-health-check scripts/biz_health_check.py -- --name "호텔샬롬" --region 제주제주시 --industry 숙박업
 ```
 
 ## Output

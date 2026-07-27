@@ -11,6 +11,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec national-pension-workplace scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path national-pension-workplace <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 국민연금 가입 사업장 내역 조회
 
 ## What this skill does
@@ -59,7 +64,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## CLI examples
 
 ```bash
-python3 national-pension-workplace/scripts/national_pension_workplace.py \
+npx -y @nomadamas/k-skill@0 exec national-pension-workplace scripts/national_pension_workplace.py -- \
   --name "삼성전자(주)" --b-no 124-81-00998
 ```
 

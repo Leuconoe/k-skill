@@ -36,7 +36,7 @@
 ## Prerequisites
 
 - `python3` 3.10+ (`argparse`, `urllib`, `unittest` 만 사용 — 추가 의존성 없음)
-- 스킬 디렉터리의 `scripts/*.py` helper (설치 시 자동 포함)
+- `@nomadamas/k-skill` CLI에 번들된 `scripts/*.py` helper
 - 나무위키 lookup 에는 인터넷 연결이 필요하지만, 실패해도 시드 인덱스만으로 안전하게 응답할 수 있다.
 
 ## Response contract
@@ -108,7 +108,7 @@
 ### 2. 시드 인덱스에서 후보 탐색
 
 ```bash
-python3 scripts/slang_search.py --mood "긍정,유머" --context "SNS,마케팅" --safety safe --limit 5 --format json
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- --mood "긍정,유머" --context "SNS,마케팅" --safety safe --limit 5 --format json
 ```
 
 주요 옵션:
@@ -128,8 +128,8 @@ python3 scripts/slang_search.py --mood "긍정,유머" --context "SNS,마케팅"
 ### 3. (선택) 나무위키 원문 요약 확인
 
 ```bash
-python3 scripts/slang_lookup.py "중꺾마" --format json
-python3 scripts/slang_lookup.py "https://namu.wiki/w/%EC%A4%91%EA%BA%BE%EB%A7%88" --max-length 800
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_lookup.py -- "중꺾마" --format json
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_lookup.py -- "https://namu.wiki/w/%EC%A4%91%EA%BA%BE%EB%A7%88" --max-length 800
 ```
 
 - 성공 시 `title`, `summary` 를 돌려준다.
@@ -147,16 +147,16 @@ python3 scripts/slang_lookup.py "https://namu.wiki/w/%EC%A4%91%EA%BA%BE%EB%A7%88
 
 ```bash
 # 1) 특정 유행어 뜻/메타 바로 확인
-python3 scripts/slang_search.py --query "갓생" --format text
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- --query "갓생" --format text
 
 # 2) 긍정 무드의 SNS 마케팅 후보 5개
-python3 scripts/slang_search.py --mood "긍정,유머" --context "SNS,마케팅" --safety safe --limit 5
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- --mood "긍정,유머" --context "SNS,마케팅" --safety safe --limit 5
 
 # 3) 이용자가 지정한 커스텀 인덱스로 전환
-python3 scripts/slang_search.py --query "중꺾마" --index-path ~/Downloads/my-slang.json
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- --query "중꺾마" --index-path ~/Downloads/my-slang.json
 
 # 4) 나무위키 원문 요약 시도
-python3 scripts/slang_lookup.py "럭키비키" --timeout 10 --format text
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_lookup.py -- "럭키비키" --timeout 10 --format text
 ```
 
 ## Response policy

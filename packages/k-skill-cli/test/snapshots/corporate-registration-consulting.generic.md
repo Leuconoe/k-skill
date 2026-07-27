@@ -12,6 +12,11 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Navigate the official legal/government surface and complete every supported reversible preparation step. Keep login, identity verification, CAPTCHA, electronic signature, filing, bidding, payment, and cancellation on the official user-controlled surface unless the host provides an explicit capability for that step.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec corporate-registration-consulting scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path corporate-registration-consulting <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # 법인등기 신청 컨설팅
 
 ## 가장 중요한 면책

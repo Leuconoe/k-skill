@@ -12,6 +12,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When purchase or cart is requested, continue past search results: open the official product page, verify live price/seller/option/stock, use vault-backed login, and complete reversible cart or checkout preparation.
 - Immediately before the final order or payment, call `clarify` with merchant, item/options, quantity, delivery summary, and total amount. After approval, submit and verify the order number and payment status.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-cars-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-cars-search <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Daangn Cars Search
 
 ## What this skill does
@@ -55,9 +60,9 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## Commands
 
 ```bash
-python3 daangn-cars-search/scripts/daangn_cars.py search "레이" --region "합정동" --limit 5
-python3 daangn-cars-search/scripts/daangn_cars.py search --region "합정동" --price-max 10000000 --limit 5
-python3 daangn-cars-search/scripts/daangn_cars.py detail "https://www.daangn.com/kr/cars/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-cars-search scripts/daangn_cars.py -- search "레이" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-cars-search scripts/daangn_cars.py -- search --region "합정동" --price-max 10000000 --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-cars-search scripts/daangn_cars.py -- detail "https://www.daangn.com/kr/cars/.../"
 ```
 
 ## Output fields
