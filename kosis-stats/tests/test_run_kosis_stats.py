@@ -296,6 +296,12 @@ class ErrorDetectionTest(unittest.TestCase):
         self.assertIn("키워드", str(err))
         self.assertIn("meta-type", str(err))
 
+    def test_code_30_hint_includes_prd_se_misconfiguration(self):
+        err = helper.detect_kosis_error({"err": "30", "errMsg": "결과 없음"})
+        self.assertIsNotNone(err)
+        self.assertIn("--prd-se", str(err))
+        self.assertIn("PRD_SE", str(err))
+
     def test_unknown_code_still_reported(self):
         err = helper.detect_kosis_error({"err": "99", "errMsg": "알 수 없음"})
         self.assertIsNotNone(err)
