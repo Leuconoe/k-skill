@@ -948,10 +948,10 @@ test("ktx-booking docs document the helper-based live Korail workflow", () => {
   assert.match(skill, /^name: ktx-booking$/m);
 
   for (const doc of [skill, featureDoc]) {
-    assert.match(doc, /python3 scripts\/ktx_booking\.py search/);
-    assert.match(doc, /python3 scripts\/ktx_booking\.py reserve/);
-    assert.match(doc, /python3 scripts\/ktx_booking\.py reservations/);
-    assert.match(doc, /python3 scripts\/ktx_booking\.py cancel/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- search/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- reserve/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- reservations/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- cancel/);
     assert.match(doc, /train_id/);
     assert.match(doc, /--train-id/);
     assert.match(doc, /--include-no-seats/);
@@ -2086,7 +2086,10 @@ test("fine-dust-location skill documents the official two-api flow and fallback 
   assert.match(skill, /k-skill-proxy\.nomadamas\.org\/v1\/fine-dust\/report/);
   assert.match(skill, /행정구역 이름/u);
   assert.match(skill, /강남구/);
-  assert.match(skill, /python3 scripts\/fine_dust\.py/);
+  assert.match(
+    skill,
+    /@nomadamas\/k-skill@0 exec fine-dust-location scripts\/fine_dust\.py --/,
+  );
   assert.match(skill, /docs\/features\/fine-dust-location\.md/);
   assert.match(skill, /docs\/features\/k-skill-proxy\.md/);
   assert.match(skill, /PM10/);
@@ -2104,7 +2107,10 @@ test("fine-dust-location skill documents the official two-api flow and fallback 
     assert.match(doc, /fallback|폴백|대체 흐름/i);
     assert.match(doc, /후보 측정소|candidate_stations/);
     assert.match(doc, /조회 시각|조회 시점/);
-    assert.match(doc, /python3 scripts\/fine_dust\.py/);
+    assert.match(
+      doc,
+      /@nomadamas\/k-skill@0 exec fine-dust-location scripts\/fine_dust\.py --/,
+    );
   }
 });
 

@@ -11,6 +11,11 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec fine-dust-location scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path fine-dust-location <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # Fine Dust By Location
 
 ## What this skill does
@@ -49,7 +54,7 @@ curl -fsS --get 'https://k-skill-proxy.nomadamas.org/v1/fine-dust/report' \
 스크립트 helper 도 같은 report endpoint 를 기본 경로로 사용한다.
 
 ```bash
-python3 scripts/fine_dust.py report --region-hint '서울 강남구' --json
+npx -y @nomadamas/k-skill@0 exec fine-dust-location scripts/fine_dust.py -- report --region-hint '서울 강남구' --json
 ```
 
 ## Ambiguous locations

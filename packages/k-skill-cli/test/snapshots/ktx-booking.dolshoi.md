@@ -13,6 +13,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When booking is requested, continue past search results: use vault-backed login on the official surface, select the requested date/slot/seat, and complete reversible reservation or hold steps instead of stopping at a link.
 - A successful reversible reservation or seat hold is a completed booking step: report the confirmation and any purchase deadline. If payment is required, call `clarify` with the exact itinerary/slot, party, seat/option, and total, then pay after approval and verify the receipt.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path ktx-booking <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # KTX Booking
 
 ## What this skill does
@@ -88,13 +93,13 @@ python3 -m pip install korail2-ncard pycryptodome
 항상 helper 를 통해 조회한다.
 
 ```bash
-python3 scripts/ktx_booking.py search 서울 부산 20260328 090000 --limit 5
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- search 서울 부산 20260328 090000 --limit 5
 ```
 
 기본 `--train-type` 은 `ktx` 다. ITX-청춘(예: 남춘천↔용산)·ITX-새마을·무궁화호처럼 KTX 외 노선을 잡으려면 `--train-type` 으로 지정한다.
 
 ```bash
-python3 scripts/ktx_booking.py search 남춘천 용산 20260503 150000 --train-type itx-cheongchun
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- search 남춘천 용산 20260503 150000 --train-type itx-cheongchun
 ```
 
 선택지: `ktx`, `itx-saemaeul`, `mugunghwa`, `nuriro`, `tonggeun`, `itx-cheongchun`, `airport`, `all`.
@@ -121,19 +126,19 @@ python3 scripts/ktx_booking.py search 남춘천 용산 20260503 150000 --train-t
 기본 상세 좌석 조회:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id>
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id>
 ```
 
 일반실/특실은 `--room` 으로 나눈다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --room special
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --room special
 ```
 
 남은 좌석번호만 보고 싶으면 `--available-only` 를 쓴다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --available-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --available-only
 ```
 
 특정 호차를 지정하지 않으면 `seats` 는 **5호차를 최우선**으로 탐색한다. 5호차가 없으면 5호차와의 거리가 가까운 호차 순으로, 같은 거리에서는 낮은 호차 번호 순으로 탐색한다(예: 1~8호차 편성은 `5, 4, 6, 3, 7, 2, 8, 1`, 1~4호차 편성은 `4, 3, 2, 1`). 일반 KTX, KTX-산천(분류 코드 07·10), KTX-청룡 모두 같은 규칙을 적용한다. 각 호차 안의 좌석은 콘센트 힌트가 있는 좌석(`direct`, `adjacent`)을 먼저, 같은 조건에서는 순방향 좌석을 먼저 보여준다.
@@ -141,19 +146,19 @@ python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <t
 특정 호차만 확인하려면 `--car-no` 를 쓴다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --car-no 5 --available-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --car-no 5 --available-only
 ```
 
 콘센트 꿀팁 자리부터 확인하려면 `--power-only` 를 붙인다. 응답의 `power_outlet` 은 `direct`, `adjacent`, `none` 중 하나다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --available-only --power-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --available-only --power-only
 ```
 
 `seats` 도 `search` 와 같은 `--train-type` 을 넘겨야 한다. ITX-청춘 등 KTX 외 열차를 조회했다면 상세 좌석 조회에도 같은 값을 사용한다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 남춘천 용산 20260503 150000 \
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 남춘천 용산 20260503 150000 \
   --train-id <train_id> \
   --train-type itx-cheongchun \
   --available-only
@@ -174,13 +179,13 @@ python3 scripts/ktx_booking.py seats 남춘천 용산 20260503 150000 \
 조회 결과의 `train_id` 를 고른 뒤에만 예약한다. 이 값은 helper 가 열차 번호/운행일/시각/역 코드를 묶어 만든 stable selector 이므로, 재조회 시 같은 열차가 아직 있으면 그대로 잡고 없으면 실패한다.
 
 ```bash
-python3 scripts/ktx_booking.py reserve 서울 부산 20260328 090000 --train-id <train_id> --seat-option general-first
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reserve 서울 부산 20260328 090000 --train-id <train_id> --seat-option general-first
 ```
 
 ITX 등 KTX 외 노선을 search 단계에서 골랐다면 reserve 에도 똑같이 `--train-type` 을 넘긴다.
 
 ```bash
-python3 scripts/ktx_booking.py reserve 남춘천 용산 20260503 150000 --train-id <train_id> --train-type itx-cheongchun --seat-option general-first
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reserve 남춘천 용산 20260503 150000 --train-id <train_id> --train-type itx-cheongchun --seat-option general-first
 ```
 
 응답에는 예약번호, 운임, 구입기한이 포함된다. 이 시점에 **좌석 확보는 완료되었다**고 안내한다. generic fallback에서는 결제를 handoff하고, 돌쇠에서는 아래 결제 단계로 계속 진행한다.
@@ -191,19 +196,19 @@ python3 scripts/ktx_booking.py reserve 남춘천 용산 20260503 150000 --train-
 N카드 할인을 적용하려면 먼저 보유 N카드 목록을 조회해 카드 번호를 확인한다.
 
 ```bash
-python3 scripts/ktx_booking.py ncard-list
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- ncard-list
 ```
 
 N카드로 할인 열차를 조회한다 (`--ncard-index` 는 `ncard-list` 결과의 순번). `ncard-list` 는 로그/셸 노출을 줄이기 위해 카드 번호를 마스킹해 출력한다.
 
 ```bash
-python3 scripts/ktx_booking.py ncard-search 대전 서울 20260512 100000 --ncard-index 1 --train-type ktx
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- ncard-search 대전 서울 20260512 100000 --ncard-index 1 --train-type ktx
 ```
 
 응답의 `train_id` 를 복사해 `reserve` 에 같은 `--ncard-index` 를 붙여 예약한다.
 
 ```bash
-python3 scripts/ktx_booking.py reserve 대전 서울 20260512 100000 \
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reserve 대전 서울 20260512 100000 \
   --train-id <train_id> \
   --ncard-index 1
 ```
@@ -228,13 +233,13 @@ N카드 기능은 `korail2-ncard` 패키지가 필요하다. 없으면 해당 �
 취소는 대상 예약을 다시 조회해 식별한 뒤에만 진행한다.
 
 ```bash
-python3 scripts/ktx_booking.py reservations
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reservations
 ```
 
 취소 실행 직전에 `clarify`로 예약번호, 열차, 날짜·시각, 승객, 환불/위약금 정보를 확인하고 승인받는다.
 
 ```bash
-python3 scripts/ktx_booking.py cancel <reservation_id>
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- cancel <reservation_id>
 ```
 
 ## Done when

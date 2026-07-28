@@ -167,7 +167,7 @@ else
 fi
 ```
 
-repo 전체를 clone받은 경우에는 같은 검증을 `bash scripts/check-setup.sh` 로 실행해도 된다.
+repo 전체를 clone받은 경우에는 같은 검증을 `npx -y @nomadamas/k-skill@0 exec k-skill-setup scripts/check-setup.sh --` 로 실행해도 된다.
 
 ### 3. Offer scheduled update checks
 

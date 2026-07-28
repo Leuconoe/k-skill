@@ -251,6 +251,7 @@ function bundledFiles(skillName) {
     while (stack.length) {
       const currentDir = stack.pop();
       for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+        if (entry.name === "__pycache__" || entry.name.startsWith(".") || entry.name.endsWith(".pyc")) continue;
         const full = path.join(currentDir, entry.name);
         if (entry.isDirectory()) stack.push(full);
         else results.push(full);

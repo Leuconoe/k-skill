@@ -36,7 +36,7 @@ curl -fsS --get 'https://k-skill-proxy.nomadamas.org/v1/fine-dust/report' \
 스크립트 helper 도 같은 report endpoint 를 기본 경로로 사용한다.
 
 ```bash
-python3 scripts/fine_dust.py report --region-hint '서울 강남구' --json
+npx -y @nomadamas/k-skill@0 exec fine-dust-location scripts/fine_dust.py -- report --region-hint '서울 강남구' --json
 ```
 
 ## Ambiguous locations

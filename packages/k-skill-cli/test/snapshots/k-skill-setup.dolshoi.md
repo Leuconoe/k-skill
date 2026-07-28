@@ -14,6 +14,11 @@ Runtime mode: dolshoi (CloakBrowser available)
 - This skill operates or configures the k-skill installation itself. Inspect current state, apply the requested reversible setup/update/repair operation, and verify the installed CLI, skill directories, browser runtime, proxy connectivity, and credential-provider integration that the request covers.
 - Do not change unrelated user configuration. Before deleting data, replacing user-managed files, changing persistent update automation, or performing another irreversible operation, call `clarify` with the exact paths and effect.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec k-skill-setup scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path k-skill-setup <relative-path>` only when another tool explicitly requires a filesystem path.
+
 # k-skill Setup
 
 ## Purpose
@@ -183,7 +188,7 @@ else
 fi
 ```
 
-repo 전체를 clone받은 경우에는 같은 검증을 `bash scripts/check-setup.sh` 로 실행해도 된다.
+repo 전체를 clone받은 경우에는 같은 검증을 `npx -y @nomadamas/k-skill@0 exec k-skill-setup scripts/check-setup.sh --` 로 실행해도 된다.
 
 ### 3. Offer scheduled update checks
 
