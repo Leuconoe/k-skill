@@ -203,7 +203,7 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
     .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
     .sort();
 
-  assert.equal(skillDirs.length, 122);
+  assert.equal(skillDirs.length, 123);
 
   for (const skillName of skillDirs) {
     const skill = readRaw(path.join(skillName, "SKILL.md"));
@@ -4485,6 +4485,7 @@ const README_SKILL_NAME_COLUMN_MAPPING = [
   ["네이버 블로그 리서치", "naver-blog-research"],
   ["네이버 쇼핑 가격비교", "naver-shopping-search"],
   ["네이버 뉴스 검색", "naver-news-search"],
+  ["한국일보 뉴스 조회", "hankookilbo-news"],
   ["한국어 글자 수 세기", "korean-character-count"],
   ["한국어 유행어 글쓰기", "korean-slang-writing"],
   ["K-스킬 클리너", "k-skill-cleaner"],

@@ -54,6 +54,7 @@
 | `gongsijiga-search` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `gov-overseas-trip-report` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `han-river-water-level` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
+| `hankookilbo-news` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `highway-traffic-status` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `hipass-receipt` | `account` | 지원되는 계정 작업 수행 → 비가역 변경 직전 `clarify` |
 | `hola-poke-yeoksam` | `commerce` | 공식 상품 선택 → 장바구니/checkout 준비 → `clarify` 후 주문·결제 |
