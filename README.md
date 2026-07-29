@@ -19,6 +19,59 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 자세한 실행 계약은 [돌쇠 런타임 문서](docs/dolshoi-runtime.md)를 참고하세요.
 
+## 설치와 실행 구조
+
+사용자 관점의 스킬 설치 방법은 기존과 같습니다. Vercel Agent Skills 호환
+설치 도구로 전체 또는 개별 스킬을 설치합니다.
+
+```bash
+# 전체 설치
+npx --yes skills add NomaDamas/k-skill --all -g
+
+# 개별 설치
+npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
+```
+
+달라진 점은 설치된 `SKILL.md`가 긴 instruction 본문을 직접 포함하지 않고,
+`@nomadamas/k-skill` CLI를 호출하는 얇은 어댑터라는 것입니다.
+
+```text
+에이전트가 srt-booking 선택
+→ SKILL.md의 어댑터 instruction 로드
+→ npx -y @nomadamas/k-skill@0 instruct srt-booking
+→ 현재 런타임에 맞는 generic 또는 Dolshoi instruction 조립
+→ 필요한 helper scripts/references는 같은 npm 패키지에서 제공
+```
+
+따라서 다음 조건이 필요합니다.
+
+- Node.js 18 이상과 `npx`
+- npm registry(`registry.npmjs.org`) 접근
+- 별도의 `@nomadamas/k-skill` 전역 설치는 필요 없음
+
+CLI를 직접 확인하려면:
+
+```bash
+npx -y @nomadamas/k-skill@0 list
+npx -y @nomadamas/k-skill@0 instruct srt-booking
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- --help
+npx -y @nomadamas/k-skill@0 read kosis-stats references/kosis-openapi-guide.md
+```
+
+반복 사용이나 npm 접근이 제한되는 환경에서는 선택적으로 major 버전을
+전역 설치할 수 있습니다.
+
+```bash
+npm install -g @nomadamas/k-skill@0
+k-skill instruct srt-booking
+k-skill exec kosis-stats scripts/run_kosis_stats.py -- --help
+```
+
+`@0`은 호환되는 최신 `0.x` CLI를 사용한다는 의미입니다. 스킬 디렉터리를
+다시 설치하지 않아도 CLI instruction과 번들 helper를 독립적으로 업데이트할
+수 있습니다. 전체 설치 방법과 에이전트별 경로는 [설치 방법](docs/install.md)을
+참고하세요.
+
 ## 잠깐만~~~
 
 한국인이면 깃허브 스타 눌러줍시다.
@@ -34,8 +87,8 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 | --- | --- | --- | --- | --- |
 | SRT 예매 | `srt-booking` | SRT 열차 조회·좌석 확인·예약·취소, 돌쇠에서는 좌석 확보 안내 후 승인 기반 결제까지 | 필요 | [SRT 예매 가이드](docs/features/srt-booking.md) |
 | KTX 예매 | `ktx-booking` | KTX/Korail 좌석번호·콘센트 좌석 확인·예약·취소, 돌쇠에서는 좌석 확보 안내 후 승인 기반 결제까지 | 필요 | [KTX 예매 가이드](docs/features/ktx-booking.md) |
-| 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점, 돌쇠에서는 승인 기반 공식 결제까지 | 불필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
-| 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점, 돌쇠에서는 승인 기반 공식 결제까지 | 불필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
+| 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점, 돌쇠에서는 vault-backed login과 승인 기반 공식 결제까지 | 필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
+| 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점, 돌쇠에서는 vault-backed login과 승인 기반 공식 결제까지 | 필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
 | 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 빈 객실 조회, 돌쇠에서는 공식 예약과 승인 기반 결제까지 | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
 | 카카오톡 Mac 아카이브 검색 | `kakaotalk-mac` | `katok`으로 macOS 카카오톡 로컬 아카이브를 동기화하고 keyword/BM25/semantic 검색 | 불필요(로컬 앱/권한 필요) | [카카오톡 Mac 아카이브 검색](docs/features/kakaotalk-mac.md) |
 | 서울 지하철 도착정보 조회 | `seoul-subway-arrival` | 서울 지하철 역 기준 실시간 도착 예정 열차 확인 | 불필요 | [서울 지하철 도착정보 가이드](docs/features/seoul-subway-arrival.md) |

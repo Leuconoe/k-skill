@@ -36,19 +36,19 @@
 ### 기본 검색
 
 ```bash
-python3 scripts/sillok_search.py --query "훈민정음"
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "훈민정음"
 ```
 
 ### 왕 + 연도 필터
 
 ```bash
-python3 scripts/sillok_search.py --query "훈민정음" --king "세종" --year 1443 --limit 3
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "훈민정음" --king "세종" --year 1443 --limit 3
 ```
 
 ### 원문 검색
 
 ```bash
-python3 scripts/sillok_search.py --query "훈민정음" --type w --limit 3
+npx -y @nomadamas/k-skill@0 exec joseon-sillok-search scripts/sillok_search.py -- --query "훈민정음" --type w --limit 3
 ```
 
 ## 응답 예시 포맷

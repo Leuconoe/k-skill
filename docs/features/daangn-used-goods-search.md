@@ -19,8 +19,8 @@
 ## 로컬 실행
 
 ```bash
-python3 daangn-used-goods-search/scripts/daangn_used_goods.py search "맥북" --region "합정동" --limit 5
-python3 daangn-used-goods-search/scripts/daangn_used_goods.py detail "https://www.daangn.com/kr/buy-sell/.../"
+npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/daangn_used_goods.py -- search "맥북" --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/daangn_used_goods.py -- detail "https://www.daangn.com/kr/buy-sell/.../"
 ```
 
 ## 지역 필터

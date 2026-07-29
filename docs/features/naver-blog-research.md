@@ -38,20 +38,20 @@
 블로그 검색:
 
 ```bash
-python3 scripts/naver_search.py "제주도 여행 코스" --count 5 --sort sim
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_search.py -- "제주도 여행 코스" --count 5 --sort sim
 ```
 
 블로그 원문 읽기:
 
 ```bash
-python3 scripts/naver_read.py "https://blog.naver.com/user123/224212849946"
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_read.py -- "https://blog.naver.com/user123/224212849946"
 ```
 
 이미지 다운로드:
 
 ```bash
-python3 scripts/naver_read.py "https://blog.naver.com/user123/224212849946" \
-  | python3 scripts/naver_download_images.py --output ./images/ --max 5
+npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_read.py -- "https://blog.naver.com/user123/224212849946" \
+  | npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/naver_download_images.py -- --output ./images/ --max 5
 ```
 
 ## 주의 사항

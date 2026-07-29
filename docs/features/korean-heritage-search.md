@@ -39,19 +39,19 @@
 ### 국가유산명 검색
 
 ```bash
-python3 scripts/korean_heritage_search.py search --query "경복궁" --region 서울 --limit 5
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- search --query "경복궁" --region 서울 --limit 5
 ```
 
 ### 지역 검색
 
 ```bash
-python3 scripts/korean_heritage_search.py search --region 전북 --limit 10
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- search --region 전북 --limit 10
 ```
 
 ### 상세 조회
 
 ```bash
-python3 scripts/korean_heritage_search.py detail \
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- detail \
   --ccba-kdcd 11 \
   --ccba-asno 0000010000000 \
   --ccba-ctcd 11
@@ -60,7 +60,7 @@ python3 scripts/korean_heritage_search.py detail \
 ### 월별 행사 조회
 
 ```bash
-python3 scripts/korean_heritage_search.py events \
+npx -y @nomadamas/k-skill@0 exec korean-heritage-search scripts/korean_heritage_search.py -- events \
   --year 2026 \
   --month 7 \
   --region 서울 \

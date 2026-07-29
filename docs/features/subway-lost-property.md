@@ -43,7 +43,7 @@ LOST112에서 실제로 중요한 검색 조건은 아래와 같다.
 ## 예시
 
 ```bash
-python3 scripts/subway_lost_property.py \
+npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/subway_lost_property.py -- \
   --station 강남역 \
   --item 지갑 \
   --days 14
@@ -52,7 +52,7 @@ python3 scripts/subway_lost_property.py \
 live reachability 확인까지 하려면:
 
 ```bash
-python3 scripts/subway_lost_property.py \
+npx -y @nomadamas/k-skill@0 exec subway-lost-property scripts/subway_lost_property.py -- \
   --station 강남역 \
   --item 지갑 \
   --days 14 \

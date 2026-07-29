@@ -66,7 +66,7 @@
 조회:
 
 ```bash
-python3 scripts/ktx_booking.py search 서울 부산 20260328 090000 --limit 5
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- search 서울 부산 20260328 090000 --limit 5
 ```
 
 좌석이 없는 열차까지 같이 보고 싶으면 `--include-no-seats`, 예약 대기 가능 열차도 같이 보고 싶으면 `--include-waiting-list` 를 붙인다.
@@ -76,13 +76,13 @@ python3 scripts/ktx_booking.py search 서울 부산 20260328 090000 --limit 5
 상세 좌석 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id>
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id>
 ```
 
 남은 좌석번호만 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --available-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --available-only
 ```
 
 특정 호차를 지정하지 않으면 `seats` 는 5호차를 최우선으로 탐색한다. 5호차가 없으면 5호차와의 거리가 가까운 호차 순, 같은 거리에서는 낮은 호차 번호 순으로 탐색한다(예: 1~8호차 편성은 `5, 4, 6, 3, 7, 2, 8, 1`). 각 호차 안에서는 콘센트 힌트가 있는 좌석을 먼저, 같은 조건에서는 순방향 좌석을 먼저 반환한다.
@@ -90,19 +90,19 @@ python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <t
 특정 호차의 남은 좌석만 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --car-no 5 --available-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --car-no 5 --available-only
 ```
 
 콘센트 꿀팁 좌석부터 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --available-only --power-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --available-only --power-only
 ```
 
 특실 좌석을 확인하려면 `--room special`, KTX 외 열차를 조회했다면 `search` 와 같은 `--train-type` 을 함께 넘긴다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 남춘천 용산 20260503 150000 \
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 남춘천 용산 20260503 150000 \
   --train-id <train_id> \
   --train-type itx-cheongchun \
   --available-only
@@ -113,7 +113,7 @@ python3 scripts/ktx_booking.py seats 남춘천 용산 20260503 150000 \
 예약:
 
 ```bash
-python3 scripts/ktx_booking.py reserve 서울 부산 20260328 090000 --train-id <train_id> --seat-option general-first
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reserve 서울 부산 20260328 090000 --train-id <train_id> --seat-option general-first
 ```
 
 좌석이 없을 때 예약 대기까지 시도하려면 조회 단계에서도 `--include-waiting-list` 를 켜고, 예약 단계에서 `--try-waiting` 을 추가한다.
@@ -121,13 +121,13 @@ python3 scripts/ktx_booking.py reserve 서울 부산 20260328 090000 --train-id 
 예약 확인:
 
 ```bash
-python3 scripts/ktx_booking.py reservations
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reservations
 ```
 
 취소:
 
 ```bash
-python3 scripts/ktx_booking.py cancel <reservation_id>
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- cancel <reservation_id>
 ```
 
 응답은 JSON 으로 나오며 예약번호, 구입기한, 운임 확인에 바로 쓸 수 있다. 이 시점에 **좌석 확보는 완료**되었음을 안내한다.

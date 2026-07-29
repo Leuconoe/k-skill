@@ -51,7 +51,7 @@
 ### 재단 장학금만 + 학부생 + 5구간 이하 + 200만원 이상
 
 ```bash
-python3 scripts/scholarship_filter.py filter \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- filter \
   --input scholarships.json \
   --org-type foundation \
   --student-level undergraduate \
@@ -62,7 +62,7 @@ python3 scripts/scholarship_filter.py filter \
 ### 내 조건으로 지원 가능 여부 판정
 
 ```bash
-python3 scripts/scholarship_filter.py eligibility \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- eligibility \
   --input scholarships.json \
   --school-name "서울대학교" \
   --student-level undergraduate \
@@ -74,7 +74,7 @@ python3 scripts/scholarship_filter.py eligibility \
 KST 기준 readable report:
 
 ```bash
-python3 scripts/scholarship_filter.py report \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/scholarship_filter.py -- report \
   --input scholarships.json \
   --today 2026-04-14 \
   --only-open-now
@@ -83,7 +83,7 @@ python3 scripts/scholarship_filter.py report \
 학교별 exhaustive query plan 생성:
 
 ```bash
-python3 scripts/university_search_plan.py \
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/university_search_plan.py -- \
   --school-name "부산대학교" \
   --department "컴퓨터공학과" \
   --year 2026
@@ -92,7 +92,7 @@ python3 scripts/university_search_plan.py \
 전국 대학 sweep query 생성:
 
 ```bash
-python3 scripts/university_search_plan.py --nationwide --year 2026
+npx -y @nomadamas/k-skill@0 exec korean-scholarship-search scripts/university_search_plan.py -- --nationwide --year 2026
 ```
 
 ## 바로 쓸 프롬프트 예시

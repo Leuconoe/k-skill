@@ -3,8 +3,8 @@
 `keris-academic-search`는 RISS 검색 Open API(`https://www.riss.kr/openApi`)의 XML 메타데이터를 조회하는 stdlib Python helper다. RISS 검색 API는 기관/대학 전용 인증키를 요구하므로 이 스킬은 `k-skill-proxy`를 사용하지 않고 사용자 본인의 RISS 키로 상류를 직접 호출한다.
 
 ```bash
-python3 keris-academic-search/scripts/keris_academic.py search --keyword '인공지능 교육'
-python3 keris-academic-search/scripts/keris_academic.py search --title '대학도서관' --resource-type B --json
+npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/keris_academic.py -- search --keyword '인공지능 교육'
+npx -y @nomadamas/k-skill@0 exec keris-academic-search scripts/keris_academic.py -- search --title '대학도서관' --resource-type B --json
 ```
 
 `keyword`, `title`, `author`, `subject`, `publisher` 중 하나 이상과 `resourceType=ALL|T|A|D|B`, `page`, `pageSize(1~100)`를 받는다. `ALL`은 공식 `T/A/O/U/F/S`, `A`는 `A/O`, `D`는 국내 학술논문 `A`, `B`는 단행본 `U`로 매핑한다. 여러 type을 합치는 `ALL`/`A`는 첫 페이지 결과를 round-robin으로 합치며 upstream을 type 수만큼 호출한다. 후속 페이지는 단일 type을 선택해야 한다.

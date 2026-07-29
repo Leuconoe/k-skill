@@ -30,7 +30,7 @@
 짧은 문장:
 
 ```bash
-python3 scripts/korean_spell_check.py \
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- \
   --text "아버지가방에들어가신다." \
   --format text
 ```
@@ -38,7 +38,7 @@ python3 scripts/korean_spell_check.py \
 Markdown 파일:
 
 ```bash
-python3 scripts/korean_spell_check.py \
+npx -y @nomadamas/k-skill@0 exec korean-spell-check scripts/korean_spell_check.py -- \
   --file README.md \
   --max-chars 1500 \
   --throttle-seconds 1.2 \

@@ -13,13 +13,13 @@
 
 ```bash
 # 경부선 소통 요약
-python3 highway-traffic-status/scripts/highway_traffic.py traffic --route 경부 --text
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- traffic --route 경부 --text
 
 # 서울TG 구간만, JSON
-python3 highway-traffic-status/scripts/highway_traffic.py traffic --keyword 서울 --limit 10
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- traffic --keyword 서울 --limit 10
 
 # 판교 근처 CCTV
-python3 highway-traffic-status/scripts/highway_traffic.py cctv \
+npx -y @nomadamas/k-skill@0 exec highway-traffic-status scripts/highway_traffic.py -- cctv \
   --min-x 126.9 --max-x 127.2 --min-y 37.3 --max-y 37.6 --text
 ```
 
