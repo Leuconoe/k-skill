@@ -9,68 +9,17 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 추가 클라이언트 API 레이어는 불필요합니다. 필요한 경우 `k-skill-proxy` 같은 프록시 서버에 HTTP 요청만 넣으면 됩니다.
 
-## 돌쇠 우선, 모든 에이전트 호환
-
-- 돌쇠 credential action broker가 있으면 ID/PW/API key를 채팅으로 받지 않고 Bitwarden/Vaultwarden 기반 vault capability(`vault-run`)를 사용합니다. credential이 없으면 앱의 `request_vault_credential` 입력 UI를 호출합니다.
-- 돌쇠의 브라우저 작업은 내장 CloakBrowser를 최우선으로 사용합니다.
-- 사용자가 구매·예약·신청·연락 같은 행동을 요청하면 조회 링크에서 멈추지 않고 공식 표면의 실제 액션까지 진행합니다.
-- 결제, 메시지/메일 전송, 최종 제출, 취소 같은 비가역 작업 직전에는 `clarify`로 정확한 대상·금액/payload·효과를 승인받습니다.
-- 돌쇠가 아니면 기존 환경변수/`~/.config/k-skill/secrets.env`, `k-skill-browser-runtime`, typed handoff 흐름으로 그대로 동작합니다.
-
-자세한 실행 계약은 [돌쇠 런타임 문서](docs/dolshoi-runtime.md)를 참고하세요.
-
-## 설치와 실행 구조
-
-사용자 관점의 스킬 설치 방법은 기존과 같습니다. Vercel Agent Skills 호환
-설치 도구로 전체 또는 개별 스킬을 설치합니다.
+## 설치
 
 ```bash
-# 전체 설치
+# 전체 스킬 설치
 npx --yes skills add NomaDamas/k-skill --all -g
 
-# 개별 설치
+# 특정 스킬만 설치
 npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 ```
 
-달라진 점은 설치된 `SKILL.md`가 긴 instruction 본문을 직접 포함하지 않고,
-`@nomadamas/k-skill` CLI를 호출하는 얇은 어댑터라는 것입니다.
-
-```text
-에이전트가 srt-booking 선택
-→ SKILL.md의 어댑터 instruction 로드
-→ npx -y @nomadamas/k-skill@0 instruct srt-booking
-→ 현재 런타임에 맞는 generic 또는 Dolshoi instruction 조립
-→ 필요한 helper scripts/references는 같은 npm 패키지에서 제공
-```
-
-따라서 다음 조건이 필요합니다.
-
-- Node.js 18 이상과 `npx`
-- npm registry(`registry.npmjs.org`) 접근
-- 별도의 `@nomadamas/k-skill` 전역 설치는 필요 없음
-
-CLI를 직접 확인하려면:
-
-```bash
-npx -y @nomadamas/k-skill@0 list
-npx -y @nomadamas/k-skill@0 instruct srt-booking
-npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- --help
-npx -y @nomadamas/k-skill@0 read kosis-stats references/kosis-openapi-guide.md
-```
-
-반복 사용이나 npm 접근이 제한되는 환경에서는 선택적으로 major 버전을
-전역 설치할 수 있습니다.
-
-```bash
-npm install -g @nomadamas/k-skill@0
-k-skill instruct srt-booking
-k-skill exec kosis-stats scripts/run_kosis_stats.py -- --help
-```
-
-`@0`은 호환되는 최신 `0.x` CLI를 사용한다는 의미입니다. 스킬 디렉터리를
-다시 설치하지 않아도 CLI instruction과 번들 helper를 독립적으로 업데이트할
-수 있습니다. 전체 설치 방법과 에이전트별 경로는 [설치 방법](docs/install.md)을
-참고하세요.
+Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아래 마켓플레이스로도 설치할 수 있습니다. 자세한 방법은 [설치 방법](docs/install.md)을 참고하세요.
 
 ## 잠깐만~~~
 
@@ -85,11 +34,11 @@ k-skill exec kosis-stats scripts/run_kosis_stats.py -- --help
 
 | 할 수 있는 일 | 스킬 이름 | 설명 | 사용자 로그인 | 문서 |
 | --- | --- | --- | --- | --- |
-| SRT 예매 | `srt-booking` | SRT 열차 조회·좌석 확인·예약·취소, 돌쇠에서는 좌석 확보 안내 후 승인 기반 결제까지 | 필요 | [SRT 예매 가이드](docs/features/srt-booking.md) |
-| KTX 예매 | `ktx-booking` | KTX/Korail 좌석번호·콘센트 좌석 확인·예약·취소, 돌쇠에서는 좌석 확보 안내 후 승인 기반 결제까지 | 필요 | [KTX 예매 가이드](docs/features/ktx-booking.md) |
-| 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점, 돌쇠에서는 vault-backed login과 승인 기반 공식 결제까지 | 필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
-| 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점, 돌쇠에서는 vault-backed login과 승인 기반 공식 결제까지 | 필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
-| 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 빈 객실 조회, 돌쇠에서는 공식 예약과 승인 기반 결제까지 | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
+| SRT 예매 | `srt-booking` | SRT 열차 조회·좌석 확인·예약·취소 | 필요 | [SRT 예매 가이드](docs/features/srt-booking.md) |
+| KTX 예매 | `ktx-booking` | KTX/Korail 좌석번호·콘센트 좌석 확인·예약·취소 | 필요 | [KTX 예매 가이드](docs/features/ktx-booking.md) |
+| 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
+| 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
+| 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 빈 객실 조회와 예약 지원 | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
 | 카카오톡 Mac 아카이브 검색 | `kakaotalk-mac` | `katok`으로 macOS 카카오톡 로컬 아카이브를 동기화하고 keyword/BM25/semantic 검색 | 불필요(로컬 앱/권한 필요) | [카카오톡 Mac 아카이브 검색](docs/features/kakaotalk-mac.md) |
 | 서울 지하철 도착정보 조회 | `seoul-subway-arrival` | 서울 지하철 역 기준 실시간 도착 예정 열차 확인 | 불필요 | [서울 지하철 도착정보 가이드](docs/features/seoul-subway-arrival.md) |
 | 서울 실시간 혼잡도 조회 | `seoul-density` | 서울 주요 121개 핫스팟의 실시간 혼잡도 단계와 추정 인구 조회 | 불필요 | [서울 실시간 혼잡도 가이드](docs/features/seoul-density.md) |
@@ -129,7 +78,7 @@ k-skill exec kosis-stats scripts/run_kosis_stats.py -- --help
 | S2B 학교장터 공고 조회 | `s2b-notice-search` | S2B 학교장터 공개 고객 공고/견적요청 화면을 브라우저 우선으로 조회하고 목록·상세 HTML fixture를 파싱 | 불필요 | [S2B 학교장터 공고 조회 가이드](docs/features/s2b-notice-search.md) |
 | LH 청약 공고문 조회 | `lh-notice-search` | 한국토지주택공사(LH) 임대/분양/주거복지(신혼희망타운)/토지/상가 공고를 지역·상태·공고유형·키워드로 조회하고 마감 여부를 KST 기준으로 표시 | 불필요 | [LH 청약 공고문 조회 가이드](docs/features/lh-notice-search.md) |
 | 법원 경매 부동산 매각공고 조회 | `court-auction-notice-search` | 대법원경매정보(courtauction.go.kr) 부동산 매각공고를 매각기일·법원·기일/기간 입찰 조건으로 검색해 사건번호·용도·주소·감정평가액·최저매각가격을 펼치고, 사건번호로 직접 사건정보·물건내역·매각기일이력을 조회 | 불필요 | [법원 경매 부동산 매각공고 조회 가이드](docs/features/court-auction-notice-search.md) |
-| 기부처 조회 | `donation-place-search` | 지역·관심 분야 기준 기부처 후보 조회, 돌쇠에서는 공식 후원 신청과 승인 기반 결제까지 | 불필요 | [기부처 조회 가이드](docs/features/donation-place-search.md) |
+| 기부처 조회 | `donation-place-search` | 지역·관심 분야 기준 기부처 후보 조회와 공식 후원 신청 지원 | 불필요 | [기부처 조회 가이드](docs/features/donation-place-search.md) |
 | 장학금 검색 및 조회 | `korean-scholarship-search` | 한국장학재단·전국 대학교·재단·기업 장학 공고를 검색해 금액·자격·지원구간·링크를 정리하고 KST 기준 현재 날짜 마감 상태와 조건별 필터링까지 제공 | 불필요 | [장학금 검색 및 조회 가이드](docs/features/korean-scholarship-search.md) |
 | 생활쓰레기 배출정보 조회 | `household-waste-info` | 시군구 기준 생활쓰레기·음식물·재활용 배출요일·시간·장소·관리부서 확인 | 불필요 | [생활쓰레기 배출정보 조회 가이드](docs/features/household-waste-info.md) |
 | 학교 급식 식단 조회 | `k-schoollunch-menu` | 교육청·학교명으로 NEIS 학교 검색·급식 식단 조회 | 불필요 | [학교 급식 식단 조회 가이드](docs/features/k-schoollunch-menu.md) |
