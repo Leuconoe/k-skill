@@ -28,7 +28,14 @@ const sampleNextData = {
           mainImage: "https://image2.gnsister.com/images/hospital/main.jpg",
           supportingLangList: ["ko", "ja", "en"],
           assessmentState: "EFFORT",
-          sido: "서울"
+          sido: "서울",
+          districtName: "신논현역",
+          subwayStationName: "신논현역 9호선",
+          latitude: "37.5001",
+          longitude: 127.0252,
+          distanceWithUnit: " 450m ",
+          integratedReviewCount: 1001,
+          eventCount: 17
         },
         {
           id: 543,
@@ -126,7 +133,7 @@ test("parseNextData classifies login, captcha, blocked, and empty-shell failures
   assert.throws(() => parseNextData("<html></html>"), /next data/i)
 })
 
-test("normalizeHospital publishes stable public clinic fields only", () => {
+test("normalizeHospital publishes stable public proximity fields only", () => {
   assert.deepEqual(normalizeHospital(sampleNextData.props.pageProps.hospitals[0]), {
     id: 347,
     name: "강남삼성성형외과의원",
@@ -137,9 +144,28 @@ test("normalizeHospital publishes stable public clinic fields only", () => {
     languages: ["ko", "ja", "en"],
     assessmentState: "EFFORT",
     sido: "서울",
+    district: "신논현역",
+    subwayStation: "신논현역 9호선",
+    latitude: 37.5001,
+    longitude: 127.0252,
+    distanceWithUnit: "450m",
+    integratedReviewCount: 1001,
+    eventCount: 17,
     profileImage: "https://image2.gnsister.com/images/hospital/profile/sample.jpg",
     mainImage: "https://image2.gnsister.com/images/hospital/main.jpg",
     url: "https://www.gangnamunni.com/hospitals/347"
+  })
+
+  assert.deepEqual(normalizeHospital({
+    id: 1,
+    name: "좌표 미제공 병원",
+    latitude: null,
+    longitude: "",
+    distanceWithUnit: null
+  }), {
+    id: 1,
+    name: "좌표 미제공 병원",
+    url: "https://www.gangnamunni.com/hospitals/1"
   })
 })
 

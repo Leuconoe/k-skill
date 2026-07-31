@@ -138,6 +138,13 @@ function normalizeHospital(hospital) {
     languages: Array.isArray(hospital && hospital.supportingLangList) ? hospital.supportingLangList.filter(Boolean) : [],
     assessmentState: cleanText(hospital && hospital.assessmentState),
     sido: cleanText(hospital && hospital.sido),
+    district: cleanText(hospital && hospital.districtName),
+    subwayStation: cleanText(hospital && hospital.subwayStationName),
+    latitude: numericOrNull(hospital && hospital.latitude),
+    longitude: numericOrNull(hospital && hospital.longitude),
+    distanceWithUnit: cleanText(hospital && hospital.distanceWithUnit),
+    integratedReviewCount: numericOrNull(hospital && hospital.integratedReviewCount),
+    eventCount: numericOrNull(hospital && hospital.eventCount),
     profileImage: safeHttpsUrl(hospital && hospital.profileImage),
     mainImage: safeHttpsUrl(hospital && hospital.mainImage),
     url: Number.isFinite(id) ? `${GANGNAMUNNI_ORIGIN}/hospitals/${id}` : null
@@ -153,6 +160,7 @@ function compactObject(value) {
 }
 
 function numericOrNull(value) {
+  if (value === null || value === undefined || value === "") return null
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : null
 }
