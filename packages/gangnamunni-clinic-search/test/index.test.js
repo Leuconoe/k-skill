@@ -1,6 +1,8 @@
 const test = require("node:test")
 const assert = require("node:assert/strict")
 const { spawnSync } = require("node:child_process")
+const fs = require("node:fs")
+const path = require("node:path")
 
 const {
   buildSearchUrl,
@@ -28,7 +30,14 @@ const sampleNextData = {
           mainImage: "https://image2.gnsister.com/images/hospital/main.jpg",
           supportingLangList: ["ko", "ja", "en"],
           assessmentState: "EFFORT",
-          sido: "서울"
+          sido: "서울",
+          districtName: "신논현역",
+          subwayStationName: "신논현역 9호선",
+          latitude: "37.5001",
+          longitude: 127.0252,
+          distanceWithUnit: " 450m ",
+          integratedReviewCount: 1001,
+          eventCount: 17
         },
         {
           id: 543,
@@ -52,10 +61,43 @@ const sampleHtml = `<!doctype html><html><body>
 <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(sampleNextData).replace(/</g, "\\u003c")}</script>
 </body></html>`
 
-test("buildSearchUrl uses the public Gangnam Unni search page", () => {
+const sampleDehydratedNextData = {
+  props: {
+    pageProps: {
+      hospitalSearchParams: { q: "제모" },
+      dehydratedState: {
+        queries: [
+          {
+            queryKey: ["unrelated-query"],
+            state: { data: { pages: [{ data: [{ id: 999, name: "무관한 병원" }] }] } }
+          },
+          {
+            queryKey: ["infinite-search-hospitals", "제모", "rcmd", "N1101", 20, "ko-KR"],
+            state: {
+              data: {
+                pages: [
+                  { data: [sampleNextData.props.pageProps.hospitals[0]] },
+                  { data: [sampleNextData.props.pageProps.hospitals[1]] }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
+const sampleDehydratedHtml = `<!doctype html><html><body>
+<script id="__NEXT_DATA__" type="application/json">${JSON.stringify(sampleDehydratedNextData).replace(/</g, "\\u003c")}</script>
+</body></html>`
+
+const capturedDehydratedHtml = fs.readFileSync(path.join(__dirname, "fixtures", "hospitals-dehydrated.html"), "utf8")
+
+test("buildSearchUrl uses the public Gangnam Unni hospitals page", () => {
   const url = buildSearchUrl("강남 성형외과")
 
-  assert.equal(url, "https://www.gangnamunni.com/search?q=%EA%B0%95%EB%82%A8+%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC")
+  assert.equal(url, "https://www.gangnamunni.com/hospitals?q=%EA%B0%95%EB%82%A8+%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC")
 })
 
 test("parseNextData reads escaped Next.js JSON payloads", () => {
@@ -95,7 +137,7 @@ test("parseNextData classifies login, captcha, blocked, and empty-shell failures
   assert.throws(() => parseNextData("<html></html>"), /next data/i)
 })
 
-test("normalizeHospital publishes stable public clinic fields only", () => {
+test("normalizeHospital publishes stable public proximity fields only", () => {
   assert.deepEqual(normalizeHospital(sampleNextData.props.pageProps.hospitals[0]), {
     id: 347,
     name: "강남삼성성형외과의원",
@@ -106,9 +148,28 @@ test("normalizeHospital publishes stable public clinic fields only", () => {
     languages: ["ko", "ja", "en"],
     assessmentState: "EFFORT",
     sido: "서울",
+    district: "신논현역",
+    subwayStation: "신논현역 9호선",
+    latitude: 37.5001,
+    longitude: 127.0252,
+    distanceWithUnit: "450m",
+    integratedReviewCount: 1001,
+    eventCount: 17,
     profileImage: "https://image2.gnsister.com/images/hospital/profile/sample.jpg",
     mainImage: "https://image2.gnsister.com/images/hospital/main.jpg",
     url: "https://www.gangnamunni.com/hospitals/347"
+  })
+
+  assert.deepEqual(normalizeHospital({
+    id: 1,
+    name: "좌표 미제공 병원",
+    latitude: null,
+    longitude: "",
+    distanceWithUnit: null
+  }), {
+    id: 1,
+    name: "좌표 미제공 병원",
+    url: "https://www.gangnamunni.com/hospitals/1"
   })
 })
 
@@ -124,7 +185,70 @@ test("parseSearchHtml returns query metadata, limited clinic items, source, and 
   assert.match(result.warnings.join("\n"), /returned 1 of 2 parsed hospitals/)
 })
 
-test("searchClinics fetches the search page with a default timeout and parses clinics", async () => {
+test("parseSearchHtml extracts hospitals from dehydratedState pages", () => {
+  const result = parseSearchHtml(sampleDehydratedHtml, { query: "제모", limit: 5 })
+
+  assert.equal(result.query, "제모")
+  assert.deepEqual(result.items.map((item) => item.id), [347, 543])
+  assert.doesNotMatch(result.items.map((item) => item.name).join("\n"), /무관한 병원/)
+})
+
+test("captured dehydratedState fixture stays parseable", () => {
+  const result = parseSearchHtml(capturedDehydratedHtml, { limit: 5 })
+
+  assert.equal(result.query, "제모")
+  assert.deepEqual(result.items.map((item) => item.id), [3402, 1860])
+  assert.deepEqual(result.items.map((item) => item.district), ["명동", "선릉"])
+})
+
+test("parseSearchHtml flags claimed matches with no parseable hospitals", () => {
+  const claimedHtml = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: { pageProps: { keyword: "강남 제모", totalLength: 7, hospitalTotalLength: 0, hospitals: [] } }
+  })}</script>`
+  const zeroHtml = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: { pageProps: { keyword: "없는 시술", totalLength: 0, hospitalTotalLength: 0, hospitals: [] } }
+  })}</script>`
+
+  const claimed = parseSearchHtml(claimedHtml)
+  const zero = parseSearchHtml(zeroHtml)
+
+  assert.equal(claimed.failureMode, "empty-shell")
+  assert.match(claimed.warnings.join("\n"), /reported 7 total matches.*no parseable hospital items/i)
+  assert.equal(zero.failureMode, undefined)
+  assert.deepEqual(zero.items, [])
+  assert.deepEqual(zero.warnings, [])
+})
+
+test("parseSearchHtml flags dehydrated claimed matches with no hospitals", () => {
+  const html = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: {
+      pageProps: {
+        hospitalSearchParams: { q: "제모" },
+        dehydratedState: {
+          queries: [
+            {
+              queryKey: ["infinite-search-hospitals", "제모", "rcmd", "N1101", 20, "ko-KR"],
+              state: {
+                data: {
+                  pages: [{ data: [], recordsTotal: 7, recordsFiltered: 7 }]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  })}</script>`
+
+  const result = parseSearchHtml(html)
+
+  assert.equal(result.totalLength, 7)
+  assert.equal(result.hospitalTotalLength, 7)
+  assert.equal(result.failureMode, "empty-shell")
+  assert.match(result.warnings.join("\n"), /reported 7 total matches.*no parseable hospital items/i)
+})
+
+test("searchClinics fetches the hospitals page with a default timeout and parses clinics", async () => {
   const seen = []
   const fetcher = async (url, options) => {
     seen.push({ url: String(url), headers: options.headers, signal: options.signal })

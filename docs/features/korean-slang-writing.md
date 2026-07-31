@@ -45,23 +45,23 @@
 
 ```bash
 # 1) 특정 유행어 즉시 조회 (시드 정확 매칭)
-python3 scripts/slang_search.py --query "갓생" --format text
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- --query "갓생" --format text
 
 # 2) 긍정·유머 무드, SNS/마케팅 문맥에서 안전한 후보 5개
-python3 scripts/slang_search.py \
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- \
   --mood "긍정,유머" \
   --context "SNS,마케팅" \
   --safety safe \
   --limit 5
 
 # 3) 구형 유행어까지 포함해 넓게 조회
-python3 scripts/slang_search.py --query "인싸" --include-deprecated
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- --query "인싸" --include-deprecated
 
 # 4) 나무위키 원문 요약 시도 (실패하면 warning 반환)
-python3 scripts/slang_lookup.py "중꺾마" --timeout 10 --format json
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_lookup.py -- "중꺾마" --timeout 10 --format json
 
 # 5) 외부 인덱스 파일로 대체 (PR 없이 커스텀 풀 사용)
-python3 scripts/slang_search.py \
+npx -y @nomadamas/k-skill@0 exec korean-slang-writing scripts/slang_search.py -- \
   --query "럭키비키" \
   --index-path ./my-custom-slang.json
 ```

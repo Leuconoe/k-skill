@@ -157,7 +157,7 @@ python iros_wizard.py
 - 출력은 등기 종류·발급일·소유권 변동 건수·근저당권(채권최고액/설정일/말소여부)·가압류/가처분 건수까지 **판단 없이 사실 나열**한다. "안전/위험/추천" 결론을 내지 않으며, 결과는 개인정보를 포함할 수 있으므로 `$workdir/output/`에만 두고 주민등록번호는 마스킹한다.
 
 ```bash
-python iros-registry-automation/scripts/iros_pdf_summary.py "$workdir/downloads/등기.pdf" --out "$workdir/output"
+npx -y @nomadamas/k-skill@0 exec iros-registry-automation scripts/iros_pdf_summary.py -- "$workdir/downloads/등기.pdf" --out "$workdir/output"
 ```
 
 ## 트러블슈팅

@@ -26,7 +26,7 @@
 지원 장소 전체 목록은 `seoul-density/SKILL.md` 의 `AREAS` 카테고리 또는 다음 명령으로 확인한다:
 
 ```bash
-python3 seoul-density/scripts/seoul_density.py list
+npx -y @nomadamas/k-skill@0 exec seoul-density scripts/seoul_density.py -- list
 ```
 
 ## 기본 흐름
@@ -46,7 +46,7 @@ curl -fsS --get "${BASE}/v1/seoul-density/citydata" \
 스킬 CLI 사용 예시:
 
 ```bash
-python3 seoul-density/scripts/seoul_density.py query "강남역"
+npx -y @nomadamas/k-skill@0 exec seoul-density scripts/seoul_density.py -- query "강남역"
 ```
 
 예상 응답 (요약):

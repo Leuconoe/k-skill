@@ -41,7 +41,7 @@ red flag 가 있으면 **즉시 119·응급실·의료진** 안내가 우선이�
 
 ## 기본 흐름
 
-1. `python3 scripts/mfds_drug_safety.py interview ...` 로 되묻기 질문 세트를 준비한다.
+1. `npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- interview ...` 로 되묻기 질문 세트를 준비한다.
 2. red flag 가 없고 약 이름이 확인되면 `lookup` 으로 프록시 route를 조회한다.
 3. 효능/주의/상호작용/부작용을 짧게 정리한다.
 4. `같이 먹어도 되나?` 질문에는 공식 문구를 근거로만 말하고 최종 판단은 약사·의료진 확인이 필요하다고 밝힌다.
@@ -49,13 +49,13 @@ red flag 가 있으면 **즉시 119·응급실·의료진** 안내가 우선이�
 ## CLI 예시
 
 ```bash
-python3 scripts/mfds_drug_safety.py interview \
+npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- interview \
   --question "타이레놀이랑 판콜 같이 먹어도 되나요?" \
   --symptoms "두드러기와 어지러움"
 ```
 
 ```bash
-python3 scripts/mfds_drug_safety.py lookup --item-name "타이레놀" --item-name "판콜"
+npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- lookup --item-name "타이레놀" --item-name "판콜"
 ```
 
 ## 출력 예시 포맷
@@ -85,8 +85,8 @@ python3 scripts/mfds_drug_safety.py lookup --item-name "타이레놀" --item-nam
 
 2026-04-13 기준 로컬에서 아래를 실제 실행해 helper 동작을 확인했다.
 
-- `python3 scripts/mfds_drug_safety.py --help`
-- `python3 scripts/mfds_drug_safety.py interview --question "타이레놀이랑 판콜 같이 먹어도 되나요?" --symptoms "두드러기와 어지러움"`
+- `npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- --help`
+- `npx -y @nomadamas/k-skill@0 exec mfds-drug-safety scripts/mfds_drug_safety.py -- interview --question "타이레놀이랑 판콜 같이 먹어도 되나요?" --symptoms "두드러기와 어지러움"`
 - 프록시 route 기준으로 `lookup` 호출 URL 구성이 `/v1/mfds/drug-safety/lookup` 로 향하는지 검증
 
 즉, helper 자체와 인터뷰 흐름은 검증했고, live 성공 경로는 프록시 서버에 `DATA_GO_KR_API_KEY` 가 준비된 환경에서 바로 이어서 검증할 수 있다.

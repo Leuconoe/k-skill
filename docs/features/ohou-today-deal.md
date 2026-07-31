@@ -29,7 +29,7 @@
 할인율 높은 오늘의딜 상위 5개:
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --sort discount \
   --limit 5
 ```
@@ -37,7 +37,7 @@ python3 ohou-today-deal/scripts/ohou_today_deal.py list \
 러그 관련 무료배송 특가:
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --query 러그 \
   --free-delivery \
   --limit 5
@@ -46,7 +46,7 @@ python3 ohou-today-deal/scripts/ohou_today_deal.py list \
 30% 이상 할인 상품:
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --min-discount 30 \
   --limit 10
 ```
@@ -54,7 +54,7 @@ python3 ohou-today-deal/scripts/ohou_today_deal.py list \
 오프라인 fixture로 검증:
 
 ```bash
-python3 ohou-today-deal/scripts/ohou_today_deal.py list \
+npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/ohou_today_deal.py -- list \
   --html-file ./today-deals.html \
   --limit 3
 ```

@@ -48,7 +48,7 @@
 프록시 예시:
 
 ```bash
-python3 scripts/fine_dust.py report --region-hint "서울 강남구" --json
+npx -y @nomadamas/k-skill@0 exec fine-dust-location scripts/fine_dust.py -- report --region-hint "서울 강남구" --json
 ```
 
 후보 반환 예시:
@@ -106,7 +106,7 @@ curl -sG "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltm
 helper script 반복 검증:
 
 ```bash
-python3 scripts/fine_dust.py report \
+npx -y @nomadamas/k-skill@0 exec fine-dust-location scripts/fine_dust.py -- report \
   --station-file scripts/fixtures/fine-dust-stations.json \
   --measurement-file scripts/fixtures/fine-dust-measurements.json \
   --region-hint "서울 강남구"

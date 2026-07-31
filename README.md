@@ -9,6 +9,18 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 추가 클라이언트 API 레이어는 불필요합니다. 필요한 경우 `k-skill-proxy` 같은 프록시 서버에 HTTP 요청만 넣으면 됩니다.
 
+## 설치
+
+```bash
+# 전체 스킬 설치
+npx --yes skills add NomaDamas/k-skill --all -g
+
+# 특정 스킬만 설치
+npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
+```
+
+Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아래 마켓플레이스로도 설치할 수 있습니다. 자세한 방법은 [설치 방법](docs/install.md)을 참고하세요.
+
 ## 잠깐만~~~
 
 한국인이면 깃허브 스타 눌러줍시다.
@@ -22,11 +34,11 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 | 할 수 있는 일 | 스킬 이름 | 설명 | 사용자 로그인 | 문서 |
 | --- | --- | --- | --- | --- |
-| SRT 예매 | `srt-booking` | SRT 열차 조회, 예약, 예약 확인, 취소 | 필요 | [SRT 예매 가이드](docs/features/srt-booking.md) |
-| KTX 예매 | `ktx-booking` | KTX/Korail 열차 조회, 호차별 좌석번호·콘센트 좌석 확인, 예약, 예약 확인, 취소 | 필요 | [KTX 예매 가이드](docs/features/ktx-booking.md) |
-| 고속버스 예매 | `express-bus-booking` | KOBUS 고속버스 배차·좌석·요금 조회와 결제 직전 handoff(결제는 수동) | 불필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
-| 시외버스 예매 | `intercity-bus-booking` | 티머니 시외버스 배차·좌석·요금 조회와 결제 직전 handoff(결제는 수동) | 불필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
-| 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 자연휴양림 예약 가능 객실 조회 자동화 (예약/결제 제외) | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
+| SRT 예매 | `srt-booking` | SRT 열차 조회·좌석 확인·예약·취소 | 필요 | [SRT 예매 가이드](docs/features/srt-booking.md) |
+| KTX 예매 | `ktx-booking` | KTX/Korail 좌석번호·콘센트 좌석 확인·예약·취소 | 필요 | [KTX 예매 가이드](docs/features/ktx-booking.md) |
+| 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
+| 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
+| 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 빈 객실 조회와 예약 지원 | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
 | 카카오톡 Mac 아카이브 검색 | `kakaotalk-mac` | `katok`으로 macOS 카카오톡 로컬 아카이브를 동기화하고 keyword/BM25/semantic 검색 | 불필요(로컬 앱/권한 필요) | [카카오톡 Mac 아카이브 검색](docs/features/kakaotalk-mac.md) |
 | 서울 지하철 도착정보 조회 | `seoul-subway-arrival` | 서울 지하철 역 기준 실시간 도착 예정 열차 확인 | 불필요 | [서울 지하철 도착정보 가이드](docs/features/seoul-subway-arrival.md) |
 | 서울 실시간 혼잡도 조회 | `seoul-density` | 서울 주요 121개 핫스팟의 실시간 혼잡도 단계와 추정 인구 조회 | 불필요 | [서울 실시간 혼잡도 가이드](docs/features/seoul-density.md) |
@@ -66,7 +78,7 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 | S2B 학교장터 공고 조회 | `s2b-notice-search` | S2B 학교장터 공개 고객 공고/견적요청 화면을 브라우저 우선으로 조회하고 목록·상세 HTML fixture를 파싱 | 불필요 | [S2B 학교장터 공고 조회 가이드](docs/features/s2b-notice-search.md) |
 | LH 청약 공고문 조회 | `lh-notice-search` | 한국토지주택공사(LH) 임대/분양/주거복지(신혼희망타운)/토지/상가 공고를 지역·상태·공고유형·키워드로 조회하고 마감 여부를 KST 기준으로 표시 | 불필요 | [LH 청약 공고문 조회 가이드](docs/features/lh-notice-search.md) |
 | 법원 경매 부동산 매각공고 조회 | `court-auction-notice-search` | 대법원경매정보(courtauction.go.kr) 부동산 매각공고를 매각기일·법원·기일/기간 입찰 조건으로 검색해 사건번호·용도·주소·감정평가액·최저매각가격을 펼치고, 사건번호로 직접 사건정보·물건내역·매각기일이력을 조회 | 불필요 | [법원 경매 부동산 매각공고 조회 가이드](docs/features/court-auction-notice-search.md) |
-| 기부처 조회 | `donation-place-search` | 지역·관심 분야 기준 기부처 후보와 공식 페이지/1365 확인용 검색 링크 안내 (기부·결제 자동화 제외) | 불필요 | [기부처 조회 가이드](docs/features/donation-place-search.md) |
+| 기부처 조회 | `donation-place-search` | 지역·관심 분야 기준 기부처 후보 조회와 공식 후원 신청 지원 | 불필요 | [기부처 조회 가이드](docs/features/donation-place-search.md) |
 | 장학금 검색 및 조회 | `korean-scholarship-search` | 한국장학재단·전국 대학교·재단·기업 장학 공고를 검색해 금액·자격·지원구간·링크를 정리하고 KST 기준 현재 날짜 마감 상태와 조건별 필터링까지 제공 | 불필요 | [장학금 검색 및 조회 가이드](docs/features/korean-scholarship-search.md) |
 | 생활쓰레기 배출정보 조회 | `household-waste-info` | 시군구 기준 생활쓰레기·음식물·재활용 배출요일·시간·장소·관리부서 확인 | 불필요 | [생활쓰레기 배출정보 조회 가이드](docs/features/household-waste-info.md) |
 | 학교 급식 식단 조회 | `k-schoollunch-menu` | 교육청·학교명으로 NEIS 학교 검색·급식 식단 조회 | 불필요 | [학교 급식 식단 조회 가이드](docs/features/k-schoollunch-menu.md) |
@@ -129,6 +141,7 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 | 네이버 쇼핑 가격비교 | `naver-shopping-search` | 네이버 검색 Open API 우선, 공개 BFF JSON fallback으로 상품 후보·현재 노출가·판매처 링크 비교 | 불필요 | [네이버 쇼핑 가격비교 가이드](docs/features/naver-shopping-search.md) |
 | 다나와 최저가 비교 | `danawa-price-search` | 다나와 공개 검색/가격비교 표면으로 상품 후보·쇼핑몰별 가격·배송비 포함 실구매가·카드 할인가·무이자 할부 비교 | 불필요 | [다나와 최저가 비교 가이드](docs/features/danawa-price-search.md) |
 | 네이버 뉴스 검색 | `naver-news-search` | 네이버 검색 Open API 뉴스 검색으로 기사 제목·요약·발행시각·원문/네이버 링크를 정리 | 불필요 | [네이버 뉴스 검색 가이드](docs/features/naver-news-search.md) |
+| 한국일보 뉴스 조회 | `hankookilbo-news` | 한국일보 공식 원격 MCP 서버를 인증 없이 직접 호출해 편집 헤드라인·많이 본·꼼꼼히 본·최신·섹션별 추천·주제 검색·오늘의 운세를 기사 메타데이터로 조회 | 불필요 | [한국일보 뉴스 조회 가이드](docs/features/hankookilbo-news.md) |
 | 네이버 검색광고 성과 조회 | `naver-ad-performance` | 네이버 검색광고 캠페인/광고그룹/키워드의 노출수·클릭수·광고비·CTR·CPC·전환수 조회, 연관키워드·월간 조회수 도구 (읽기 전용, 로컬 실행 전용) | 필요 | [네이버 검색광고 성과 조회 가이드](docs/features/naver-ad-performance.md) |
 | 한국어 글자 수 세기 | `korean-character-count` | 한국어 텍스트의 글자 수·줄 수·UTF-8/NEIS byte 수를 결정론적으로 계산 | 불필요 | [한국어 글자 수 세기 가이드](docs/features/korean-character-count.md) |
 | 한국어 유행어 글쓰기 | `korean-slang-writing` | 나무위키 유행어 기반 큐레이션 시드로 한국 유행어 후보 조회, 무드/문맥/safety 필터 및 나무위키 best-effort 요약으로 한국어 글을 유행어 느낌으로 작성 | 불필요 | [한국어 유행어 글쓰기 가이드](docs/features/korean-slang-writing.md) |
@@ -276,6 +289,7 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 - [네이버 쇼핑 가격비교 가이드](docs/features/naver-shopping-search.md)
 - [다나와 최저가 비교 가이드](docs/features/danawa-price-search.md)
 - [네이버 뉴스 검색 가이드](docs/features/naver-news-search.md)
+- [한국일보 뉴스 조회 가이드](docs/features/hankookilbo-news.md)
 - [한국어 글자 수 세기 가이드](docs/features/korean-character-count.md)
 - [한국어 유행어 글쓰기 가이드](docs/features/korean-slang-writing.md)
 - [한국어 AI 윤문 가이드](docs/features/korean-humanizer.md)

@@ -17,17 +17,17 @@ hosted proxy 사용자는 키가 필요 없다. self-host 운영자는 `DATA_GO_
 ## 사용 예시
 
 ```bash
-python3 ev-charger-nearby/scripts/ev_charger.py info --location '서울 강남구'
-python3 ev-charger-nearby/scripts/ev_charger.py status --stat-id ME000001 --json
-python3 ev-charger-nearby/scripts/ev_charger.py status --zcode 11 --limit-yn Y --period 10
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- info --location '서울 강남구'
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- status --stat-id ME000001 --json
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- status --zcode 11 --limit-yn Y --period 10
 ```
 
 직접 호출과 안전한 미리보기:
 
 ```bash
 export KSKILL_EV_CHARGER_API_KEY=your-key
-python3 ev-charger-nearby/scripts/ev_charger.py info --zcode 11 --zscode 11680 --direct
-python3 ev-charger-nearby/scripts/ev_charger.py status --stat-id ME000001 --direct --dry-run
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- info --zcode 11 --zscode 11680 --direct
+npx -y @nomadamas/k-skill@0 exec ev-charger-nearby scripts/ev_charger.py -- status --stat-id ME000001 --direct --dry-run
 ```
 
 hosted proxy는 고유한 `location`을 `zcode`/`zscode`로 변환하고, 모호하거나 찾을 수 없는 위치와 충돌하는 명시적 코드를 거부한다. 직접 호출은 위치 텍스트 변환을 지원하지 않으므로 `--zcode`/`--zscode`를 사용한다. `--dry-run` 출력에는 실제 키가 나오지 않는다.
