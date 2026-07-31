@@ -16,10 +16,10 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 ## What this skill does
 
-강남언니(Gangnam Unni) 웹 검색 페이지의 **비로그인 공개 Next.js payload**를 읽어 병원 후보를 조회한다.
+강남언니(Gangnam Unni) 웹 병원 목록 페이지의 **비로그인 공개 Next.js payload**를 읽어 병원 후보를 조회한다.
 
 - 키워드로 병원 후보를 검색한다.
-- 공개 검색 결과에 포함된 평점, 평점 수, 리뷰 수, 지원 언어, 공개 이미지, 병원 링크를 정리한다.
+- 공개 검색 결과에 포함된 평점, 리뷰 수, 지역/역, 거리, 공개 이미지, 병원 링크를 정리한다.
 - 예약, 상담, 결제, 리뷰 작성, 앱 로그인 등 사용자 계정이 필요한 액션은 하지 않는다.
 
 ## When to use
@@ -56,11 +56,13 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 ## Public Gangnam Unni surface
 
-- search list: `https://www.gangnamunni.com/search?q=<keyword>`
-- parsed payload: `<script id="__NEXT_DATA__" type="application/json">...props.pageProps.hospitals...</script>`
+- primary hospital list: `https://www.gangnamunni.com/hospitals?q=<keyword>`
+- primary payload: `<script id="__NEXT_DATA__" type="application/json">...props.pageProps.dehydratedState.queries[*].state.data.pages[*].data...</script>`
+- query selector: `queryKey[0] === "infinite-search-hospitals"`
+- legacy fallback: `https://www.gangnamunni.com/search?q=<keyword>`의 `props.pageProps.hospitals`
 - public hospital URL: `https://www.gangnamunni.com/hospitals/<id>`
 
-Discovery result: `curl`/Node fetch로 비로그인 검색 HTML이 200으로 응답하고, 병원 후보는 server-rendered `__NEXT_DATA__`의 `props.pageProps.hospitals` 배열에 포함된다. 이 경로는 공개 read-only endpoint이므로 `k-skill-proxy`를 사용하지 않는다.
+Discovery result: `curl`/Node fetch로 `/hospitals?q=` 비로그인 HTML이 200으로 응답하고, 병원 후보는 server-rendered `__NEXT_DATA__`의 react-query `dehydratedState`에 포함된다. `/search?q=`의 `pageProps.hospitals`는 이전 구조 호환용 fallback이다. 이 경로는 공개 read-only endpoint이므로 `k-skill-proxy`를 사용하지 않는다.
 
 ## Workflow
 
@@ -85,15 +87,20 @@ npx gangnamunni-clinic-search "강남 성형외과" --limit 5
 
 - `name`: 병원명
 - `rating`, `ratingCount`, `reviewCount`: 공개 검색 페이지에 포함된 평점/리뷰 지표
+- `integratedReviewCount`, `eventCount`: 통합 리뷰 수와 공개 이벤트 수
+- `district`, `subwayStation`, `distanceWithUnit`: 공개 지역/역/거리 정보. upstream이 값을 주지 않으면 필드가 생략될 수 있다.
+- `latitude`, `longitude`: upstream 병원 객체에 공개 좌표가 있을 때만 숫자로 반환한다. 현재 `/hospitals?q=` 응답에는 없을 수 있다.
 - `languages`: 공개 지원 언어
 - `url`: 강남언니 공개 병원 페이지
 - `profileImage`, `mainImage`: 공개 이미지 URL
 
 ### 3. Fallback order
 
-1. 기본: `https://www.gangnamunni.com/search?q=<keyword>`의 `__NEXT_DATA__` payload를 파싱한다.
-2. payload가 없으면 로그인벽, CAPTCHA, 차단, 빈 shell 페이지를 실패 모드로 분류한다.
-3. 검색 결과가 너무 적거나 앱 전용 정보가 필요하면 자동화를 멈추고 사용자가 공식 앱/웹에서 직접 확인하도록 안내한다.
+1. 기본: `https://www.gangnamunni.com/hospitals?q=<keyword>`의 `__NEXT_DATA__`에서 `infinite-search-hospitals` query의 모든 `pages[*].data`를 합친다.
+2. 현재 query가 없거나 비어 있으면 이전 구조인 `/search?q=<keyword>`의 `props.pageProps.hospitals`를 fallback으로 읽는다.
+3. payload가 없으면 로그인벽, CAPTCHA, 차단, 빈 HTML shell을 실패 모드로 분류한다.
+4. `totalLength > 0`인데 파싱 가능한 병원이 하나도 없으면 `failureMode: "empty-shell"`과 구조 변경 경고를 반환한다.
+5. 검색 결과가 너무 적거나 앱 전용 정보가 필요하면 자동화를 멈추고 사용자가 공식 앱/웹에서 직접 확인하도록 안내한다.
 
 ### 4. Respond safely
 
@@ -115,6 +122,7 @@ npx gangnamunni-clinic-search "강남 성형외과" --limit 5
 
 - 검색어가 너무 넓거나 강남언니가 병원 후보를 공개 payload에 일부만 넣을 수 있다.
 - 강남언니 웹 구조가 바뀌면 `__NEXT_DATA__` 경로가 깨질 수 있다.
+- 사이트가 결과 수를 보고하지만 병원 항목을 파싱할 수 없으면 `empty-shell` 실패로 보고한다.
 - 로그인 필요, CAPTCHA, 접근 차단, 빈 HTML shell은 자동 우회하지 않고 실패로 보고한다.
 - 평점, 리뷰 수, 노출 순서는 시점에 따라 달라진다.
 - 앱 전용/로그인 전용 정보는 비로그인 공개 조회만으로 확정할 수 없다.

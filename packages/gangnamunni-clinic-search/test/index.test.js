@@ -1,6 +1,8 @@
 const test = require("node:test")
 const assert = require("node:assert/strict")
 const { spawnSync } = require("node:child_process")
+const fs = require("node:fs")
+const path = require("node:path")
 
 const {
   buildSearchUrl,
@@ -89,6 +91,8 @@ const sampleDehydratedNextData = {
 const sampleDehydratedHtml = `<!doctype html><html><body>
 <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(sampleDehydratedNextData).replace(/</g, "\\u003c")}</script>
 </body></html>`
+
+const capturedDehydratedHtml = fs.readFileSync(path.join(__dirname, "fixtures", "hospitals-dehydrated.html"), "utf8")
 
 test("buildSearchUrl uses the public Gangnam Unni hospitals page", () => {
   const url = buildSearchUrl("강남 성형외과")
@@ -187,6 +191,14 @@ test("parseSearchHtml extracts hospitals from dehydratedState pages", () => {
   assert.equal(result.query, "제모")
   assert.deepEqual(result.items.map((item) => item.id), [347, 543])
   assert.doesNotMatch(result.items.map((item) => item.name).join("\n"), /무관한 병원/)
+})
+
+test("captured dehydratedState fixture stays parseable", () => {
+  const result = parseSearchHtml(capturedDehydratedHtml, { limit: 5 })
+
+  assert.equal(result.query, "제모")
+  assert.deepEqual(result.items.map((item) => item.id), [3402, 1860])
+  assert.deepEqual(result.items.map((item) => item.district), ["명동", "선릉"])
 })
 
 test("parseSearchHtml flags claimed matches with no parseable hospitals", () => {
