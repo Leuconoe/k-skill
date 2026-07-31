@@ -45,10 +45,10 @@
 - primary hospital list: `https://www.gangnamunni.com/hospitals?q=<keyword>`
 - primary payload: `<script id="__NEXT_DATA__" type="application/json">...props.pageProps.dehydratedState.queries[*].state.data.pages[*].data...</script>`
 - query selector: `queryKey[0] === "infinite-search-hospitals"`
-- legacy fallback: `https://www.gangnamunni.com/search?q=<keyword>`의 `props.pageProps.hospitals`
+- same-payload legacy field fallback: 이전 `/search?q=<keyword>` HTML에서 쓰던 `props.pageProps.hospitals`
 - public hospital URL: `https://www.gangnamunni.com/hospitals/<id>`
 
-Discovery result: `curl`/Node fetch로 `/hospitals?q=` 비로그인 HTML이 200으로 응답하고, 병원 후보는 server-rendered `__NEXT_DATA__`의 react-query `dehydratedState`에 포함된다. `/search?q=`의 `pageProps.hospitals`는 이전 구조 호환용 fallback이다. 이 경로는 공개 read-only endpoint이므로 `k-skill-proxy`를 사용하지 않는다.
+Discovery result: `curl`/Node fetch로 `/hospitals?q=` 비로그인 HTML이 200으로 응답하고, 병원 후보는 server-rendered `__NEXT_DATA__`의 react-query `dehydratedState`에 포함된다. 파서가 이전 `/search?q=` HTML의 `pageProps.hospitals`도 읽지만, `searchClinics`가 `/search`를 두 번째로 요청하지는 않는다. 이 경로는 공개 read-only endpoint이므로 `k-skill-proxy`를 사용하지 않는다.
 
 ## Workflow
 
@@ -83,9 +83,9 @@ npx gangnamunni-clinic-search "강남 성형외과" --limit 5
 ### 3. Fallback order
 
 1. 기본: `https://www.gangnamunni.com/hospitals?q=<keyword>`의 `__NEXT_DATA__`에서 `infinite-search-hospitals` query의 모든 `pages[*].data`를 합친다.
-2. 현재 query가 없거나 비어 있으면 이전 구조인 `/search?q=<keyword>`의 `props.pageProps.hospitals`를 fallback으로 읽는다.
+2. 입력 payload 자체에 이전 구조의 `props.pageProps.hospitals`가 있으면 같은 payload 안에서 fallback으로 읽는다. `/search`를 추가 요청하지 않는다.
 3. payload가 없으면 로그인벽, CAPTCHA, 차단, 빈 HTML shell을 실패 모드로 분류한다.
-4. `totalLength > 0`인데 파싱 가능한 병원이 하나도 없으면 `failureMode: "empty-shell"`과 구조 변경 경고를 반환한다.
+4. `pageProps.totalLength` 또는 dehydrated page의 `recordsTotal`이 0보다 큰데 파싱 가능한 병원이 하나도 없으면 `failureMode: "empty-shell"`과 구조 변경 경고를 반환한다.
 5. 검색 결과가 너무 적거나 앱 전용 정보가 필요하면 자동화를 멈추고 사용자가 공식 앱/웹에서 직접 확인하도록 안내한다.
 
 ### 4. Respond safely

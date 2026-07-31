@@ -1374,7 +1374,7 @@ test("repository docs advertise the gangnamunni-clinic-search skill across insta
   assert.match(install, /--skill gangnamunni-clinic-search/);
   assert.match(install, /npm install -g .*gangnamunni-clinic-search/);
   assert.match(sources, /강남언니 공개 병원 검색\(기본\): https:\/\/www\.gangnamunni\.com\/hospitals\?q=<keyword>/);
-  assert.match(sources, /강남언니 공개 검색\(이전 구조 fallback\): https:\/\/www\.gangnamunni\.com\/search\?q=<keyword>/);
+  assert.match(sources, /강남언니 공개 검색\(이전 HTML 구조 참고\): https:\/\/www\.gangnamunni\.com\/search\?q=<keyword>/);
   assert.match(sources, /강남언니 공개 병원 페이지: https:\/\/www\.gangnamunni\.com\/hospitals\/<id>/);
 });
 

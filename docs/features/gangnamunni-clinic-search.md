@@ -7,7 +7,7 @@
 - 기본 검색 URL: `https://www.gangnamunni.com/hospitals?q=<keyword>`
 - 데이터 위치: HTML 안의 `__NEXT_DATA__` JSON (`props.pageProps.dehydratedState.queries[*].state.data.pages[*].data`)
 - query 선택: `queryKey[0] === "infinite-search-hospitals"`
-- 이전 구조 fallback: `https://www.gangnamunni.com/search?q=<keyword>`의 `props.pageProps.hospitals`
+- 같은 payload의 이전 필드 fallback: 이전 `/search?q=<keyword>` HTML에서 쓰던 `props.pageProps.hospitals`도 파싱한다. `/search`를 추가 요청하지 않는다.
 - 인증/시크릿: 불필요
 - 프록시: 사용하지 않음
 
@@ -31,5 +31,5 @@ const result = await searchClinics({ query: "코성형", limit: 3 })
 - 조회 시점 공개 검색 결과 기준입니다.
 - 로그인, 상담, 예약, 결제, 찜, 리뷰 작성은 자동화하지 않습니다.
 - CAPTCHA/차단/로그인벽/빈 shell 페이지는 실패 모드로 처리합니다.
-- 결과 수는 있는데 파싱 가능한 병원이 없으면 `failureMode: "empty-shell"`로 구조 변경을 명시합니다.
+- `pageProps.totalLength` 또는 dehydrated `recordsTotal`은 있는데 파싱 가능한 병원이 없으면 `failureMode: "empty-shell"`로 구조 변경을 명시합니다.
 - 의료 판단이나 병원 선택 보증을 대신하지 않습니다.

@@ -219,6 +219,35 @@ test("parseSearchHtml flags claimed matches with no parseable hospitals", () => 
   assert.deepEqual(zero.warnings, [])
 })
 
+test("parseSearchHtml flags dehydrated claimed matches with no hospitals", () => {
+  const html = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: {
+      pageProps: {
+        hospitalSearchParams: { q: "제모" },
+        dehydratedState: {
+          queries: [
+            {
+              queryKey: ["infinite-search-hospitals", "제모", "rcmd", "N1101", 20, "ko-KR"],
+              state: {
+                data: {
+                  pages: [{ data: [], recordsTotal: 7, recordsFiltered: 7 }]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  })}</script>`
+
+  const result = parseSearchHtml(html)
+
+  assert.equal(result.totalLength, 7)
+  assert.equal(result.hospitalTotalLength, 7)
+  assert.equal(result.failureMode, "empty-shell")
+  assert.match(result.warnings.join("\n"), /reported 7 total matches.*no parseable hospital items/i)
+})
+
 test("searchClinics fetches the hospitals page with a default timeout and parses clinics", async () => {
   const seen = []
   const fetcher = async (url, options) => {
