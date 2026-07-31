@@ -21,9 +21,9 @@
 ## 로컬 실행
 
 ```bash
-python3 daangn-realty-search/scripts/daangn_realty.py search --region "합정동" --limit 5
-python3 daangn-realty-search/scripts/daangn_realty.py search --region "합정동" --sales-type "STORE,OFFICETEL" --trade-type "MONTH"
-python3 daangn-realty-search/scripts/daangn_realty.py detail "https://realty.daangn.com/articles/..."
+npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/daangn_realty.py -- search --region "합정동" --limit 5
+npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/daangn_realty.py -- search --region "합정동" --sales-type "STORE,OFFICETEL" --trade-type "MONTH"
+npx -y @nomadamas/k-skill@0 exec daangn-realty-search scripts/daangn_realty.py -- detail "https://realty.daangn.com/articles/..."
 ```
 
 ## 지역 필터

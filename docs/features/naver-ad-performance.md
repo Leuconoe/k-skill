@@ -29,31 +29,31 @@
 ### 진단
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py doctor
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- doctor
 ```
 
 ### 캠페인/광고그룹/키워드 목록
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py campaigns
-python3 naver-ad-performance/scripts/naver_ad_performance.py adgroups --campaign <nccCampaignId>
-python3 naver-ad-performance/scripts/naver_ad_performance.py keywords --adgroup <nccAdgroupId>
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- campaigns
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- adgroups --campaign <nccCampaignId>
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- keywords --adgroup <nccAdgroupId>
 ```
 
 ### 성과 조회
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py stats \
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- stats \
   --ids <id1,id2> --since 2026-06-01 --until 2026-06-30
 
-python3 naver-ad-performance/scripts/naver_ad_performance.py stats \
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- stats \
   --ids <id> --since 2026-06-01 --until 2026-06-30 --by day
 ```
 
 ### 키워드 도구
 
 ```bash
-python3 naver-ad-performance/scripts/naver_ad_performance.py keywordtool --keywords "제주여행,게스트하우스"
+npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/naver_ad_performance.py -- keywordtool --keywords "제주여행,게스트하우스"
 ```
 
 ## 응답 예시 포맷

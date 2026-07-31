@@ -26,7 +26,7 @@ mcp_servers:
 직접 MCP 설정을 하지 않아도 스킬에 포함된 래퍼를 사용할 수 있다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py tools
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- tools
 ```
 
 ## 주요 도구
@@ -49,21 +49,21 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py tools
 ### 국제선 검색
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchInternationalFlights \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchInternationalFlights \
   --json '{"tripType":"ROUND_TRIP","origin":"ICN","destination":"KIX","departDate":"2026-06-10","returnDate":"2026-06-14","passengers":{"adults":1,"children":0,"infants":0},"maxResults":5}'
 ```
 
 ### 숙소 검색
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchStays \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchStays \
   --json '{"keyword":"부산 해운대","checkIn":"2026-06-10","checkOut":"2026-06-12","adultCount":2,"childCount":0,"isDomestic":true,"order":"recommended"}'
 ```
 
 ### 투어/티켓 검색
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchTnas \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call searchTnas \
   --arg query="오사카 유니버설 스튜디오" \
   --arg perPage=5
 ```
@@ -71,7 +71,7 @@ python3 myrealtrip-search/scripts/myrealtrip_mcp.py call searchTnas \
 날짜별 실제 옵션과 가격은 검색 결과의 `gid`, `url`로 다시 확인한다.
 
 ```bash
-python3 myrealtrip-search/scripts/myrealtrip_mcp.py call getTnaOptions \
+npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- call getTnaOptions \
   --json '{"gid":"123456","url":"https://www.myrealtrip.com/offers/123456","selectedDate":"2026-06-10"}'
 ```
 

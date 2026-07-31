@@ -60,14 +60,14 @@ skill directory 안에는 원본 pack을 따라 local helper script도 포함한
 historical cache 생성:
 
 ```bash
-node ./lck-analytics/scripts/sync-oracle.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/sync-oracle.js -- \
   --csv ./lck-analytics/samples/oracle-lck-sample.csv
 ```
 
 날짜별 match analysis 생성:
 
 ```bash
-node ./lck-analytics/scripts/build-match-report.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/build-match-report.js -- \
   --date 2026-04-01 \
   --team 한화
 ```
@@ -75,7 +75,7 @@ node ./lck-analytics/scripts/build-match-report.js \
 live turning point 분석:
 
 ```bash
-node ./lck-analytics/scripts/analyze-live-game.js \
+npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/analyze-live-game.js -- \
   --game game-id
 ```
 

@@ -27,7 +27,7 @@
 4. **감사** — "왜 아직 AI 같은가?"를 다시 묻고, 자가검증 6항과 변경률을 점검한다. 위반이면 롤백 후 재윤문.
 5. **등급** — A~D로 자가 채점한다. C·D면 추가 윤문이나 사람 검토를 권한다.
 
-전체 패턴 표(A~J, 60+ 서브 패턴)는 스킬 디렉터리의 [`references/ai-tell-taxonomy.md`](../../korean-humanizer/references/ai-tell-taxonomy.md)에 있다.
+전체 패턴 표(A~J, 60+ 서브 패턴)는 스킬 디렉터리의 [`npx -y @nomadamas/k-skill@0 read korean-humanizer references/ai-tell-taxonomy.md`](../../korean-humanizer/references/ai-tell-taxonomy.md)에 있다.
 
 ## 사용 예시
 

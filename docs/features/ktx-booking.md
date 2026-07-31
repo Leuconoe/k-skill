@@ -25,9 +25,9 @@
 ### Credential resolution order
 
 1. **이미 환경변수에 있으면** 그대로 사용한다.
-2. **에이전트가 자체 secret vault(1Password CLI, Bitwarden CLI, macOS Keychain 등)를 사용 중이면** 거기서 꺼내 환경변수로 주입해도 된다.
-3. **`~/.config/k-skill/secrets.env`** (기본 fallback) — plain dotenv 파일, 퍼미션 `0600`.
-4. **아무것도 없으면** 유저에게 물어서 2 또는 3에 저장한다.
+2. **돌쇠 credential mode이면** provisioned `vault-run` capability를 사용하고, 없으면 `request_vault_credential`로 앱 vault 입력 UI를 호출한다.
+3. **그 밖의 host vault가 있으면** 모델에 평문을 노출하지 않는 방식으로 주입한다.
+4. **generic fallback이면** `~/.config/k-skill/secrets.env`를 퍼미션 `0600`으로 사용한다.
 
 ## 입력값
 
@@ -66,7 +66,7 @@
 조회:
 
 ```bash
-python3 scripts/ktx_booking.py search 서울 부산 20260328 090000 --limit 5
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- search 서울 부산 20260328 090000 --limit 5
 ```
 
 좌석이 없는 열차까지 같이 보고 싶으면 `--include-no-seats`, 예약 대기 가능 열차도 같이 보고 싶으면 `--include-waiting-list` 를 붙인다.
@@ -76,13 +76,13 @@ python3 scripts/ktx_booking.py search 서울 부산 20260328 090000 --limit 5
 상세 좌석 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id>
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id>
 ```
 
 남은 좌석번호만 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --available-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --available-only
 ```
 
 특정 호차를 지정하지 않으면 `seats` 는 5호차를 최우선으로 탐색한다. 5호차가 없으면 5호차와의 거리가 가까운 호차 순, 같은 거리에서는 낮은 호차 번호 순으로 탐색한다(예: 1~8호차 편성은 `5, 4, 6, 3, 7, 2, 8, 1`). 각 호차 안에서는 콘센트 힌트가 있는 좌석을 먼저, 같은 조건에서는 순방향 좌석을 먼저 반환한다.
@@ -90,19 +90,19 @@ python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <t
 특정 호차의 남은 좌석만 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --car-no 5 --available-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --car-no 5 --available-only
 ```
 
 콘센트 꿀팁 좌석부터 확인:
 
 ```bash
-python3 scripts/ktx_booking.py seats 서울 부산 20260328 090000 --train-id <train_id> --available-only --power-only
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 서울 부산 20260328 090000 --train-id <train_id> --available-only --power-only
 ```
 
 특실 좌석을 확인하려면 `--room special`, KTX 외 열차를 조회했다면 `search` 와 같은 `--train-type` 을 함께 넘긴다.
 
 ```bash
-python3 scripts/ktx_booking.py seats 남춘천 용산 20260503 150000 \
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- seats 남춘천 용산 20260503 150000 \
   --train-id <train_id> \
   --train-type itx-cheongchun \
   --available-only
@@ -113,7 +113,7 @@ python3 scripts/ktx_booking.py seats 남춘천 용산 20260503 150000 \
 예약:
 
 ```bash
-python3 scripts/ktx_booking.py reserve 서울 부산 20260328 090000 --train-id <train_id> --seat-option general-first
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reserve 서울 부산 20260328 090000 --train-id <train_id> --seat-option general-first
 ```
 
 좌석이 없을 때 예약 대기까지 시도하려면 조회 단계에서도 `--include-waiting-list` 를 켜고, 예약 단계에서 `--try-waiting` 을 추가한다.
@@ -121,20 +121,22 @@ python3 scripts/ktx_booking.py reserve 서울 부산 20260328 090000 --train-id 
 예약 확인:
 
 ```bash
-python3 scripts/ktx_booking.py reservations
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- reservations
 ```
 
 취소:
 
 ```bash
-python3 scripts/ktx_booking.py cancel <reservation_id>
+npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- cancel <reservation_id>
 ```
 
-응답은 JSON 으로 나오며 예약번호, 구입기한, 운임 확인에 바로 쓸 수 있다. **결제는 제외** 하고 예약까지만 자동화한다.
+응답은 JSON 으로 나오며 예약번호, 구입기한, 운임 확인에 바로 쓸 수 있다. 이 시점에 **좌석 확보는 완료**되었음을 안내한다.
+
+돌쇠에서 사용자가 예매 완료를 요청하면 CloakBrowser의 공식 Korail 결제 화면에서 같은 예약번호를 확인하고 계속 진행한다. 결제 버튼 직전에 `clarify`로 열차·승객·좌석·할인·총액을 승인받고, 승인 후 결제를 실행해 결제 완료 상태와 영수증을 확인한다. generic runtime에서는 예약번호와 구입기한을 제공하고 결제를 handoff한다.
 
 ## 주의할 점
 
 - SRT 예매와는 별도 표면이므로 혼용하지 않는다.
 - credential은 환경변수로 주입한다.
-- 결제 완료까지 자동화하는 범위는 아니다.
+- 돌쇠에서는 `clarify` 승인 후 공식 결제 표면까지 완료하고, generic runtime에서는 예약까지만 자동화한다.
 - Korail anti-bot 규칙이 다시 바뀌면 helper 도 함께 점검해야 한다.

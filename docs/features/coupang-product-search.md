@@ -49,14 +49,14 @@ k-skill 쪽 래퍼(`coupang_partners_mcp.py`)는 위 환경변수를 **오버라
 
 | 도구명 | CLI 명령 | 기능 | 사용 예시 |
 |--------|----------|------|----------|
-| `search_coupang_products` | `search` | 일반 상품 검색 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py search "맥북"` |
-| `search_coupang_rocket` | `rocket` | 로켓배송만 필터링 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py rocket "에어팟"` |
-| `search_coupang_budget` | `budget` | 가격대 범위 검색 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py budget "키보드" --max-price 100000` |
-| `compare_coupang_products` | `compare` | 상품 비교표 생성 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py compare "아이패드 vs 갤럭시탭"` |
-| `get_coupang_recommendations` | `recommendations` | 인기 검색어 제안 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py recommendations --category 전자제품` |
-| `get_coupang_seasonal` | `seasonal` | 계절/상황별 추천 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py seasonal "설날 선물"` |
-| `get_coupang_best_products` | `best` | 카테고리별 베스트 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py best --category-id 1016` |
-| `get_coupang_goldbox` | `goldbox` | 당일 특가 정보 | `python3 coupang-product-search/scripts/coupang_partners_mcp.py goldbox --limit 10` |
+| `search_coupang_products` | `search` | 일반 상품 검색 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- search "맥북"` |
+| `search_coupang_rocket` | `rocket` | 로켓배송만 필터링 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- rocket "에어팟"` |
+| `search_coupang_budget` | `budget` | 가격대 범위 검색 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- budget "키보드" --max-price 100000` |
+| `compare_coupang_products` | `compare` | 상품 비교표 생성 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- compare "아이패드 vs 갤럭시탭"` |
+| `get_coupang_recommendations` | `recommendations` | 인기 검색어 제안 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- recommendations --category 전자제품` |
+| `get_coupang_seasonal` | `seasonal` | 계절/상황별 추천 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- seasonal "설날 선물"` |
+| `get_coupang_best_products` | `best` | 카테고리별 베스트 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- best --category-id 1016` |
+| `get_coupang_goldbox` | `goldbox` | 당일 특가 정보 | `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- goldbox --limit 10` |
 
 주의: `get_coupang_goldbox`와 `get_coupang_best_products`는 upstream 기준 Coupang Partners API 권한이 필요한 경로이므로, 키 없이 hosted fallback으로만 실행 중이면 실패할 수 있다. 실패 메시지를 그대로 전달하고 hosted fallback이 커버하는 `search`/`rocket`/`budget`/`compare`로 우회 제안한다.
 
@@ -72,34 +72,34 @@ k-skill 쪽 래퍼(`coupang_partners_mcp.py`)는 위 환경변수를 **오버라
 
 ```bash
 # 1. 최초 실행: upstream checkout을 자동 clone하고 도구 목록 확인
-python3 coupang-product-search/scripts/coupang_partners_mcp.py tools
-python3 coupang-product-search/scripts/coupang_partners_mcp.py init
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- tools
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- init
 
 # 2. 이미 clone된 upstream을 명시해서 네트워크 없이 계약 확인
-python3 coupang-product-search/scripts/coupang_partners_mcp.py \
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- \
   --repo-dir ~/.cache/k-skill/coupang_partners \
   --no-clone \
   tools
-python3 coupang-product-search/scripts/coupang_partners_mcp.py \
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- \
   --repo-dir ~/.cache/k-skill/coupang_partners \
   --no-clone \
   init
 
 # 3. 기존 checkout을 fast-forward로 최신화한 뒤 계약 확인
-python3 coupang-product-search/scripts/coupang_partners_mcp.py \
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- \
   --repo-dir ~/.cache/k-skill/coupang_partners \
   --update \
   tools
 
 # 4. 상품 검색 (키 없이도 hosted fallback으로 동작)
-python3 coupang-product-search/scripts/coupang_partners_mcp.py search "생수"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- search "생수"
 
 # 5. 로켓배송 필터
-python3 coupang-product-search/scripts/coupang_partners_mcp.py rocket "에어팟"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- rocket "에어팟"
 
 # 6. hosted fallback 강제 (upstream 기본 allowlist client-id 유지)
 OPENCLAW_SHOPPING_FORCE_HOSTED=1 \
-python3 coupang-product-search/scripts/coupang_partners_mcp.py search "무선청소기"
+npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/coupang_partners_mcp.py -- search "무선청소기"
 ```
 
 ## 결과 형식

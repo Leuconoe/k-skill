@@ -30,13 +30,13 @@
 ## 직접 실행 예시
 
 ```bash
-python3 job-posting-match/scripts/job_posting_match.py   --resume-text "퍼포먼스 마케터 5년. GA4, Google Ads, Meta Ads, SQL, 커머스 경험. 서울 희망."   --location 서울   --negative 보험영업   --negative 대출영업   --limit 10
+npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/job_posting_match.py --   --resume-text "퍼포먼스 마케터 5년. GA4, Google Ads, Meta Ads, SQL, 커머스 경험. 서울 희망."   --location 서울   --negative 보험영업   --negative 대출영업   --limit 10
 ```
 
 JSON으로 받고 싶으면:
 
 ```bash
-python3 job-posting-match/scripts/job_posting_match.py   --resume-file ./resume.txt   --keyword "퍼포먼스 마케터 GA4"   --keyword "그로스 마케터 SQL"   --location 서울   --json
+npx -y @nomadamas/k-skill@0 exec job-posting-match scripts/job_posting_match.py --   --resume-file ./resume.txt   --keyword "퍼포먼스 마케터 GA4"   --keyword "그로스 마케터 SQL"   --location 서울   --json
 ```
 
 ## 결과 해석

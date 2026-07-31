@@ -18,7 +18,7 @@
 ## 예시
 
 ```bash
-python3 nts-tax-delinquency/scripts/nts_tax_delinquency.py --name "○○건설"
+npx -y @nomadamas/k-skill@0 exec nts-tax-delinquency scripts/nts_tax_delinquency.py -- --name "○○건설"
 ```
 
 ## 실패 모드

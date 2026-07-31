@@ -29,6 +29,20 @@ These rules are repo-specific and apply to everything under this directory.
 - Respect existing home-directory indirection such as symlinks when syncing `~/.agents/skills`.
 - Do **not** create repo-local `.claude` or `.agents` directories for skill installation unless the user explicitly asks for a repository-local test fixture.
 
+## Unified CLI skill instruction rules
+
+- Every top-level skill uses `skill.json` (frontmatter + profiles) and `instruction.md` (site-specific workflow) as its source of truth.
+- Top-level `SKILL.md` files are generated CLI adapter stubs. Do not edit them directly; run `npm run generate:skill-stubs` after changing `skill.json`.
+- Run `npm run sync:cli-skills` after changing `skill.json`, `instruction.md`, `scripts/`, or `references/` so `packages/k-skill-cli/skills/` stays aligned.
+- Instruction commands must execute bundled helpers through `npx -y @nomadamas/k-skill@0 exec <skill> scripts/<file> -- ...` and read references through `... read <skill> references/<file>`. Run `npm run migrate:cli-assets` to normalize legacy relative paths.
+- Shared runtime behavior belongs in `packages/k-skill-cli/templates/*.md`, selected by profiles such as `proxy`, `vault`, `browser`, `action:booking`, `action:commerce`, `legal`, `operations`, `local`, and `lookup`.
+- Do not duplicate shared runtime blocks in `instruction.md`. Keep only the skill's site-dependent navigation, commands, inputs/outputs, action details, and failure modes there.
+- Runtime detection is capability-based. Credential action mode requires both `DOLSHOI_ACTION_BROKER_URL` and a usable `vault-run`; CloakBrowser mode is detected independently through the bundled browser tool or `CLOAKBROWSER_PEEK_TOKEN`.
+- In Dolshoi credential mode, never ask for or reveal plaintext credentials. Use provisioned `vault-run` capabilities and call `request_vault_credential` when the required credential is missing.
+- In Dolshoi browser mode, the built-in browser tool backed by CloakBrowser is the first browser path. Generic `k-skill-browser-runtime` providers remain the fallback outside Dolshoi or when CloakBrowser is unavailable.
+- If the user asks for an action and the official surface supports it lawfully, continue past lookup through reversible preparation and execution. Immediately before payment, message delivery, final submission, cancellation, or another irreversible external side effect, use the `clarify` tool with the exact target and effect, then execute only after approval.
+- Do not bypass CAPTCHA, identity-proofing, electronic-signature, or official authentication controls. Legal profiles proceed through supported official authentication and resume after user-presence-only controls.
+
 ## Crawling/search skill authoring
 
 - For any k-skill that crawls or searches a website, the expected output is a site-dependent recipe packaged into that skill.
@@ -39,8 +53,9 @@ These rules are repo-specific and apply to everything under this directory.
 ## Browser runtime skill authoring
 
 - For new or changed Node skills that need a logged-in browser session, rendered-page automation, or CDP browser fallback, use `k-skill-browser-runtime` as the default browser runtime instead of writing ad hoc CDP or Playwright connection code.
+- In Dolshoi browser mode, use the agent's built-in CloakBrowser-backed browser tool before `k-skill-browser-runtime`; the package runtime is the portable fallback.
 - The default provider is `auto`: attach to a user-launched BrowserOS GUI session first (`KSKILL_BROWSEROS_CDP_URL`, default `http://127.0.0.1:9100`), use Aside Browser through the documented `aside repl` CLI when available, then fall back to a user-launched Chrome/Chromium CDP session (`KSKILL_CHROME_CDP_URL`, default `http://127.0.0.1:9222`). `KSKILL_BROWSER_PROVIDER` may pin `auto`, `browseros`, `aside`, or `chrome-cdp`.
-- BrowserOS is CDP-only attach; Aside is CLI REPL-backed, not an undocumented CDP port. Skills must not launch BrowserOS or Aside, pass headless flags to BrowserOS, close the user browser/profile, solve login/CAPTCHA/payment/e-signature flows, or automate irreversible submission. Disconnect automation clients and clean up only pages/contexts/tabs the skill created.
+- BrowserOS is CDP-only attach; Aside is CLI REPL-backed, not an undocumented CDP port. Skills must not launch BrowserOS or Aside, pass headless flags to BrowserOS, close the user browser/profile, solve CAPTCHA/identity-proofing/e-signature flows, or bypass the required `clarify` approval before irreversible submission. Disconnect automation clients and clean up only pages/contexts/tabs the skill created.
 - Package dependencies must use publishable semver such as `"k-skill-browser-runtime": "^0.1.0"`; do not use `workspace:` for publishable packages.
 - Keep site-specific navigation, selectors, parsing, fallback order, and typed stop/failure modes in the skill's `SKILL.md` and helper package code. Prefer public/direct HTTP endpoints before browser automation when they are stable and do not require authentication.
 

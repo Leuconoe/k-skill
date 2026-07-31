@@ -37,7 +37,7 @@ LLM에게 "중세 국어처럼"이라고만 요청하면 변환 강도와 표기
 ### 기본 JSON 출력
 
 ```bash
-node scripts/korean_middle_korean.js --text "민수는 3월 5일 학교에서 공부했다."
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --text "민수는 3월 5일 학교에서 공부했다."
 ```
 
 예상 출력 일부:
@@ -56,7 +56,7 @@ node scripts/korean_middle_korean.js --text "민수는 3월 5일 학교에서 �
 ### 변환문만 출력
 
 ```bash
-node scripts/korean_middle_korean.js --text "열애설을 인정했다." --format text
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --text "열애설을 인정했다." --format text
 ```
 
 예상 출력:
@@ -68,8 +68,8 @@ node scripts/korean_middle_korean.js --text "열애설을 인정했다." --forma
 ### 파일/stdin 입력
 
 ```bash
-node scripts/korean_middle_korean.js --file ./input.txt --format text
-cat input.txt | node scripts/korean_middle_korean.js --stdin --format json
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --file ./input.txt --format text
+cat input.txt | npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --stdin --format json
 ```
 
 ## 응답 원칙
@@ -82,5 +82,5 @@ cat input.txt | node scripts/korean_middle_korean.js --stdin --format json
 
 ```bash
 node --test scripts/test_korean_middle_korean.js
-node scripts/korean_middle_korean.js --text "민수는 3월 5일 학교에서 공부했다." --format text
+npx -y @nomadamas/k-skill@0 exec korean-middle-korean scripts/korean_middle_korean.js -- --text "민수는 3월 5일 학교에서 공부했다." --format text
 ```

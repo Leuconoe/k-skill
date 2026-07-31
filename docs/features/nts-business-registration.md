@@ -22,12 +22,12 @@ self-host 프록시를 쓰는 경우에만 `KSKILL_PROXY_BASE_URL`을 설정한�
 ## 예시
 
 ```bash
-python3 nts-business-registration/scripts/nts_business_registration.py status \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- status \
   --b-no 123-45-67890
 ```
 
 ```bash
-python3 nts-business-registration/scripts/nts_business_registration.py validate \
+npx -y @nomadamas/k-skill@0 exec nts-business-registration scripts/nts_business_registration.py -- validate \
   --business-json '{"b_no":"123-45-67890","start_dt":"2020-01-31","p_nm":"홍길동","b_nm":"테스트상사"}'
 ```
 

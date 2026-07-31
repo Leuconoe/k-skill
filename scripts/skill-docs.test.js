@@ -9,6 +9,23 @@ const childProcess = require("node:child_process");
 const repoRoot = path.join(__dirname, "..");
 
 function read(relativePath) {
+  // CLI-managed skills keep their authored content in skill.json (frontmatter)
+  // + instruction.md; the committed SKILL.md is a generated CLI stub. Content
+  // tests keep asserting against the logical document.
+  const skillMatch = relativePath.match(/^([a-z0-9-]+)[\\/]SKILL\.md$/);
+  if (skillMatch) {
+    const manifestPath = path.join(repoRoot, skillMatch[1], "skill.json");
+    if (fs.existsSync(manifestPath)) {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+      const instruction = fs.readFileSync(path.join(repoRoot, skillMatch[1], "instruction.md"), "utf8");
+      return `---\n${manifest.frontmatter.trim()}\n---\n\n${instruction}`;
+    }
+  }
+
+  return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function readRaw(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
@@ -163,6 +180,180 @@ test("root npm test script includes the skill docs regression suite", () => {
   const packageJson = JSON.parse(read("package.json"));
 
   assert.match(packageJson.scripts.test, /node --test scripts\/skill-docs\.test\.js/);
+});
+
+// Skills that have migrated to the @nomadamas/k-skill CLI adapter keep their
+// source in skill.json/instruction.md and publish a generated stub SKILL.md.
+function cliManagedSkills() {
+  return fs
+    .readdirSync(repoRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => fs.existsSync(path.join(repoRoot, name, "skill.json")))
+    .sort();
+}
+
+test("every top-level skill embeds the canonical portable runtime contract or a CLI stub", () => {
+  const canonical = findSection(read("docs/adding-a-skill.md"), "## Runtime contract (required)").trim();
+  const cliManaged = new Set(cliManagedSkills());
+  const skillDirs = fs
+    .readdirSync(repoRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
+    .sort();
+
+  assert.equal(skillDirs.length, 122);
+
+  for (const skillName of skillDirs) {
+    const skill = readRaw(path.join(skillName, "SKILL.md"));
+
+    if (cliManaged.has(skillName)) {
+      assert.match(skill, /k-skill:cli-stub/, `${skillName} must be a generated CLI stub`);
+      assert.match(
+        skill,
+        new RegExp(`npx -y @nomadamas/k-skill@0 instruct ${escapeRegex(skillName)}`),
+        `${skillName} stub must invoke the pinned-major CLI`,
+      );
+      continue;
+    }
+
+    assert.ok(skill.includes(canonical), `${skillName} must embed the canonical portable runtime contract`);
+    assert.equal(
+      (skill.match(/^## Runtime contract \(required\)$/gm) ?? []).length,
+      1,
+      `${skillName} must contain exactly one portable runtime contract`,
+    );
+  }
+});
+
+test("CLI-managed skills keep source, stub safety floor, and bundled copies aligned", () => {
+  const cliManaged = cliManagedSkills();
+
+  assert.ok(cliManaged.length >= 5, "expected at least the five pilot skills to be CLI-managed");
+
+  const { SAFETY_FLOOR } = require("./generate-skill-stubs.js");
+
+  for (const skillName of cliManaged) {
+    const stub = readRaw(path.join(skillName, "SKILL.md"));
+    const manifest = readJson(path.join(skillName, "skill.json"));
+
+    assert.equal(manifest.name, skillName, `${skillName}/skill.json name must match the directory`);
+    assert.ok(
+      fs.existsSync(path.join(repoRoot, skillName, "instruction.md")),
+      `${skillName} must keep its instruction.md source`,
+    );
+    assert.ok(stub.includes(SAFETY_FLOOR), `${skillName} stub must keep the static safety floor`);
+    assert.match(stub, /clarify|approval/, `${skillName} stub must state the approval boundary`);
+
+    for (const relative of ["skill.json", "instruction.md"]) {
+      const source = readRaw(path.join(skillName, relative));
+      const bundled = readRaw(path.join("packages", "k-skill-cli", "skills", skillName, relative));
+
+      assert.equal(bundled, source, `packages/k-skill-cli/skills/${skillName}/${relative} must match the source`);
+    }
+  }
+
+  // Staleness gates: regenerating and re-syncing must be no-ops.
+  childProcess.execFileSync("node", [path.join(__dirname, "generate-skill-stubs.js"), "--check"], { cwd: repoRoot });
+  childProcess.execFileSync(
+    "node",
+    [path.join(__dirname, "migrate-cli-asset-instructions.js"), "--check"],
+    { cwd: repoRoot },
+  );
+  childProcess.execFileSync("node", [path.join(__dirname, "sync-cli-skills.js"), "--check"], { cwd: repoRoot });
+});
+
+test("actionable skills publish a Dolshoi action path", () => {
+  const cliManaged = new Set(cliManagedSkills());
+  const actionableSkills = [
+    "bunjang-search",
+    "catchtable-sniper",
+    "corporate-registration-consulting",
+    "coupang-product-search",
+    "court-auction-notice-search",
+    "court-payment-order-assistant",
+    "d2b-notice-search",
+    "daangn-cars-search",
+    "daangn-jobs-search",
+    "daangn-realty-search",
+    "daangn-used-goods-search",
+    "daiso-product-search",
+    "danawa-price-search",
+    "donation-place-search",
+    "ev-charger-nearby",
+    "ev-subsidy-status",
+    "express-bus-booking",
+    "flight-ticket-search",
+    "foresttrip-vacancy",
+    "g2b-order-plan-search",
+    "gangnamunni-clinic-search",
+    "hipass-receipt",
+    "hola-poke-yeoksam",
+    "intercity-bus-booking",
+    "iros-registry-automation",
+    "job-posting-match",
+    "jobkorea-talent-search",
+    "kakao-bar-nearby",
+    "kakao-map",
+    "kakaotalk-mac",
+    "keris-academic-search",
+    "kopis-performance-search",
+    "korean-cinema-search",
+    "korean-jangbu-for",
+    "korean-marathon-schedule",
+    "korean-scholarship-search",
+    "kr-whois-lookup",
+    "kstartup-search",
+    "ktx-booking",
+    "lh-notice-search",
+    "library-book-search",
+    "lovebug-report",
+    "market-kurly-search",
+    "myrealtrip-search",
+    "naver-ad-performance",
+    "naver-shopping-search",
+    "nhis-care-checkup-search",
+    "nts-business-registration",
+    "nts-tax-delinquency",
+    "ohou-today-deal",
+    "olive-young-search",
+    "popbill",
+    "s2b-notice-search",
+    "saramin-talent-search",
+    "sh-notice-search",
+    "srt-booking",
+    "subway-lost-property",
+    "ticket-availability",
+    "toss-securities",
+    "used-car-price-search",
+    "yebigun-training",
+  ];
+
+  for (const skillName of actionableSkills) {
+    if (cliManaged.has(skillName)) continue; // action path now lives in the CLI-assembled instructions
+
+    const skill = read(path.join(skillName, "SKILL.md"));
+
+    assert.match(skill, /^## Dolshoi action path$/m, `${skillName} should document its Dolshoi action path`);
+    assert.match(skill, /clarify/, `${skillName} should document irreversible-action approval`);
+  }
+});
+
+test("runtime action audit covers every top-level skill exactly once", () => {
+  const audit = findSection(read("docs/runtime-action-audit.md"), "## Complete catalog");
+  const skillDirs = fs
+    .readdirSync(repoRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
+    .sort();
+
+  for (const skillName of skillDirs) {
+    const matches = audit.match(new RegExp(`^\\| \\\`${escapeRegex(skillName)}\\\` \\|`, "gm")) ?? [];
+
+    assert.equal(matches.length, 1, `${skillName} must appear exactly once in the runtime action audit`);
+  }
 });
 
 test("README advertises OpenClaw among the supported coding agents", () => {
@@ -444,7 +635,10 @@ test("repository docs advertise the korean-spell-check skill and usage constrain
   assert.match(skill, /원문.*교정안.*이유/s);
   assert.match(featureDoc, /old_speller\/results/);
   assert.match(featureDoc, /Cloudflare|403/);
-  assert.match(featureDoc, /python3 scripts\/korean_spell_check\.py/);
+  assert.match(
+    featureDoc,
+    /@nomadamas\/k-skill@0 exec korean-spell-check scripts\/korean_spell_check\.py --/,
+  );
   assert.match(sources, /https:\/\/nara-speller\.co\.kr\/speller\//);
   assert.match(sources, /https:\/\/nara-speller\.co\.kr\/old_speller\//);
   assert.match(sources, /https:\/\/nara-speller\.co\.kr\/robots\.txt/);
@@ -754,10 +948,10 @@ test("ktx-booking docs document the helper-based live Korail workflow", () => {
   assert.match(skill, /^name: ktx-booking$/m);
 
   for (const doc of [skill, featureDoc]) {
-    assert.match(doc, /python3 scripts\/ktx_booking\.py search/);
-    assert.match(doc, /python3 scripts\/ktx_booking\.py reserve/);
-    assert.match(doc, /python3 scripts\/ktx_booking\.py reservations/);
-    assert.match(doc, /python3 scripts\/ktx_booking\.py cancel/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- search/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- reserve/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- reservations/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py -- cancel/);
     assert.match(doc, /train_id/);
     assert.match(doc, /--train-id/);
     assert.match(doc, /--include-no-seats/);
@@ -765,7 +959,10 @@ test("ktx-booking docs document the helper-based live Korail workflow", () => {
     assert.match(doc, /--try-waiting/);
     assert.match(doc, /credential resolution order|KSKILL_KTX_ID/);
     assert.match(doc, /anti-bot|Dynapath|x-dynapath-m-token/i);
-    assert.match(doc, /결제(까지)?는 자동화하지 않는다|결제는 제외/);
+    assert.match(doc, /좌석 확보는 완료|예약번호.*구입기한|예약번호, 구입기한/);
+    assert.match(doc, /돌쇠|Dolshoi/);
+    assert.match(doc, /clarify/);
+    assert.match(doc, /결제 완료|결제 상태/);
     assert.doesNotMatch(doc, /예약 시 선택할 `--train-index`/);
   }
 
@@ -812,9 +1009,9 @@ test("geeknews-search docs lock the RSS-first list-search-detail workflow", () =
 
   for (const doc of [skill, featureDoc]) {
     assert.match(doc, /feeds\.feedburner\.com\/geeknews-feed/);
-    assert.match(doc, /python3 scripts\/geeknews_search\.py list/);
-    assert.match(doc, /python3 scripts\/geeknews_search\.py search/);
-    assert.match(doc, /python3 scripts\/geeknews_search\.py detail/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec geeknews-search scripts\/geeknews_search\.py -- list/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec geeknews-search scripts\/geeknews_search\.py -- search/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec geeknews-search scripts\/geeknews_search\.py -- detail/);
     assert.match(doc, /RSS-first|RSS first|RSS 피드/);
     assert.match(doc, /read-only|읽기 전용/);
   }
@@ -840,7 +1037,7 @@ test("subway-lost-property docs lock the official LOST112 guidance flow", () => 
   for (const doc of [skill, featureDoc]) {
     assert.match(doc, /LOST112/);
     assert.match(doc, /seoulmetro\.co\.kr\/kr\/page\.do\?menuIdx=541/);
-    assert.match(doc, /python3 scripts\/subway_lost_property\.py/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec subway-lost-property scripts\/subway_lost_property\.py --/);
     assert.match(doc, /SITE=V/);
     assert.match(doc, /안내형|하이브리드/);
   }
@@ -884,8 +1081,8 @@ test("zipcode-search docs lock the official postcode plus English-address extrac
     assert.match(doc, /--retry-all-errors/);
     assert.match(doc, /"--retry-delay",\s+"1"/);
     assert.match(doc, /영문 주소|영문주소/);
-    assert.match(doc, /python3 scripts\/zipcode_search\.py/);
-    assert.match(doc, /\.\/scripts\/zipcode_search\.py/);
+    assert.match(doc, /@nomadamas\/k-skill@0 exec zipcode-search scripts\/zipcode_search\.py --/);
+    assert.doesNotMatch(doc, /(?:python3|\.) scripts?\/zipcode_search\.py/);
     assert.match(doc, /mktemp|임시 파일/);
     assert.doesNotMatch(doc, /urllib\.request/);
   }
@@ -1472,8 +1669,8 @@ test("coupang-product-search skill and docs use retention-corp coupang_partners 
     assert.match(doc, /--repo-dir/);
     assert.match(doc, /--no-clone/);
     assert.match(doc, /--update/);
-    assert.match(doc, /coupang_partners_mcp\.py\s+tools/);
-    assert.match(doc, /coupang_partners_mcp\.py\s+init/);
+    assert.match(doc, /coupang_partners_mcp\.py --\s+tools/);
+    assert.match(doc, /coupang_partners_mcp\.py --\s+init/);
     assert.match(doc, /search_coupang_products/);
     assert.match(doc, /로켓배송/);
     assert.match(doc, /a\.retn\.kr\/v1\/public\/assist/);
@@ -1541,7 +1738,7 @@ test("ohou-today-deal docs lock the public Next data read-only workflow", () => 
     assert.match(doc, /https:\/\/store\.ohou\.se\/today_deals/);
     assert.match(doc, /__NEXT_DATA__/);
     assert.match(doc, /today-deal-feed/);
-    assert.match(doc, /ohou_today_deal\.py list/);
+    assert.match(doc, /ohou_today_deal\.py -- list/);
     assert.match(doc, /(로그인|API key|API 키).*(불필요|없음)|(불필요|없음).*(로그인|API key|API 키)/);
     assert.match(doc, /(구매|장바구니|결제).*자동화.*(하지 않는다|하지 말고|제외)/);
   }
@@ -1889,7 +2086,10 @@ test("fine-dust-location skill documents the official two-api flow and fallback 
   assert.match(skill, /k-skill-proxy\.nomadamas\.org\/v1\/fine-dust\/report/);
   assert.match(skill, /행정구역 이름/u);
   assert.match(skill, /강남구/);
-  assert.match(skill, /python3 scripts\/fine_dust\.py/);
+  assert.match(
+    skill,
+    /@nomadamas\/k-skill@0 exec fine-dust-location scripts\/fine_dust\.py --/,
+  );
   assert.match(skill, /docs\/features\/fine-dust-location\.md/);
   assert.match(skill, /docs\/features\/k-skill-proxy\.md/);
   assert.match(skill, /PM10/);
@@ -1907,7 +2107,10 @@ test("fine-dust-location skill documents the official two-api flow and fallback 
     assert.match(doc, /fallback|폴백|대체 흐름/i);
     assert.match(doc, /후보 측정소|candidate_stations/);
     assert.match(doc, /조회 시각|조회 시점/);
-    assert.match(doc, /python3 scripts\/fine_dust\.py/);
+    assert.match(
+      doc,
+      /@nomadamas\/k-skill@0 exec fine-dust-location scripts\/fine_dust\.py --/,
+    );
   }
 });
 
@@ -2221,11 +2424,17 @@ test("repository docs advertise the joseon-sillok-search skill and helper", () =
   assert.match(readme, /\| 조선왕조실록 검색 \|/);
   assert.match(readme, /\[조선왕조실록 검색 가이드\]\(docs\/features\/joseon-sillok-search\.md\)/);
   assert.match(install, /--skill joseon-sillok-search/);
-  assert.match(install, /python3 scripts\/sillok_search\.py --query "훈민정음" --king 세종 --year 1443/);
+  assert.match(
+    install,
+    /@nomadamas\/k-skill@0 exec joseon-sillok-search scripts\/sillok_search\.py -- --query "훈민정음" --king 세종 --year 1443/,
+  );
   assert.match(skill, /sillok\.history\.go\.kr/);
   assert.match(skill, /--king/);
   assert.match(skill, /--year/);
-  assert.match(featureDoc, /python3 scripts\/sillok_search\.py --query "훈민정음"/);
+  assert.match(
+    featureDoc,
+    /@nomadamas\/k-skill@0 exec joseon-sillok-search scripts\/sillok_search\.py -- --query "훈민정음"/,
+  );
   assert.match(featureDoc, /1443/);
   assert.match(featureDoc, /kda_12512030_002/);
   assert.match(sources, /https:\/\/sillok\.history\.go\.kr/);
@@ -2325,7 +2534,10 @@ test("repository docs advertise the korean-patent-search skill and official KIPR
   assert.match(readme, /\[한국 특허 정보 검색 가이드\]\(docs\/features\/korean-patent-search\.md\)/);
   assert.match(install, /--skill korean-patent-search/);
   assert.match(install, /KIPRIS_PLUS_API_KEY/);
-  assert.match(install, /python3 scripts\/patent_search\.py --query "배터리"/);
+  assert.match(
+    install,
+    /@nomadamas\/k-skill@0 exec korean-patent-search scripts\/patent_search\.py -- --query "배터리"/,
+  );
   assert.match(setup, /한국 특허 정보 검색의 KIPRIS Plus 경로용 `KIPRIS_PLUS_API_KEY`/);
   assert.match(security, /KIPRIS_PLUS_API_KEY/);
   assert.match(setupSkill, /한국 특허 정보 검색: `KIPRIS_PLUS_API_KEY`/);
@@ -2337,7 +2549,10 @@ test("repository docs advertise the korean-patent-search skill and official KIPR
     assert.match(doc, /getWordSearch/);
     assert.match(doc, /getBibliographyDetailInfoSearch/);
     assert.match(doc, /ServiceKey/);
-    assert.match(doc, /python3 scripts\/patent_search\.py/);
+    assert.match(
+      doc,
+      /@nomadamas\/k-skill@0 exec korean-patent-search scripts\/patent_search\.py --/,
+    );
     assert.match(doc, /Done when/i);
     assert.doesNotMatch(doc, /packages\/korean-patent-search/);
     assert.doesNotMatch(doc, /python-packages\/korean-patent-search/);
@@ -2803,7 +3018,10 @@ test("repository docs advertise the shipped korean-spell-check helper assets", (
   assert.equal(fs.existsSync(featureDocPath), true);
   assert.equal(fs.existsSync(helperPath), true);
   assert.match(readme, /\[한국어 맞춤법 검사 가이드\]\(docs\/features\/korean-spell-check\.md\)/);
-  assert.match(install, /python3 scripts\/korean_spell_check\.py/);
+  assert.match(
+    install,
+    /@nomadamas\/k-skill@0 exec korean-spell-check scripts\/korean_spell_check\.py --/,
+  );
 });
 
 test("repository docs advertise the korean-character-count skill and deterministic counting contract", () => {
@@ -2828,14 +3046,20 @@ test("repository docs advertise the korean-character-count skill and determinist
     /--skill k-schoollunch-menu \\\n  --skill korean-character-count/,
     "docs/install.md selective-install block should keep k-schoollunch-menu and korean-character-count in the same continued shell command",
   );
-  assert.match(install, /node scripts\/korean_character_count\.js --text "가나다"/);
+  assert.match(
+    install,
+    /@nomadamas\/k-skill@0 exec korean-character-count scripts\/korean_character_count\.js -- --text "가나다"/,
+  );
 
   for (const doc of [skill, featureDoc]) {
     assert.match(doc, /grapheme|extended grapheme/i);
     assert.match(doc, /UTF-8/);
     assert.match(doc, /NEIS/i);
     assert.match(doc, /CRLF|U\+2028|U\+2029/);
-    assert.match(doc, /node scripts\/korean_character_count\.js/);
+    assert.match(
+      doc,
+      /@nomadamas\/k-skill@0 exec korean-character-count scripts\/korean_character_count\.js --/,
+    );
     assert.doesNotMatch(doc, /packages\/korean-character-count/);
     assert.doesNotMatch(doc, /python-packages\/korean-character-count/);
   }
@@ -3039,7 +3263,10 @@ test("MFDS public-health skill docs require interview-first safety flow and offi
     assert.match(doc, /사용자.*시크릿 없음|사용자 API key 없이/u);
     assert.match(doc, /DATA_GO_KR_API_KEY.*프록시 운영 서버/u);
     assert.match(doc, /\/v1\/mfds\/drug-safety\/lookup/);
-    assert.match(doc, /python3 scripts\/mfds_drug_safety\.py/);
+    assert.match(
+      doc,
+      /@nomadamas\/k-skill@0 exec mfds-drug-safety scripts\/mfds_drug_safety\.py --/,
+    );
   }
 
   for (const doc of [foodSkill, foodFeatureDoc]) {
@@ -3052,7 +3279,10 @@ test("MFDS public-health skill docs require interview-first safety flow and offi
     assert.match(doc, /DATA_GO_KR_API_KEY.*프록시 운영 서버/u);
     assert.match(doc, /FOODSAFETYKOREA_API_KEY/);
     assert.match(doc, /\/v1\/mfds\/food-safety\/search/);
-    assert.match(doc, /python3 scripts\/mfds_food_safety\.py/);
+    assert.match(
+      doc,
+      /@nomadamas\/k-skill@0 exec mfds-food-safety scripts\/mfds_food_safety\.py --/,
+    );
     assert.match(doc, /https:\/\/openapi\.foodsafetykorea\.go\.kr\/api\/sample\/I0490\/json\/1\/5/);
     assert.doesNotMatch(doc, /http:\/\/openapi\.foodsafetykorea\.go\.kr/);
   }
@@ -3578,8 +3808,8 @@ test("korean-jangbu-for installer registers upstream subskills for Claude and ag
     );
     assert.match(
       fs.readFileSync(path.join(skillRoot, "korean-jangbu-for", "SKILL.md"), "utf8"),
-      /@kimlawtech/,
-      `${root} should keep the korean-jangbu-for wrapper policy at the top level`,
+      /@kimlawtech|k-skill:cli-stub/,
+      `${root} should keep the korean-jangbu-for wrapper policy (or CLI stub) at the top level`,
     );
     assert.ok(
       !fs.lstatSync(path.join(skillRoot, "korean-jangbu-for")).isSymbolicLink(),
@@ -4344,9 +4574,15 @@ test("repository docs advertise the k-skill-cleaner skill and agent usage source
   assert.match(skill, /OpenCode/);
   assert.match(skill, /OpenClaw\/ClawHub/);
   assert.match(skill, /Hermes Agent/);
-  assert.match(skill, /python3 scripts\/k_skill_cleaner\.py/);
+  assert.match(
+    skill,
+    /@nomadamas\/k-skill@0 exec k-skill-cleaner scripts\/k_skill_cleaner\.py --/,
+  );
   assert.match(skill, /--days 90/);
-  assert.match(featureDoc, /k-skill-cleaner\/scripts\/k_skill_cleaner\.py/);
+  assert.match(
+    featureDoc,
+    /@nomadamas\/k-skill@0 exec k-skill-cleaner scripts\/k_skill_cleaner\.py --/,
+  );
   assert.match(featureDoc, /--days 90/);
   assert.match(featureDoc, /인터뷰/);
   assert.match(featureDoc, /트리거 횟수/);

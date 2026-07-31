@@ -40,7 +40,7 @@ pip install httpx
 ### 일정 조회 (인터파크)
 
 ```bash
-python3 scripts/ticket_availability.py schedule "https://tickets.interpark.com/goods/26000541"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- schedule "https://tickets.interpark.com/goods/26000541"
 ```
 
 응답 (요약):
@@ -59,19 +59,19 @@ python3 scripts/ticket_availability.py schedule "https://tickets.interpark.com/g
 ### 일정 조회 (YES24, 기본 3주 윈도우)
 
 ```bash
-python3 scripts/ticket_availability.py schedule "https://ticket.yes24.com/Perf/58026"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- schedule "https://ticket.yes24.com/Perf/58026"
 ```
 
 6개월 전체:
 
 ```bash
-python3 scripts/ticket_availability.py schedule "yes24:58026" --all-dates
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- schedule "yes24:58026" --all-dates
 ```
 
 ### 등급별 잔여석 조회
 
 ```bash
-python3 scripts/ticket_availability.py seats "interpark:26000541"
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- seats "interpark:26000541"
 ```
 
 응답 (요약, 회차당 1개 키):
@@ -99,7 +99,7 @@ YES24 응답은 회차별 `time_label` (예: `1회`, `2회`) 와 등급별 `pric
 ### 헬스체크
 
 ```bash
-python3 scripts/ticket_availability.py health
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- health
 ```
 
 응답:
@@ -114,7 +114,7 @@ python3 scripts/ticket_availability.py health
 ### 한 줄 JSON (파이프용)
 
 ```bash
-python3 scripts/ticket_availability.py seats "interpark:26000541" --compact
+npx -y @nomadamas/k-skill@0 exec ticket-availability scripts/ticket_availability.py -- seats "interpark:26000541" --compact
 ```
 
 ## 출력에서 확인할 점

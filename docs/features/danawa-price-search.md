@@ -19,9 +19,9 @@
 ## 로컬 실행
 
 ```bash
-python3 danawa-price-search/scripts/danawa_search.py search "맥북 에어 M4" --limit 5
-python3 danawa-price-search/scripts/danawa_search.py offers 28208783 --limit 10
-python3 danawa-price-search/scripts/danawa_search.py compare "갤럭시 S25" --limit 3 --offers 5
+npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- search "맥북 에어 M4" --limit 5
+npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- offers 28208783 --limit 10
+npx -y @nomadamas/k-skill@0 exec danawa-price-search scripts/danawa_search.py -- compare "갤럭시 S25" --limit 3 --offers 5
 ```
 
 ## 출력 해석

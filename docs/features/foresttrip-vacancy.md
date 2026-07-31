@@ -22,7 +22,7 @@
 ```bash
 python3 -m pip install playwright
 python3 -m playwright install chromium
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --check-deps
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --check-deps
 ```
 
 `--check-deps` 는 숲나들e 로그인이나 네트워크 조회를 수행하지 않고, 로컬 Python/Playwright Chromium 준비 상태만 확인한다.
@@ -53,8 +53,8 @@ helper는 `KSKILL_FORESTTRIP_ID`, `KSKILL_FORESTTRIP_PASSWORD` 환경변수를 �
 export KSKILL_FORESTTRIP_ID="your-foresttrip-id"
 export KSKILL_FORESTTRIP_PASSWORD="your-foresttrip-password"
 
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --check-deps
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --forest-name 유명산 --text --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --check-deps
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --forest-name 유명산 --text --dates 20260504
 ```
 
 성공 여부를 먼저 보려면 전체 조회보다 `--forest-name` 또는 `--forest-id` 로 범위를 좁혀 실행한다. JSON 결과가 필요하면 같은 조건에 `--json` 을 사용한다.
@@ -97,37 +97,37 @@ python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --forest-name 유�
 전체 자연휴양림에서 하루 조회:
 
 ```bash
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --all --text --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --text --dates 20260504
 ```
 
 JSON으로 조회:
 
 ```bash
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --all --json --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --json --dates 20260504
 ```
 
 여러 날짜 조회:
 
 ```bash
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --all --text --dates 20260504,20260505
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --text --dates 20260504,20260505
 ```
 
 야영/캠핑만 조회:
 
 ```bash
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --all --text --dates 20260504 --categories 02
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --text --dates 20260504 --categories 02
 ```
 
 휴양림명으로 좁혀 조회:
 
 ```bash
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --forest-name 유명산 --text --dates 20260504
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --forest-name 유명산 --text --dates 20260504
 ```
 
 로그인 세션 캐시를 무시하고 새로 조회:
 
 ```bash
-python3 foresttrip-vacancy/scripts/run_foresttrip_vacancy.py --all --text --dates 20260504 --refresh-session
+npx -y @nomadamas/k-skill@0 exec foresttrip-vacancy scripts/run_foresttrip_vacancy.py -- --all --text --dates 20260504 --refresh-session
 ```
 
 ## 주의할 점

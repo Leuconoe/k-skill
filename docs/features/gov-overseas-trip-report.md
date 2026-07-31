@@ -24,11 +24,11 @@
 ```
 
 ```bash
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider nec --max-pages 5
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider acrc
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py list --provider daegu_council
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py search --keyword 몰디브
-python3 gov-overseas-trip-report/scripts/gov_overseas_trip_report.py discover --keyword 공무국외출장
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider nec --max-pages 5
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider acrc
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- list --provider daegu_council
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- search --keyword 몰디브
+npx -y @nomadamas/k-skill@0 exec gov-overseas-trip-report scripts/gov_overseas_trip_report.py -- discover --keyword 공무국외출장
 ```
 
 표에 없는 기관은 unsupported. open_portal 메타검색만 보조로 제안한다.

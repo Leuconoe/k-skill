@@ -31,25 +31,25 @@
 최신 글 목록:
 
 ```bash
-python3 scripts/geeknews_search.py list --limit 5
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- list --limit 5
 ```
 
 검색:
 
 ```bash
-python3 scripts/geeknews_search.py search --query Claude --limit 5
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- search --query Claude --limit 5
 ```
 
 상세:
 
 ```bash
-python3 scripts/geeknews_search.py detail --id 28439
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- detail --id 28439
 ```
 
 오프라인 fixture 또는 저장된 feed로 검증할 때:
 
 ```bash
-python3 scripts/geeknews_search.py list \
+npx -y @nomadamas/k-skill@0 exec geeknews-search scripts/geeknews_search.py -- list \
   --feed-file scripts/fixtures/geeknews-feed.xml \
   --limit 3
 ```
