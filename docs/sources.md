@@ -157,7 +157,8 @@
 - 러브버그.com 클러스터 JSON: https://xn--2i0bt2q2wd1wb.com/api/map/clusters?level=sigungu&historicalYear=2026
 - 러브버그.com 동네 snapshot JSON: https://xn--2i0bt2q2wd1wb.com/api/map/areas?historicalYear=2026&includePolygon=false
 - 러브버그.com 익명 제보 RPC: https://sewrbxfawkmusnyzjoab.supabase.co/rest/v1/rpc/submit_anonymous_report (public anon key, `p_gu_code`, `p_lng`, `p_lat`, `p_accuracy_m`, `p_level`, `p_device_hash`, `p_context`, `p_image_url`, `p_indoor` body)
-- 강남언니 공개 검색: https://www.gangnamunni.com/search?q=<keyword>
+- 강남언니 공개 병원 검색(기본): https://www.gangnamunni.com/hospitals?q=<keyword> — `__NEXT_DATA__`의 `dehydratedState` 안 `infinite-search-hospitals` query를 사용
+- 강남언니 공개 검색(이전 HTML 구조 참고): https://www.gangnamunni.com/search?q=<keyword> — 파서는 입력 payload의 `pageProps.hospitals`를 호환 처리하지만 이 URL을 추가 요청하지 않음
 - 강남언니 공개 병원 페이지: https://www.gangnamunni.com/hospitals/<id>
 - 마켓컬리 검색 API(v4): https://api.kurly.com/search/v4/sites/market/normal-search
 - 마켓컬리 검색 개수 API(v3): https://api.kurly.com/search/v3/sites/market/normal-search/count
