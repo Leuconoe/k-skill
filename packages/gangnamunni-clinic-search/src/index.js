@@ -45,9 +45,13 @@ function parseSearchHtml(html, options = {}) {
   const parsed = hospitals.map(normalizeHospital).filter((item) => item.id && item.name)
   const items = parsed.slice(0, normalizedLimit)
   const warnings = []
+  const failureMode = Number(pageProps.totalLength || 0) > 0 && parsed.length === 0 ? "empty-shell" : null
 
   if (hospitals.length === 0 && Number(pageProps.hospitalTotalLength || 0) > 0) {
     warnings.push(`Gangnam Unni reported ${pageProps.hospitalTotalLength} hospitals but embedded no hospital list items`)
+  }
+  if (failureMode) {
+    warnings.push(`Gangnam Unni reported ${pageProps.totalLength} total matches but embedded no parseable hospital items; site structure may have changed`)
   }
   if (parsed.length > items.length) warnings.push(`returned ${items.length} of ${parsed.length} parsed hospitals; increase limit for more`)
   if (Number(pageProps.hospitalTotalLength || 0) > parsed.length) {
@@ -61,7 +65,8 @@ function parseSearchHtml(html, options = {}) {
     sourceUrl,
     sources: [SOURCE_ID],
     warnings,
-    items
+    items,
+    ...(failureMode ? { failureMode } : {})
   }
 }
 

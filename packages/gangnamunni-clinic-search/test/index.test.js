@@ -163,6 +163,24 @@ test("parseSearchHtml extracts hospitals from dehydratedState pages", () => {
   assert.doesNotMatch(result.items.map((item) => item.name).join("\n"), /무관한 병원/)
 })
 
+test("parseSearchHtml flags claimed matches with no parseable hospitals", () => {
+  const claimedHtml = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: { pageProps: { keyword: "강남 제모", totalLength: 7, hospitalTotalLength: 0, hospitals: [] } }
+  })}</script>`
+  const zeroHtml = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: { pageProps: { keyword: "없는 시술", totalLength: 0, hospitalTotalLength: 0, hospitals: [] } }
+  })}</script>`
+
+  const claimed = parseSearchHtml(claimedHtml)
+  const zero = parseSearchHtml(zeroHtml)
+
+  assert.equal(claimed.failureMode, "empty-shell")
+  assert.match(claimed.warnings.join("\n"), /reported 7 total matches.*no parseable hospital items/i)
+  assert.equal(zero.failureMode, undefined)
+  assert.deepEqual(zero.items, [])
+  assert.deepEqual(zero.warnings, [])
+})
+
 test("searchClinics fetches the hospitals page with a default timeout and parses clinics", async () => {
   const seen = []
   const fetcher = async (url, options) => {
