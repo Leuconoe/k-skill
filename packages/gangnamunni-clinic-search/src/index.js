@@ -1,5 +1,5 @@
 const GANGNAMUNNI_ORIGIN = "https://www.gangnamunni.com"
-const GANGNAMUNNI_SEARCH_URL = `${GANGNAMUNNI_ORIGIN}/search`
+const GANGNAMUNNI_SEARCH_URL = `${GANGNAMUNNI_ORIGIN}/hospitals`
 const SOURCE_ID = "gangnamunni-search-next-data"
 
 function buildSearchUrl(query) {
@@ -39,7 +39,9 @@ function parseSearchHtml(html, options = {}) {
   const normalizedLimit = Math.max(1, Number(limit) || 5)
   const data = parseNextData(html)
   const pageProps = (((data || {}).props || {}).pageProps) || {}
-  const hospitals = Array.isArray(pageProps.hospitals) ? pageProps.hospitals : []
+  const dehydratedHospitals = parseDehydratedHospitals(pageProps.dehydratedState)
+  const legacyHospitals = Array.isArray(pageProps.hospitals) ? pageProps.hospitals : []
+  const hospitals = dehydratedHospitals.length > 0 ? dehydratedHospitals : legacyHospitals
   const parsed = hospitals.map(normalizeHospital).filter((item) => item.id && item.name)
   const items = parsed.slice(0, normalizedLimit)
   const warnings = []
@@ -53,7 +55,7 @@ function parseSearchHtml(html, options = {}) {
   }
 
   return {
-    query: cleanText(pageProps.keyword) || cleanText(query),
+    query: cleanText(pageProps.keyword) || cleanText(pageProps.hospitalSearchParams && pageProps.hospitalSearchParams.q) || cleanText(query),
     totalLength: numericOrNull(pageProps.totalLength),
     hospitalTotalLength: numericOrNull(pageProps.hospitalTotalLength),
     sourceUrl,
@@ -61,6 +63,17 @@ function parseSearchHtml(html, options = {}) {
     warnings,
     items
   }
+}
+
+function parseDehydratedHospitals(dehydratedState) {
+  const queries = Array.isArray(dehydratedState && dehydratedState.queries) ? dehydratedState.queries : []
+  const hospitalQuery = queries.find((query) => {
+    const queryKey = query && query.queryKey
+    return Array.isArray(queryKey) && queryKey[0] === "infinite-search-hospitals"
+  })
+  const pages = (((hospitalQuery || {}).state || {}).data || {}).pages
+  if (!Array.isArray(pages)) return []
+  return pages.flatMap((page) => Array.isArray(page && page.data) ? page.data : [])
 }
 
 function parseNextData(html) {

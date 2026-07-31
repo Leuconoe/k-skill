@@ -52,10 +52,41 @@ const sampleHtml = `<!doctype html><html><body>
 <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(sampleNextData).replace(/</g, "\\u003c")}</script>
 </body></html>`
 
-test("buildSearchUrl uses the public Gangnam Unni search page", () => {
+const sampleDehydratedNextData = {
+  props: {
+    pageProps: {
+      hospitalSearchParams: { q: "제모" },
+      dehydratedState: {
+        queries: [
+          {
+            queryKey: ["unrelated-query"],
+            state: { data: { pages: [{ data: [{ id: 999, name: "무관한 병원" }] }] } }
+          },
+          {
+            queryKey: ["infinite-search-hospitals", "제모", "rcmd", "N1101", 20, "ko-KR"],
+            state: {
+              data: {
+                pages: [
+                  { data: [sampleNextData.props.pageProps.hospitals[0]] },
+                  { data: [sampleNextData.props.pageProps.hospitals[1]] }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
+const sampleDehydratedHtml = `<!doctype html><html><body>
+<script id="__NEXT_DATA__" type="application/json">${JSON.stringify(sampleDehydratedNextData).replace(/</g, "\\u003c")}</script>
+</body></html>`
+
+test("buildSearchUrl uses the public Gangnam Unni hospitals page", () => {
   const url = buildSearchUrl("강남 성형외과")
 
-  assert.equal(url, "https://www.gangnamunni.com/search?q=%EA%B0%95%EB%82%A8+%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC")
+  assert.equal(url, "https://www.gangnamunni.com/hospitals?q=%EA%B0%95%EB%82%A8+%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC")
 })
 
 test("parseNextData reads escaped Next.js JSON payloads", () => {
@@ -124,7 +155,15 @@ test("parseSearchHtml returns query metadata, limited clinic items, source, and 
   assert.match(result.warnings.join("\n"), /returned 1 of 2 parsed hospitals/)
 })
 
-test("searchClinics fetches the search page with a default timeout and parses clinics", async () => {
+test("parseSearchHtml extracts hospitals from dehydratedState pages", () => {
+  const result = parseSearchHtml(sampleDehydratedHtml, { query: "제모", limit: 5 })
+
+  assert.equal(result.query, "제모")
+  assert.deepEqual(result.items.map((item) => item.id), [347, 543])
+  assert.doesNotMatch(result.items.map((item) => item.name).join("\n"), /무관한 병원/)
+})
+
+test("searchClinics fetches the hospitals page with a default timeout and parses clinics", async () => {
   const seen = []
   const fetcher = async (url, options) => {
     seen.push({ url: String(url), headers: options.headers, signal: options.signal })
