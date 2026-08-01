@@ -1,5 +1,5 @@
 const GANGNAMUNNI_ORIGIN = "https://www.gangnamunni.com"
-const GANGNAMUNNI_SEARCH_URL = `${GANGNAMUNNI_ORIGIN}/search`
+const GANGNAMUNNI_SEARCH_URL = `${GANGNAMUNNI_ORIGIN}/hospitals`
 const SOURCE_ID = "gangnamunni-search-next-data"
 
 function buildSearchUrl(query) {
@@ -39,27 +39,58 @@ function parseSearchHtml(html, options = {}) {
   const normalizedLimit = Math.max(1, Number(limit) || 5)
   const data = parseNextData(html)
   const pageProps = (((data || {}).props || {}).pageProps) || {}
-  const hospitals = Array.isArray(pageProps.hospitals) ? pageProps.hospitals : []
+  const dehydrated = parseDehydratedHospitalState(pageProps.dehydratedState)
+  const legacyHospitals = Array.isArray(pageProps.hospitals) ? pageProps.hospitals : []
+  const hospitals = dehydrated.hospitals.length > 0 ? dehydrated.hospitals : legacyHospitals
   const parsed = hospitals.map(normalizeHospital).filter((item) => item.id && item.name)
   const items = parsed.slice(0, normalizedLimit)
   const warnings = []
+  const pageTotalLength = numericOrNull(pageProps.totalLength)
+  const pageHospitalTotalLength = numericOrNull(pageProps.hospitalTotalLength)
+  const totalLength = pageTotalLength === null ? dehydrated.totalLength : pageTotalLength
+  const hospitalTotalLength = pageHospitalTotalLength === null ? dehydrated.totalLength : pageHospitalTotalLength
+  const reportedTotal = totalLength === null ? hospitalTotalLength : totalLength
+  const failureMode = Number(reportedTotal || 0) > 0 && parsed.length === 0 ? "empty-shell" : null
 
-  if (hospitals.length === 0 && Number(pageProps.hospitalTotalLength || 0) > 0) {
-    warnings.push(`Gangnam Unni reported ${pageProps.hospitalTotalLength} hospitals but embedded no hospital list items`)
+  if (!failureMode && hospitals.length === 0 && Number(hospitalTotalLength || 0) > 0) {
+    warnings.push(`Gangnam Unni reported ${hospitalTotalLength} hospitals but embedded no hospital list items`)
+  }
+  if (failureMode) {
+    warnings.push(`Gangnam Unni reported ${reportedTotal} total matches but embedded no parseable hospital items; site structure may have changed`)
   }
   if (parsed.length > items.length) warnings.push(`returned ${items.length} of ${parsed.length} parsed hospitals; increase limit for more`)
-  if (Number(pageProps.hospitalTotalLength || 0) > parsed.length) {
-    warnings.push(`public search page embedded ${parsed.length} of ${pageProps.hospitalTotalLength} matching hospitals`)
+  if (Number(hospitalTotalLength || 0) > parsed.length) {
+    warnings.push(`public search page embedded ${parsed.length} of ${hospitalTotalLength} matching hospitals`)
   }
 
   return {
-    query: cleanText(pageProps.keyword) || cleanText(query),
-    totalLength: numericOrNull(pageProps.totalLength),
-    hospitalTotalLength: numericOrNull(pageProps.hospitalTotalLength),
+    query: cleanText(pageProps.keyword) || cleanText(pageProps.hospitalSearchParams && pageProps.hospitalSearchParams.q) || cleanText(query),
+    totalLength,
+    hospitalTotalLength,
     sourceUrl,
     sources: [SOURCE_ID],
     warnings,
-    items
+    items,
+    ...(failureMode ? { failureMode } : {})
+  }
+}
+
+function parseDehydratedHospitalState(dehydratedState) {
+  const queries = Array.isArray(dehydratedState && dehydratedState.queries) ? dehydratedState.queries : []
+  const hospitalQuery = queries.find((query) => {
+    const queryKey = query && query.queryKey
+    return Array.isArray(queryKey) && queryKey[0] === "infinite-search-hospitals"
+  })
+  const pages = (((hospitalQuery || {}).state || {}).data || {}).pages
+  if (!Array.isArray(pages)) return { hospitals: [], totalLength: null }
+  const totalLength = pages.reduce((total, page) => {
+    if (total !== null) return total
+    const recordsTotal = numericOrNull(page && page.recordsTotal)
+    return recordsTotal === null ? numericOrNull(page && page.recordsFiltered) : recordsTotal
+  }, null)
+  return {
+    hospitals: pages.flatMap((page) => Array.isArray(page && page.data) ? page.data : []),
+    totalLength
   }
 }
 
@@ -120,6 +151,13 @@ function normalizeHospital(hospital) {
     languages: Array.isArray(hospital && hospital.supportingLangList) ? hospital.supportingLangList.filter(Boolean) : [],
     assessmentState: cleanText(hospital && hospital.assessmentState),
     sido: cleanText(hospital && hospital.sido),
+    district: cleanText(hospital && hospital.districtName),
+    subwayStation: cleanText(hospital && hospital.subwayStationName),
+    latitude: numericOrNull(hospital && hospital.latitude),
+    longitude: numericOrNull(hospital && hospital.longitude),
+    distanceWithUnit: cleanText(hospital && hospital.distanceWithUnit),
+    integratedReviewCount: numericOrNull(hospital && hospital.integratedReviewCount),
+    eventCount: numericOrNull(hospital && hospital.eventCount),
     profileImage: safeHttpsUrl(hospital && hospital.profileImage),
     mainImage: safeHttpsUrl(hospital && hospital.mainImage),
     url: Number.isFinite(id) ? `${GANGNAMUNNI_ORIGIN}/hospitals/${id}` : null
@@ -135,6 +173,7 @@ function compactObject(value) {
 }
 
 function numericOrNull(value) {
+  if (value === null || value === undefined || value === "") return null
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : null
 }

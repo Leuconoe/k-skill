@@ -37,6 +37,55 @@ class RequestBuilderTest(unittest.TestCase):
         self.assertEqual(page_two["nso"], "so:dd,p:all,a:all")
 
 
+def make_anchor(user_id: str, post_id: str, inner_html: str) -> str:
+    return f'<a href="https://blog.naver.com/{user_id}/{post_id}" class="link">{inner_html}</a>'
+
+
+NEW_WINDOW_LABEL_SPAN = '<span class="fender-ui_0cb57fb2">새 창 열림</span>'
+
+
+class ParseSearchResultsHiddenLabelTest(unittest.TestCase):
+    def test_title_and_snippet_do_not_leak_new_window_accessibility_label(self):
+        html = make_anchor(
+            "testuser1",
+            "223456789012",
+            '<span class="sds-comps-text-type-headline1">테스트 제목입니다</span>' + NEW_WINDOW_LABEL_SPAN,
+        ) + make_anchor(
+            "testuser1",
+            "223456789012",
+            '<span class="sds-comps-text-type-body1">테스트 스니펫 본문입니다.</span>'
+            + '<span class="fender-ui_44bf8dba">새 창 열림</span>',
+        )
+
+        results = naver_search.parse_search_results(html)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["title"], "테스트 제목입니다")
+        self.assertEqual(results[0]["snippet"], "테스트 스니펫 본문입니다.")
+
+    def test_label_glued_without_whitespace_is_removed(self):
+        html = make_anchor(
+            "testuser2",
+            "223456789013",
+            '<span class="sds-comps-text-type-headline1">제주도한우' + NEW_WINDOW_LABEL_SPAN + "</span>",
+        )
+
+        results = naver_search.parse_search_results(html)
+
+        self.assertEqual(results[0]["title"], "제주도한우")
+
+    def test_legitimate_text_containing_the_phrase_is_preserved(self):
+        html = make_anchor(
+            "testuser3",
+            "223456789014",
+            '<span class="sds-comps-text-type-headline1">"새 창 열림" 안 될 때 해결법</span>' + NEW_WINDOW_LABEL_SPAN,
+        )
+
+        results = naver_search.parse_search_results(html)
+
+        self.assertEqual(results[0]["title"], '"새 창 열림" 안 될 때 해결법')
+
+
 class SearchWorkflowTest(unittest.TestCase):
     def test_search_uses_15_result_pages_and_ignores_extra_anchors_beyond_page_window(self):
         fetch_starts: list[int] = []

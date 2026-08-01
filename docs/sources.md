@@ -157,7 +157,8 @@
 - 러브버그.com 클러스터 JSON: https://xn--2i0bt2q2wd1wb.com/api/map/clusters?level=sigungu&historicalYear=2026
 - 러브버그.com 동네 snapshot JSON: https://xn--2i0bt2q2wd1wb.com/api/map/areas?historicalYear=2026&includePolygon=false
 - 러브버그.com 익명 제보 RPC: https://sewrbxfawkmusnyzjoab.supabase.co/rest/v1/rpc/submit_anonymous_report (public anon key, `p_gu_code`, `p_lng`, `p_lat`, `p_accuracy_m`, `p_level`, `p_device_hash`, `p_context`, `p_image_url`, `p_indoor` body)
-- 강남언니 공개 검색: https://www.gangnamunni.com/search?q=<keyword>
+- 강남언니 공개 병원 검색(기본): https://www.gangnamunni.com/hospitals?q=<keyword> — `__NEXT_DATA__`의 `dehydratedState` 안 `infinite-search-hospitals` query를 사용
+- 강남언니 공개 검색(이전 HTML 구조 참고): https://www.gangnamunni.com/search?q=<keyword> — 파서는 입력 payload의 `pageProps.hospitals`를 호환 처리하지만 이 URL을 추가 요청하지 않음
 - 강남언니 공개 병원 페이지: https://www.gangnamunni.com/hospitals/<id>
 - 마켓컬리 검색 API(v4): https://api.kurly.com/search/v4/sites/market/normal-search
 - 마켓컬리 검색 개수 API(v3): https://api.kurly.com/search/v3/sites/market/normal-search/count
@@ -295,3 +296,4 @@
 - 한국도로공사 공공데이터포털 실시간 교통량: https://data.ex.co.kr/openapi/odtraffic/trafficAmountByRealtime — 공개 데모 키 `test`로 무가입 호출 가능(2026-07-21 확인), 잘못된 키는 HTTP 200 + `{"code":"ERROR"}` 반환
 - 국가교통정보센터 ITS CCTV 정보: https://openapi.its.go.kr:9443/cctvInfo — 공개 데모 키 `test`로 무가입 호출 가능, `getType=json`이어도 성공 응답은 XML, 잘못된 키는 HTTP 401 resultCode 4005
 - 한국은행 ECOS Open API: https://ecos.bok.or.kr/api — positional URL(`/<Service>/<key>/json/kr/...`), 공개 데모 키 `sample`로 무가입 호출 가능(2026-07-21 확인, 호출당 최대 10행/ERROR-301), 잘못된 키는 HTTP 200 + `INFO-100`, 빈 결과는 `INFO-200`
+- 한국일보 공식 원격 MCP 서버: https://mcp.hankookilbo.com/mcp — 한국일보가 직접 운영하는 무인증 공개 Streamable HTTP MCP endpoint. 무상태 구성이라 `initialize`·`Mcp-Session-Id` 없이 단일 POST `tools/call` 이 `application/json` 으로 응답하므로 `hankookilbo-news` 스킬이 MCP SDK 없이 `curl` 로 직접 호출한다(2026-07-29 실측: 무세션 `tools/call` 200 `application/json`, `Accept` 누락 406, `GET` 405). 공식 MCP Registry 등재명은 `com.hankookilbo.mcp/hankookilbo-mcp` 이고, 기사 본문 전문 없이 제목·발행시각·원문 링크·썸네일·짧은 발췌만 반환한다. 원문 URL 에는 서버가 `?did=mcp` 유입 파라미터를 붙인다. 인증이 없으므로 `k-skill-proxy` 를 경유하지 않는다.

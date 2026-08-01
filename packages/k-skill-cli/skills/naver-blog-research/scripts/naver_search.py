@@ -33,9 +33,14 @@ BLOG_ANCHOR_PATTERN = re.compile(
     re.DOTALL,
 )
 
+# 검색 결과 앵커마다 시각적으로 숨겨진 접근성 라벨
+# <span class="fender-ui_해시">새 창 열림</span>이 들어 있다. 클래스명은
+# CSS 모듈 해시라 안정적이지 않으므로 라벨 텍스트 기준으로 span째 제거한다.
+NEW_WINDOW_LABEL_RE = re.compile(r"<span[^>]*>\s*새\s*창\s*열림\s*</span>")
+
 
 def strip_html(text: str) -> str:
-    return unescape(TAG_RE.sub("", text)).strip()
+    return unescape(TAG_RE.sub("", NEW_WINDOW_LABEL_RE.sub("", text))).strip()
 
 
 def build_search_params(query: str, start: int = FIRST_PAGE_START, sort: str = "sim") -> dict[str, str]:

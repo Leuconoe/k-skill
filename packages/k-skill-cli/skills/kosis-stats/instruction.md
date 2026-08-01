@@ -132,10 +132,17 @@ npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- searc
 
 ### 3. Inspect the table meta before fetching data
 
-데이터를 받기 전에 분류/단위/주기를 확인한다.
+데이터를 받기 전에 분류/단위를 확인한다.
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- meta --table-id DT_1JC1501 --text
+```
+
+**수록주기는 `meta` 로 확정되지 않는다.** `meta --meta-type TBL` 은 표 명칭(국/영문) 위주라 `--prd-se` 에 넣을 주기를 돌려주지 않고, `search` 응답의 `PRD_SE` 는 `--prd-se` 와 코드 체계가 달라(예: `DT_1IN0001` → `PRD_SE=A` 이지만 실제 조회는 `F`) 그대로 쓰면 안 된다. `STRT_PRD_DE`~`END_PRD_DE` 도 수록 범위일 뿐 간격을 알려주지 않는다. 조사주기는 `explain` 으로 확인하거나 §4 의 프로브로 확정한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- explain \
+  --org-id 101 --table-id DT_1IN0001 --meta-itm All --text
 ```
 
 ### 4. Fetch a small bounded slice first
@@ -146,6 +153,16 @@ npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- meta 
 npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
   --table-id DT_1JC1501 --prd-se Y --start 2020 --end 2022 \
   --obj-l 1=ALL --json
+```
+
+**`--prd-se` 를 먼저 확정한다.** 주기를 틀리면 다른 파라미터가 전부 맞아도 KOSIS는 코드 `30`(결과 없음)만 돌려주며, 메시지로는 원인을 알 수 없다. `explain`(§3)으로 조사주기를 확인하거나, 좁은 기간·최소 분류로 `Y` → `F` → `IR` → `M`/`Q`/`S` 순으로 프로브해 데이터가 나오는 코드를 찾은 뒤 본 조회를 한다. 총조사·인구주택총조사처럼 5년 간격인 표는 연 단위로 보여도 `F`(다년)다.
+
+```bash
+for p in Y F IR; do
+  npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- data \
+    --org-id 101 --table-id DT_1IN0001 --prd-se "$p" \
+    --start 2010 --end 2010 --itm-id ALL --obj-l 1=00 --obj-l 2=00 --text
+done
 ```
 
 표마다 필수 분류 차원 수가 다르다. **default `--obj-l 1=ALL` 만으로는 부족한 표가 많다.** KOSIS가 코드 `20` (필수요청변수값 누락 objL)을 돌려주면, `meta --table-id <ID> --meta-type ITM --json` 으로 ITM 안에 들어 있는 `OBJ_ID`(분류 차원)와 코드를 확인한 뒤 `--obj-l 1=<코드> --obj-l 2=<코드>` 형태로 필요한 차원을 모두 지정한다. (많은 표가 OBJ 메타는 비어 있고 분류가 ITM 안에 들어 있음.)
@@ -171,7 +188,7 @@ npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- bigda
 ## Done when
 
 - 사용자 질문에 대응하는 통계표 ID(`org_id`/`tbl_id`)가 명확하다.
-- 메타데이터를 1회 이상 조회해 분류·단위·주기를 확인했다.
+- 메타데이터를 1회 이상 조회해 분류·단위를 확인했고, `--prd-se` 는 실제 데이터가 나오는 코드로 확정했다.
 - 작은 슬라이스부터 단계적으로 데이터를 받았다.
 - 결과에 출처(table id, 기간, 단위, endpoint)를 명시했다.
 - 한도 초과 시 분할 또는 `bigdata` 안내로 처리했다.
@@ -182,7 +199,10 @@ npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- bigda
 - KOSIS 에러 코드 `10`/`11`: 인증키 누락/만료 → 키 점검. `bigdata` 에서 `11` 이 나오면 `userStatsId` 가 본인 KOSIS 계정에 등록된 것이 아닐 가능성이 크다.
 - 코드 `20`: 필수 분류 누락 → `meta --meta-type OBJ` (또는 비어 있으면 `ITM`) 으로 필요한 차원 수와 코드를 확인하고 `--obj-l 1=... --obj-l 2=...` 모두 지정 후 재시도
 - 코드 `21`: 잘못된 요청 변수 → `org_id`/`tbl_id`/기간 형식 재확인. tblId 의심 시 `search` 로 정확한 ID 다시 찾기
-- 코드 `30`: 결과 없음 → 키워드를 더 짧게 또는 다른 표현으로 바꾸거나 기간/분류 완화. **meta 호출에서 30 이 나오면** 표가 해당 메타 타입을 지원하지 않는 경우이므로 다른 `--meta-type` 시도
+- 코드 `30`: 결과 없음. 어느 서브커맨드에서 났는지로 원인이 갈린다.
+  - **`data` 에서 30 → 먼저 `--prd-se` 오지정을 의심한다.** 표의 실제 수록주기와 다른 코드를 주면 `--start`/`--end`/`--obj-l` 이 전부 맞아도 항상 30 이다. 연 단위처럼 보이는 표라도 총조사·센서스류는 다년주기 `F`(2·3·4·5·10년) 또는 부정기 `IR` 인 경우가 많다. `explain` 으로 조사주기를 확인하거나 `Y` → `F` → `IR` → `M`/`Q`/`S` 순으로 프로브해 확정한다 (§4 참고).
+  - `search` 에서 30 → 키워드를 더 짧게 또는 다른 표현으로 바꾸거나 기간/분류 완화
+  - **`meta` 에서 30** → 표가 해당 메타 타입을 지원하지 않는 경우이므로 다른 `--meta-type` 시도
 - 코드 `31`/`41`: 한도 초과 → 기간 좁히기, 분류 ALL 을 특정 코드로 바꾸기, 또는 `bigdata` 사용
 - 코드 `40`: 분당 1,000건 호출 한도 → 잠시 대기
 - 코드 `50`: KOSIS 서버 오류 → 1~2초 후 재시도
@@ -194,6 +214,7 @@ npx -y @nomadamas/k-skill@0 exec kosis-stats scripts/run_kosis_stats.py -- bigda
 
 - 코드 20 회복: `data --table-id DT_1J22001 --prd-se M --start 202401 --end 202401` → 코드 20 → `meta --table-id DT_1J22001 --meta-type ITM --json` 으로 차원 확인 → `data ... --obj-l 1=T10 --obj-l 2=0` 재호출 → 성공
 - 코드 31 회복: `data --table-id DT_1B26001 --prd-se Y --start 2020 --end 2024 --obj-l 1=ALL --obj-l 2=ALL --obj-l 3=ALL` → 코드 31 → `... --start 2024 --end 2024 --obj-l 1=11 --obj-l 2=ALL --obj-l 3=ALL` (서울만) 재호출 → 성공
+- 코드 30 회복(수록주기 오지정): `data --org-id 101 --table-id DT_1IN0001 --prd-se Y --start 1990 --end 2010 --itm-id ALL --obj-l 1=00 --obj-l 2=00` → 코드 30 → 연도를 2015·2010·2005·2000·1995·1990 으로 바꿔 재시도해도 전부 코드 30, `--prd-se IR` 도 코드 30 → `--prd-se F --start 1925 --end 2010` 으로 재호출 → 성공(수록 시점 18개, 72셀). `DT_1IN0001`(총조사인구 총괄)은 연 단위 표처럼 보이지만 5년 간격 총조사라 `F` 로만 조회된다. 이 표는 `meta --meta-type TBL` 에도 주기가 없고 `search` 응답 `PRD_SE` 는 `A` 로 나와 둘 다 `--prd-se` 값으로 쓸 수 없었다.
 
 ## Maintainer review notes
 

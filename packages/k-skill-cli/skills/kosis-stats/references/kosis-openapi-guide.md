@@ -54,9 +54,11 @@ GET https://kosis.kr/openapi/statisticsSearch.do
   &searchNm=인구&resultCount=20&startCount=1
 ```
 
-응답 필드(주요): `ORG_ID`, `ORG_NM`, `TBL_ID`, `TBL_NM`, `STAT_ID`, `STAT_NM`, `VW_CD`, `MT_ATITLE`, `STRT_PRD_DE`, `END_PRD_DE`, `LINK_URL`.
+응답 필드(주요): `ORG_ID`, `ORG_NM`, `TBL_ID`, `TBL_NM`, `STAT_ID`, `STAT_NM`, `VW_CD`, `MT_ATITLE`, `PRD_SE`, `STRT_PRD_DE`, `END_PRD_DE`, `LINK_URL`.
 
 데이터 조회는 `ORG_ID` + `TBL_ID` 조합을 다음 단계에서 사용한다.
+
+⚠️ **`search` 의 `PRD_SE` 를 §3.3 의 `prdSe` 요청 파라미터로 그대로 쓰지 말 것.** 두 필드는 코드 체계가 다르다 — `DT_1IN0001`(총조사인구 총괄)은 `search` 가 `PRD_SE=A` 를 돌려주지만 실제 데이터 조회는 `prdSe=F` 로만 성공하고 `A`·`Y`·`IR` 은 모두 코드 `30`(결과 없음)이다. `STRT_PRD_DE`~`END_PRD_DE` 도 수록 범위일 뿐 간격(주기)을 알려주지 않는다. 요청용 주기는 `statisticsExplData.do`(helper 의 `explain` 서브커맨드) 의 조사주기 항목에서 확인하거나, §3.3 표의 코드를 좁은 슬라이스로 프로브해 확정한다.
 
 ### 3.2 통계표 메타데이터 (`statisticsData.do?method=getMeta`)
 
@@ -96,6 +98,8 @@ GET https://kosis.kr/openapi/Param/statisticsParameterData.do
 | `Y` | 연간 | `YYYY` (2024) |
 | `F` | 다년(2,3,4,5,10년) | `YYYY` |
 | `IR` | 부정기 | `YYYY` 또는 `YYYYMMDD` |
+
+`prdSe` 를 틀리면 `startPrdDe`/`endPrdDe`/`objL*` 이 전부 맞아도 응답은 항상 코드 `30`(결과 없음)이고, 메시지만으로는 주기 문제인지 구분되지 않는다. 5년 간격 총조사처럼 연 단위로 보이는 표가 `F`(다년)인 경우가 흔하므로, `statisticsExplData.do` 로 조사주기를 확인하거나 최소 슬라이스로 `Y` → `F` → `IR` → `M`/`Q`/`S` 순으로 프로브해 확정한 뒤 본 조회를 한다.
 
 분류 파라미터는 `objL1` ~ `objL8` (필요한 만큼만), 항목은 `itmId` (`ALL` 또는 특정 ID).
 
