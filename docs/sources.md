@@ -199,8 +199,8 @@
 - 당근알바 검색 Remix data route: https://www.daangn.com/kr/jobs/?_data=routes/kr.jobs._index
 - 당근중고차 검색 Remix data route: https://www.daangn.com/kr/cars/?_data=routes/kr.cars._index
 - 당근부동산 상세 페이지: https://realty.daangn.com/articles/<id>
-- 카카오맵 모바일 검색: https://m.map.kakao.com/actions/searchView
-- 카카오맵 장소 패널 JSON: https://place-api.map.kakao.com/places/panel3/<confirmId>
+- 카카오맵 근처 술집 후보 검색: https://dapi.kakao.com/v2/local/search/keyword.json — `kakao-bar-nearby`가 `k-skill-proxy`의 `/v1/kakao-map/search/keyword`를 통해 기준 장소와 술집 후보를 조회한다.
+- 카카오맵 장소 상세 페이지: https://place.map.kakao.com/<id> — Kakao Local 응답의 `place_url`을 메뉴·현재 영업 상태·좌석 옵션 확인용 브라우저 핸드오프로 사용한다.
 - 조선왕조실록 메인: https://sillok.history.go.kr
 - 조선왕조실록 검색 결과: https://sillok.history.go.kr/search/searchResultList.do
 - 조선왕조실록 기사 상세: https://sillok.history.go.kr/id/kda_12512030_002
