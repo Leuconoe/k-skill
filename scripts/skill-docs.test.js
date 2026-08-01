@@ -203,7 +203,7 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
     .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
     .sort();
 
-  assert.equal(skillDirs.length, 123);
+  assert.equal(skillDirs.length, 124);
 
   for (const skillName of skillDirs) {
     const skill = readRaw(path.join(skillName, "SKILL.md"));
