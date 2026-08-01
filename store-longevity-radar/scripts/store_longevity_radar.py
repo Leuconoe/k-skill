@@ -19,6 +19,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 import zipfile
 
@@ -30,6 +31,10 @@ CACHE_TTL = 24 * 3600
 
 DEFAULT_CODES = ["G21302", "G21306"]          # 문구/회화용품 소매업, 장난감 소매업 (2022~ 코드체계)
 DEFAULT_KEYWORDS = ["문구", "문방구", "완구", "장난감"]
+LEGACY_CODES_BY_CURRENT = {
+    "G21302": {"D08A01"},
+    "G21306": {"D04A01", "D04A02"},
+}
 COLS = ["상가업소번호", "상호명", "상권업종소분류코드", "상권업종소분류명",
         "시도명", "시군구명", "행정동명", "도로명주소", "지번주소", "경도", "위도"]
 
@@ -60,16 +65,22 @@ def download_latest_zip():
     if os.path.exists(path) and time.time() - os.path.getmtime(path) < CACHE_TTL:
         log(f"cache hit: {path}")
         return path
-    fid = discover_atch_file_id()
-    log(f"downloading {fid} (수백 MB, 수 분 소요) ...")
-    tmp = path + ".part"
-    with http_get(DOWNLOAD_URL.format(fid=fid), timeout=1800) as r, open(tmp, "wb") as f:
-        while True:
-            chunk = r.read(1 << 20)
-            if not chunk:
-                break
-            f.write(chunk)
-    os.replace(tmp, path)
+    try:
+        fid = discover_atch_file_id()
+        log(f"downloading {fid} (수백 MB, 수 분 소요) ...")
+        tmp = path + ".part"
+        with http_get(DOWNLOAD_URL.format(fid=fid), timeout=1800) as r, open(tmp, "wb") as f:
+            while True:
+                chunk = r.read(1 << 20)
+                if not chunk:
+                    break
+                f.write(chunk)
+        os.replace(tmp, path)
+    except (TimeoutError, urllib.error.URLError) as exc:
+        raise SystemExit(json.dumps({
+            "status": "unavailable",
+            "note": f"공공데이터포털 접속 또는 다운로드 실패: {exc}. 수동 확인: {DATASET_PAGE}",
+        }, ensure_ascii=False)) from None
     return path
 
 
@@ -83,6 +94,13 @@ def row_matches(d, codes, keywords):
         return True
     name = d.get("상호명", "")
     return any(k in name for k in keywords)
+
+
+def historical_codes(codes):
+    expanded = set(codes)
+    for code in codes:
+        expanded.update(LEGACY_CODES_BY_CURRENT.get(code, ()))
+    return expanded
 
 
 def iter_csv(fobj, delimiter):
@@ -203,7 +221,7 @@ def main():
     if args.cmd == "current":
         write_out(current, args.out, args.format)
         return
-    old = load_old(args.old_csv, set(args.code) | {"D08A01", "D04A01", "D04A02"}, args.keyword)
+    old = load_old(args.old_csv, historical_codes(set(args.code)), args.keyword)
     log(f"old: {len(old)}건")
     write_out(match_longevity(current, old, args.max_dist), args.out, args.format)
 

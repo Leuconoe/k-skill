@@ -39,7 +39,7 @@
 
 ## Inputs
 
-- `--code`: 상권업종소분류코드 (반복 지정, 기본 `G21302` `G21306`)
+- `--code`: 상권업종소분류코드 (반복 지정, 기본 `G21302` `G21306`). 다른 업종을 `match`할 때 코드체계가 바뀌었다면 현재 코드와 과거 코드를 모두 반복 지정한다.
 - `--keyword`: 상호 키워드 (반복 지정, 기본 문구/문방구/완구/장난감 — 업종코드 밖 점포 보완용)
 - `--sido`: 시도명 필터 (예: `서울`, `부산`; 생략 시 전국)
 - `--zip`: 이미 받아둔 최신 zip 경로 (생략 시 자동 다운로드+캐시)
@@ -66,13 +66,14 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 ## Workflow
 
 1. `current`부터 실행해 대상 업종 전수를 확보한다. zip 자동 다운로드는 수 분 걸릴 수 있음을 사용자에게 알린다.
-2. 과거 스냅샷 CSV가 있으면 `match`로 장수 점포를 추출한다. 과거 코드체계(2022년 이전 `D08A01` 등)는 helper가 기본 포함한다.
+2. 과거 스냅샷 CSV가 있으면 `match`로 장수 점포를 추출한다. 기본 문구·완구 코드는 helper가 2022년 이전 `D08A01`/`D04A01`/`D04A02`를 자동 포함한다. 다른 업종은 현재 코드와 과거 코드를 `--code`로 함께 지정한다.
 3. 결과 전달 시 위 Honest limitations를 함께 요약한다.
 4. 후속 확인이 필요하면 `nts-business-registration`(폐업 확정), `localdata-business-status`(인허가 업력), `kakao-map`(전화번호·현재 등재)을 안내한다.
 
 ## Failure modes
 
 - 데이터셋 페이지에서 파일 ID 발견 실패 → `unavailable` + 수동 확인 URL 출력 (분기 개편 시 페이지 구조 변경 가능).
+- 공공데이터포털 접속/다운로드 timeout 또는 HTTP 실패 → `unavailable` + 원인 + 수동 확인 URL 출력.
 - 다운로드 중단 → `.part` 파일만 남고 캐시로 승격되지 않음. 재실행하면 이어서 새로 받는다.
 - `match`에 과거 CSV 미지정 → argparse 에러. 과거분 확보 방법을 사용자에게 안내한다.
 - 0건 매칭: 업종코드가 스냅샷 코드체계와 다를 수 있다. `--keyword`만으로 재시도한다.

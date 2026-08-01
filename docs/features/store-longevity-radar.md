@@ -33,7 +33,7 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 
 ## 입력
 
-- `--code`: 상권업종소분류코드 (반복, 기본 `G21302` `G21306`)
+- `--code`: 상권업종소분류코드 (반복, 기본 `G21302` `G21306`). 다른 업종을 `match`할 때 코드체계가 바뀌었다면 현재 코드와 과거 코드를 모두 반복 지정
 - `--keyword`: 상호 키워드 (반복, 기본 문구/문방구/완구/장난감)
 - `--sido`: 시도명 필터 (생략 시 전국)
 - `--zip`: 기존 zip 재사용 / `--old-csv`: 과거 CSV (`match` 필수, 구분자 자동 감지)
@@ -43,5 +43,6 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 ## 실패 모드
 
 - 데이터셋 페이지에서 파일 ID 발견 실패 → `unavailable` + 수동 확인 URL
+- 공공데이터포털 접속/다운로드 timeout 또는 HTTP 실패 → `unavailable` + 원인 + 수동 확인 URL
 - 다운로드 중단 → `.part` 잔존, 캐시 미승격, 재실행 시 재다운로드
-- 0건: 코드체계 불일치 가능(2022년 이전 `D08A01` 등은 `match`가 기본 포함) — `--keyword` 위주로 재시도
+- 0건: 코드체계 불일치 가능(기본 문구·완구의 2022년 이전 코드는 자동 포함, 다른 업종은 현재/과거 코드를 모두 `--code`로 지정) — `--keyword` 위주로 재시도
