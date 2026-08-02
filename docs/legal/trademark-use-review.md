@@ -139,6 +139,19 @@ k-skill이 제3자 표장을 **자기 서비스의 출처표시로 사용하지 
 | `toss-securities` | 토스증권 / Toss Securities |
 | `used-car-price-search` | SK렌터카 |
 
+### 조회형 7개 스킬의 종결 판단
+
+`kbl-results`, `kbo-results`, `kleague-results`, `lotto-results`,
+`kakao-map`, `korean-transit-route`, `delivery-tracking`은 기존
+상표 legal statement를 유지한다. 현재의 공식·공개 표면 기반
+조회 전용 기능과 데이터 최소화 조건에서는 별도의 기능 변경이나
+추가 완화조치가 필요하지 않은 것으로 검토했다.
+
+구체적인 구현 근거, 저작권·데이터베이스권, 접근 방식, 개인정보
+최소화 조건과 재검토 기준은
+[조회 전용 7개 스킬 법적 리스크 검토 종결](./read-only-skill-risk-resolution.md)에
+기록한다.
+
 ### 제외
 
 - `building-register-search`, `cheap-gas-nearby`,
