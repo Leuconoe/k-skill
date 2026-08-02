@@ -10,6 +10,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
 - This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec kbo-results scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path kbo-results <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read kbo-results references/<file>`.
+
 # KBO Results
 
 ## What this skill does

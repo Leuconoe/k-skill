@@ -14,6 +14,7 @@ Runtime mode: generic
 
 - Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec naver-blog-research scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path naver-blog-research <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read naver-blog-research references/<file>`.
 
 # 네이버 블로그 리서치
 

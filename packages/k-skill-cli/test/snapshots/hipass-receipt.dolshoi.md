@@ -12,6 +12,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Use the built-in browser tool backed by CloakBrowser first. Fall back to `k-skill-browser-runtime` providers only when CloakBrowser is unavailable.
 - Perform supported account operations on the official surface with vault-backed login. Reversible changes proceed directly; immediately before any irreversible account mutation, call `clarify` with the exact change and effect, then execute after approval and verify the resulting state.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec hipass-receipt scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path hipass-receipt <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read hipass-receipt references/<file>`.
+
 # 하이패스 영수증 발급
 
 ## What this skill does

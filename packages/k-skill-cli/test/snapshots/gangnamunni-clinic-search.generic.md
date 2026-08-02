@@ -11,6 +11,12 @@ Runtime mode: generic
 - Plain lookups go through the hosted `k-skill-proxy` (`https://k-skill-proxy.nomadamas.org`) by default; no user API key is needed. Set `KSKILL_PROXY_BASE_URL` only for a self-hosted or alternate proxy. Direct upstream calls require the skill-documented API key.
 - Complete search and reversible reservation steps that the documented portable workflow supports, then report the confirmation, purchase deadline, and the exact official surface where the user finishes payment. Do not automate payment here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec gangnamunni-clinic-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path gangnamunni-clinic-search <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read gangnamunni-clinic-search references/<file>`.
+
 # Gangnam Unni Clinic Search
 
 ## What this skill does

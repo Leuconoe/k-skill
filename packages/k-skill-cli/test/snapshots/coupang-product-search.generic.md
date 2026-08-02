@@ -16,6 +16,7 @@ Runtime mode: generic
 
 - Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec coupang-product-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path coupang-product-search <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read coupang-product-search references/<file>`.
 
 # Coupang Product Search
 

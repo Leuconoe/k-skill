@@ -15,6 +15,7 @@ Runtime mode: generic
 
 - Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec ohou-today-deal scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path ohou-today-deal <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read ohou-today-deal references/<file>`.
 
 # 오늘의집 오늘의딜 조회
 

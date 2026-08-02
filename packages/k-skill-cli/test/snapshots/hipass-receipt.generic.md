@@ -12,6 +12,12 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Perform read operations and reversible preparation that the documented portable workflow supports; hand irreversible account changes to the user on the official surface.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec hipass-receipt scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path hipass-receipt <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read hipass-receipt references/<file>`.
+
 # 하이패스 영수증 발급
 
 ## What this skill does
