@@ -110,7 +110,6 @@ k-skill이 제3자 표장을 **자기 서비스의 출처표시로 사용하지 
 | `foresttrip-vacancy` | 숲나들e / Foresttrip |
 | `gangnamunni-clinic-search` | 강남언니 |
 | `hipass-receipt` | 하이패스 / Hi-Pass |
-| `hola-poke-yeoksam` | 올라포케 역삼점 / Hola Poke |
 | `intercity-bus-booking` | 티머니 시외버스 / Tmoney |
 | `job-posting-match` | 잡코리아, 사람인 |
 | `jobkorea-talent-search` | 잡코리아 / JobKorea |
@@ -155,18 +154,9 @@ k-skill이 제3자 표장을 **자기 서비스의 출처표시로 사용하지 
 - `korean-jangbu-for`, `korean-privacy-terms`: upstream 오픈소스
   프로젝트의 명칭과 권리 고지는 각 스킬의 `NOTICE` 및 라이선스가
   담당한다.
-
-## 올라포케 역삼점의 별도 사실관계
-
-저장소 관리자의 설명과 프로젝트 기록에 따르면
-`hola-poke-yeoksam`은 해당 매장 사장님과 LinkedIn으로 직접 소통한
-뒤 k-skill에 추가되었다. 이 사실은 무단으로 매장명을 발견해
-임의 편입한 경우와 구별되는 프로젝트 유래를 설명한다.
-
-다만 현재 저장소에 별도의 계약서나 권리 범위를 정한 공개 문서가
-첨부되어 있지는 않으므로, 그 소통 사실만으로 포괄적 제휴, 보증,
-상표 라이선스 또는 모든 후속 기능에 대한 승인을 주장하지 않는다.
-해당 스킬의 개별 고지는 이 범위를 그대로 따른다.
+- `hola-poke-yeoksam`: 해당 매장 사장님과 직접 소통한 뒤 추가된
+  스킬이므로 이번 제3자 상표의 기능 설명용 사용 고지 대상에서
+  제외했다.
 
 ## 검토 한계
 
