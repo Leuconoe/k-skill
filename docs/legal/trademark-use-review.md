@@ -108,7 +108,6 @@ k-skill이 제3자 표장을 **자기 서비스의 출처표시로 사용하지 
 | `express-bus-booking` | KOBUS |
 | `flight-ticket-search` | Google Flights |
 | `foresttrip-vacancy` | 숲나들e / Foresttrip |
-| `gangnamunni-clinic-search` | 강남언니 |
 | `hipass-receipt` | 하이패스 / Hi-Pass |
 | `intercity-bus-booking` | 티머니 시외버스 / Tmoney |
 | `job-posting-match` | 잡코리아, 사람인 |
