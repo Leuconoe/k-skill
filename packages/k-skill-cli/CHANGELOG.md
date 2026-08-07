@@ -1,5 +1,12 @@
 # @nomadamas/k-skill
 
+## 0.2.2
+
+### Patch Changes
+
+- 38a3121: hankookilbo-news 스킬을 CLI 번들에 추가한다. 한국일보 공식 원격 MCP 서버를 인증 없이 직접 호출해 기사 메타데이터를 조회한다.
+- 9a206b2: naver-blog-research: 검색 결과 제목·스니펫에서 숨김 접근성 라벨 "새 창 열림" 제거
+
 ## 0.2.1
 
 ### Patch Changes
