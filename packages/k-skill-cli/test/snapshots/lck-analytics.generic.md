@@ -15,6 +15,7 @@ Runtime mode: generic
 
 - Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec lck-analytics scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path lck-analytics <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read lck-analytics references/<file>`.
 
 # LCK Results + Advanced Analysis
 

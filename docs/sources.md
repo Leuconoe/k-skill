@@ -157,9 +157,6 @@
 - 러브버그.com 클러스터 JSON: https://xn--2i0bt2q2wd1wb.com/api/map/clusters?level=sigungu&historicalYear=2026
 - 러브버그.com 동네 snapshot JSON: https://xn--2i0bt2q2wd1wb.com/api/map/areas?historicalYear=2026&includePolygon=false
 - 러브버그.com 익명 제보 RPC: https://sewrbxfawkmusnyzjoab.supabase.co/rest/v1/rpc/submit_anonymous_report (public anon key, `p_gu_code`, `p_lng`, `p_lat`, `p_accuracy_m`, `p_level`, `p_device_hash`, `p_context`, `p_image_url`, `p_indoor` body)
-- 강남언니 공개 병원 검색(기본): https://www.gangnamunni.com/hospitals?q=<keyword> — `__NEXT_DATA__`의 `dehydratedState` 안 `infinite-search-hospitals` query를 사용
-- 강남언니 공개 검색(이전 HTML 구조 참고): https://www.gangnamunni.com/search?q=<keyword> — 파서는 입력 payload의 `pageProps.hospitals`를 호환 처리하지만 이 URL을 추가 요청하지 않음
-- 강남언니 공개 병원 페이지: https://www.gangnamunni.com/hospitals/<id>
 - 마켓컬리 검색 API(v4): https://api.kurly.com/search/v4/sites/market/normal-search
 - 마켓컬리 검색 개수 API(v3): https://api.kurly.com/search/v3/sites/market/normal-search/count
 - 마켓컬리 상품 상세 페이지 예시: https://www.kurly.com/goods/5063110
@@ -277,6 +274,8 @@
 - 국세청 고액·상습체납자 명단공개(무인증): https://www.nts.go.kr/nts/ad/openInfo/selectList.do
 - 지방행정 인허가데이터 LOCALDATA 파일 다운로드(무인증, CP949 CSV): https://file.localdata.go.kr/file/download/<업종slug>/info?orgCode=<지자체코드>
 - LOCALDATA 본체: https://www.localdata.go.kr
+- 소상공인시장진흥공단 상가(상권)정보 파일데이터(무인증, UTF-8 CSV zip, 분기 갱신): https://www.data.go.kr/data/15083033/fileData.do
+- 상가(상권)정보 다운로드 endpoint: https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=<FILE_ID>&fileDetailSn=1 (파일 ID는 데이터셋 페이지에서 분기마다 갱신)
 - 잡코리아 기업 인재검색: https://www.jobkorea.co.kr/corp/person/find — 기업회원 로그인 세션에서 마스킹 이력서/목록을 읽는 브라우저 기반 경로. 유료 열람/마스킹 해제/포지션 제안은 수동 확인 대상.
 - 사람인 기업회원 인재풀 검색: https://www.saramin.co.kr/zf_user/memcom/talent-pool/main/search — 기업회원 로그인 및 첫 기기 2차 인증 후 현재 보이는 마스킹 후보 정보를 읽는 브라우저 기반 경로. 유료 열람/연락처 확인/제안 발송은 수동 확인 대상.
 - 예비군 홈페이지 메인: https://www.yebigun1.mil.kr/

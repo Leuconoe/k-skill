@@ -11,6 +11,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Never ask for, print, read, or store plaintext secrets in chat or files. Use a provisioned `vault-run` capability; if the needed credential is missing, call `request_vault_credential` and retry the intended action in the same turn when provisioned.
 - Perform supported account operations on the official surface with vault-backed login. Reversible changes proceed directly; immediately before any irreversible account mutation, call `clarify` with the exact change and effect, then execute after approval and verify the resulting state.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec toss-securities scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path toss-securities <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read toss-securities references/<file>`.
+
 # Toss Securities
 
 ## What this skill does

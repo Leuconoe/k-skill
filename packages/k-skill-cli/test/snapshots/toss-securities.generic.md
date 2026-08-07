@@ -11,6 +11,12 @@ Runtime mode: generic
 - Resolve credentials in this order: already-injected environment variables, then the host vault, then `~/.config/k-skill/secrets.env` (mode `0600`). If the value is missing, request it through the safest input surface the host provides and store it in the vault or dotenv; never echo it back.
 - Perform read operations and reversible preparation that the documented portable workflow supports; hand irreversible account changes to the user on the official surface.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec toss-securities scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path toss-securities <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read toss-securities references/<file>`.
+
 # Toss Securities
 
 ## What this skill does
