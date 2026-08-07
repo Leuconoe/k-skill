@@ -48,6 +48,7 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 | 지하철 분실물 조회 | `subway-lost-property` | 지하철 역/물품명 기준 공식 LOST112 분실물 검색 조건과 유실물센터 진입점 안내 | 불필요 | [지하철 분실물 조회 가이드](docs/features/subway-lost-property.md) |
 | 긱뉴스 조회 | `geeknews-search` | GeekNews 공개 RSS/Atom 피드 기반 최신 글 목록, 검색, 상세 확인 | 불필요 | [긱뉴스 조회 가이드](docs/features/geeknews-search.md) |
 | 한국 날씨 조회 | `korea-weather` | 기상청 단기예보 기반 한국 날씨 조회 | 불필요 | [한국 날씨 조회 가이드](docs/features/korea-weather.md) |
+| 서울 기상 위험 시간대 조회 | `seoul-weather-risk` | ASK 서울 API로 장소별 폭염·한파·호우·대설·강풍 후보 예보 시간대와 판정 근거 조회 (기상청 공식 특보 아님) | 필요 | [서울 기상 위험 시간대 조회 가이드](docs/features/seoul-weather-risk.md) |
 | 사용자 위치 미세먼지 조회 | `fine-dust-location` | 현재 위치 또는 지역 기준 PM10/PM2.5 미세먼지 조회 | 불필요 | [사용자 위치 미세먼지 조회 가이드](docs/features/fine-dust-location.md) |
 | 한강 수위 정보 조회 | `han-river-water-level` | 한강 관측소 기준 현재 수위·유량·기준수위 확인 | 불필요 | [한강 수위 정보 가이드](docs/features/han-river-water-level.md) |
 | 한국 법령 검색 | `korean-law-search` | 한국 법령/조문/판례/유권해석 검색 | 불필요 | [한국 법령 검색 가이드](docs/features/korean-law-search.md) |
@@ -201,6 +202,7 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 - [지하철 분실물 조회 가이드](docs/features/subway-lost-property.md)
 - [긱뉴스 조회 가이드](docs/features/geeknews-search.md)
 - [한국 날씨 조회 가이드](docs/features/korea-weather.md)
+- [서울 기상 위험 시간대 조회 가이드](docs/features/seoul-weather-risk.md)
 - [사용자 위치 미세먼지 조회](docs/features/fine-dust-location.md)
 - [한강 수위 정보 가이드](docs/features/han-river-water-level.md)
 - [한국 법령 검색 가이드](docs/features/korean-law-search.md)
