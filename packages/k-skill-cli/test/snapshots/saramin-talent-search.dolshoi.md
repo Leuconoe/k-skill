@@ -13,6 +13,12 @@ Runtime mode: dolshoi (CloakBrowser available)
 - Use the official employer account surface to search and compare candidates, keeping masked/private data protected until the requested candidate is fixed.
 - Paid resume unlocks, contact-detail reveals, credit use, proposal delivery, shortlist mutation, and candidate-status changes are separate external effects. Immediately before each such action, call `clarify` with the candidate, cost/credit impact, disclosed data, message payload, and resulting state; execute only the approved action and verify it.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec saramin-talent-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path saramin-talent-search <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read saramin-talent-search references/<file>`.
+
 # saramin-talent-search
 
 ## Use when

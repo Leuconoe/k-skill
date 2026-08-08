@@ -12,6 +12,12 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Search and compare visible candidate information through the documented logged-in browser workflow. Prepare the shortlist and proposal draft, then hand paid unlocks, private-data reveals, credit use, and proposal delivery to the user on the official surface.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec saramin-talent-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path saramin-talent-search <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read saramin-talent-search references/<file>`.
+
 # saramin-talent-search
 
 ## Use when

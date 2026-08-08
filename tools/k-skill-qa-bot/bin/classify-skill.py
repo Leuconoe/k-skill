@@ -41,7 +41,7 @@ PROXY_DEPENDENT = {
     "blue-ribbon-nearby", "cheap-gas-nearby", "daangn-cars-search",
     "daangn-jobs-search", "daangn-realty-search", "daangn-used-goods-search",
     "daishin-report-search", "donation-place-search", "fine-dust-location",
-    "gangnamunni-clinic-search", "gongsijiga-search", "han-river-water-level",
+    "gongsijiga-search", "han-river-water-level",
     "household-waste-info", "k-schoollunch-menu", "kbl-results", "kbo-results",
     "kleague-results", "korea-weather", "korean-marathon-schedule",
     "korean-stock-search", "korean-transit-route", "kosis-stats",

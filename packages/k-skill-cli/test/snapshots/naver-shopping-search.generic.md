@@ -13,6 +13,12 @@ Runtime mode: generic
 - Use `k-skill-browser-runtime` (provider `auto`: BrowserOS CDP, then Aside CLI, then user-launched Chrome CDP) for logged-in or rendered-page automation. Do not launch or close the user's browser, and never solve CAPTCHA, identity proofing, or e-signature flows.
 - Complete search, comparison, and link preparation that the documented portable workflow supports, then hand off to the official surface for login, cart, and payment. Do not automate purchase here.
 
+## Bundled asset access
+
+- Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec naver-shopping-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
+- Resolve an asset path with `npx -y @nomadamas/k-skill@0 path naver-shopping-search <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read naver-shopping-search references/<file>`.
+
 # Naver Shopping Search
 
 ## What this skill does

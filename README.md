@@ -121,7 +121,6 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 | 근처 술집 조회 | `kakao-bar-nearby` | 현재 위치 기준 영업 상태·메뉴·좌석·전화번호가 포함된 근처 술집 조회 | 불필요 | [근처 술집 조회 가이드](docs/features/kakao-bar-nearby.md) |
 | 우편번호 검색 | `zipcode-search` | 주소 키워드로 우편번호 + 공식 영문주소 조회 | 불필요 | [우편번호 검색 가이드](docs/features/zipcode-search.md) |
 | 다이소 상품 조회 | `daiso-product-search` | 다이소 매장별 상품 픽업 가능 여부 확인 (정확한 매장별 재고 수량은 다이소몰 보안 정책으로 2026-05-05 부터 차단됨) | 불필요 | [다이소 상품 조회 가이드](docs/features/daiso-product-search.md) |
-| 강남언니 병원 조회 | `gangnamunni-clinic-search` | 강남언니 공개 검색 페이지에서 성형외과·피부과 병원 후보, 평점, 리뷰 수, 지원 언어, 공개 링크 조회 | 불필요 | [강남언니 병원 조회 가이드](docs/features/gangnamunni-clinic-search.md) |
 | 마켓컬리 상품 조회 | `market-kurly-search` | 마켓컬리 상품 검색, 현재 가격, 할인 여부, 품절 여부 조회 | 불필요 | [마켓컬리 상품 조회 가이드](docs/features/market-kurly-search.md) |
 | 올리브영 검색 | `olive-young-search` | 올리브영 매장·상품·재고 조회 | 불필요 | [올리브영 검색 가이드](docs/features/olive-young-search.md) |
 | 영화관 검색 | `korean-cinema-search` | CGV·메가박스·롯데시네마 영화관, 상영작, 시간표, 잔여석 조회 | 불필요 | [영화관 검색 가이드](docs/features/korean-cinema-search.md) |
@@ -270,7 +269,6 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 - [근처 술집 조회 가이드](docs/features/kakao-bar-nearby.md)
 - [우편번호 검색](docs/features/zipcode-search.md)
 - [다이소 상품 조회](docs/features/daiso-product-search.md)
-- [강남언니 병원 조회 가이드](docs/features/gangnamunni-clinic-search.md)
 - [마켓컬리 상품 조회 가이드](docs/features/market-kurly-search.md)
 - [올리브영 검색 가이드](docs/features/olive-young-search.md)
 - [영화관 검색 가이드](docs/features/korean-cinema-search.md)

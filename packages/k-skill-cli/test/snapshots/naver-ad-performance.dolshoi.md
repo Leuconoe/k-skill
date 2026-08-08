@@ -15,6 +15,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 - Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec naver-ad-performance scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path naver-ad-performance <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read naver-ad-performance references/<file>`.
 
 # 네이버 검색광고 성과 조회
 

@@ -15,6 +15,7 @@ Runtime mode: generic
 
 - Execute bundled helpers only through `npx -y @nomadamas/k-skill@0 exec daangn-used-goods-search scripts/<file> -- <args>`; do not assume a repository-relative or installed-skill-relative path.
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path daangn-used-goods-search <relative-path>` only when another tool explicitly requires a filesystem path.
+- Read bundled references through `npx -y @nomadamas/k-skill@0 read daangn-used-goods-search references/<file>`.
 
 # Daangn Used-Goods Search
 
