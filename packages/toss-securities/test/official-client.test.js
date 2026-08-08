@@ -54,7 +54,13 @@ function makeFetch(queue) {
   const calls = [];
   const responses = Array.isArray(queue) ? [...queue] : [queue];
   const fetchImpl = async (url, init = {}) => {
-    calls.push({ url, method: init.method || "GET", headers: init.headers || {}, body: init.body });
+    calls.push({
+      url,
+      method: init.method || "GET",
+      headers: init.headers || {},
+      body: init.body,
+      redirect: init.redirect
+    });
     if (responses.length === 0) {
       throw new Error(`Unexpected fetch call (no queued response) for ${url}`);
     }
@@ -95,6 +101,7 @@ test("issueAccessToken posts client_credentials form body to /oauth2/token", asy
   const call = fetchImpl.calls[0];
   assert.equal(call.url, `${BASE_URL}/oauth2/token`);
   assert.equal(call.method, "POST");
+  assert.equal(call.redirect, "error");
   assert.equal(call.headers["Content-Type"], "application/x-www-form-urlencoded");
   const params = new URLSearchParams(call.body);
   assert.equal(params.get("grant_type"), "client_credentials");
@@ -143,6 +150,7 @@ test("market helpers send only the bearer header (no account header)", async () 
   const apiCall = fetchImpl.calls.find((c) => c.url.includes("/api/v1/prices"));
   assert.equal(apiCall.headers.Authorization, `Bearer ${ACCESS_TOKEN}`);
   assert.equal(apiCall.headers["X-Tossinvest-Account"], undefined);
+  assert.equal(apiCall.redirect, "error");
 });
 
 test("getPrices and getStocks comma-join multiple symbols per the OpenAPI symbols param", async () => {
@@ -229,27 +237,42 @@ test("requestId falls back to the X-Request-Id header when absent from the body"
   );
 });
 
-test("thrown errors never expose the client_secret or the access token", async () => {
+test("thrown errors never expose credentials, account identifiers, or access tokens", async () => {
+  const account = "account-42";
   const fetchImpl = makeFetch([
     tokenOk(),
     jsonResponse({
       status: 400,
       body: {
         error: {
-          requestId: "REQ-2",
-          code: "invalid-request",
-          message: `leaked ${CLIENT_SECRET} and ${ACCESS_TOKEN}`,
-          data: { secret: CLIENT_SECRET, token: ACCESS_TOKEN }
+          code: `invalid-${CLIENT_SECRET}`,
+          requestId: `request-${account}`,
+          message: `leaked ${CLIENT_ID}, ${CLIENT_SECRET}, ${account}, and ${ACCESS_TOKEN}`,
+          data: {
+            clientId: CLIENT_ID,
+            secret: CLIENT_SECRET,
+            account,
+            token: ACCESS_TOKEN
+          }
         }
       }
     })
   ]);
 
   await assert.rejects(
-    () => getBuyingPower(baseOptions({ fetch: fetchImpl, account: "1" })),
+    () => getBuyingPower(baseOptions({ fetch: fetchImpl, account })),
     (error) => {
-      const serialized = `${error.message} ${JSON.stringify(error.data)}`;
+      const serialized = JSON.stringify({
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        requestId: error.requestId,
+        httpStatus: error.httpStatus,
+        data: error.data
+      });
+      assert.ok(!serialized.includes(CLIENT_ID), "client id must be redacted");
       assert.ok(!serialized.includes(CLIENT_SECRET), "client_secret must be redacted");
+      assert.ok(!serialized.includes(account), "account identifier must be redacted");
       assert.ok(!serialized.includes(ACCESS_TOKEN), "access token must be redacted");
       assert.match(serialized, /\[REDACTED\]/);
       return true;
@@ -340,6 +363,26 @@ test("missing client credentials throws TossCredentialsError without echoing sec
   assert.equal(fetchImpl.calls.length, 0);
 });
 
+test("non-official base URL overrides are rejected before credentials leave the process", async () => {
+  for (const options of [
+    baseOptions({ baseUrl: "https://attacker.example" }),
+    {
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET,
+      env: { TOSSINVEST_API_BASE_URL: "https://attacker.example" }
+    }
+  ]) {
+    const fetchImpl = makeFetch([]);
+    await assert.rejects(
+      () => getPrices("005930", { ...options, fetch: fetchImpl }),
+      (error) =>
+        error instanceof TossCredentialsError &&
+        /official Toss Securities API origin/.test(error.message)
+    );
+    assert.equal(fetchImpl.calls.length, 0);
+  }
+});
+
 test("buildAuthHeaders and buildAccountHeaders construct the expected header sets", () => {
   assert.deepEqual(buildAuthHeaders("abc"), { Authorization: "Bearer abc" });
   assert.deepEqual(buildAccountHeaders("abc", 7), {
@@ -358,7 +401,7 @@ test("each read-only helper builds the correct path, query, headers, and path pa
     { run: (o) => getPriceLimits("005930", o), path: "/api/v1/price-limits", query: { symbol: "005930" }, account: false },
     { run: (o) => getCandles("005930", { ...o, interval: "1d", count: 50 }), path: "/api/v1/candles", query: { symbol: "005930", interval: "1d", count: "50" }, account: false },
     { run: (o) => getStockWarnings("005930", o), path: "/api/v1/stocks/005930/warnings", query: {}, account: false },
-    { run: (o) => getExchangeRate({ ...o, from: "USD", to: "KRW" }), path: "/api/v1/exchange-rate", query: { from: "USD", to: "KRW" }, account: false },
+    { run: (o) => getExchangeRate({ ...o, baseCurrency: "USD", quoteCurrency: "KRW" }), path: "/api/v1/exchange-rate", query: { baseCurrency: "USD", quoteCurrency: "KRW" }, account: false },
     { run: (o) => getMarketCalendarKR({ ...o, date: "2026-06-09" }), path: "/api/v1/market-calendar/KR", query: { date: "2026-06-09" }, account: false },
     { run: (o) => getMarketCalendarUS(o), path: "/api/v1/market-calendar/US", query: {}, account: false },
     { run: (o) => listOpenOrders(o), path: "/api/v1/orders", query: { status: "OPEN" }, account: true },
@@ -383,6 +426,20 @@ test("each read-only helper builds the correct path, query, headers, and path pa
       assert.equal(apiCall.headers["X-Tossinvest-Account"], undefined, `no account header for ${tc.path}`);
     }
   }
+});
+
+test("getExchangeRate requires both official currency parameters before network access", () => {
+  const fetchImpl = makeFetch([]);
+
+  assert.throws(
+    () => getExchangeRate(baseOptions({ fetch: fetchImpl, quoteCurrency: "KRW" })),
+    /baseCurrency is required/
+  );
+  assert.throws(
+    () => getExchangeRate(baseOptions({ fetch: fetchImpl, baseCurrency: "USD" })),
+    /quoteCurrency is required/
+  );
+  assert.equal(fetchImpl.calls.length, 0);
 });
 
 test("module exposes no order mutation helpers (read-only safety contract)", () => {

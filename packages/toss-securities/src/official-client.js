@@ -3,7 +3,7 @@
 // Official Toss Securities Open API client (read-only).
 //
 // Source of truth: https://openapi.tossinvest.com/openapi-docs/latest/openapi.json
-// (title "토스증권 Open API", version 1.0.3, server https://openapi.tossinvest.com).
+// (title "토스증권 Open API", server https://openapi.tossinvest.com).
 //
 // Security posture:
 // - Credentials (client id/secret, account) are read from the user's environment
@@ -48,7 +48,7 @@ const ENDPOINTS = Object.freeze({
   getCommissions: { path: "/api/v1/commissions", requiresAccount: true, rateLimitGroup: "ORDER_INFO" }
 });
 
-// Process-global token cache, keyed by `${clientId}::${baseUrl}`. By design the
+// Process-global token cache, keyed by client id. The API origin is fixed. By design the
 // cache is shared across all callers in a single Node process; call
 // `clearTokenCache()` to reset it (tests do this between cases).
 const tokenCache = new Map();
@@ -57,8 +57,8 @@ class TossApiError extends Error {
   constructor({ code, message, requestId, httpStatus, data } = {}, secrets = []) {
     super(redact(`[${code}] ${message}`, secrets));
     this.name = "TossApiError";
-    this.code = code;
-    this.requestId = requestId || null;
+    this.code = redact(code, secrets);
+    this.requestId = requestId ? redact(requestId, secrets) : null;
     this.httpStatus = httpStatus;
     this.data = redactDeep(data ?? null, secrets);
   }
@@ -96,17 +96,46 @@ function redactDeep(value, secrets = []) {
   }
 }
 
+function resolveOfficialBaseUrl(options, env) {
+  const requested = options.baseUrl ?? env.TOSSINVEST_API_BASE_URL;
+  if (isBlank(requested)) {
+    return OFFICIAL_BASE_URL;
+  }
+
+  let url;
+  try {
+    url = new URL(String(requested));
+  } catch {
+    throw new TossCredentialsError(
+      `Requests are restricted to the official Toss Securities API origin: ${OFFICIAL_BASE_URL}.`
+    );
+  }
+
+  const isOfficialOrigin = url.origin === OFFICIAL_BASE_URL;
+  const hasExtraTarget =
+    url.username !== "" ||
+    url.password !== "" ||
+    url.pathname !== "/" ||
+    url.search !== "" ||
+    url.hash !== "";
+
+  if (!isOfficialOrigin || hasExtraTarget) {
+    throw new TossCredentialsError(
+      `Requests are restricted to the official Toss Securities API origin: ${OFFICIAL_BASE_URL}.`
+    );
+  }
+
+  return OFFICIAL_BASE_URL;
+}
+
 function resolveConfig(options = {}) {
   const env = options.env || process.env;
-  const baseUrl = String(
-    options.baseUrl ?? env.TOSSINVEST_API_BASE_URL ?? OFFICIAL_BASE_URL
-  ).replace(/\/+$/u, "");
 
   return {
     clientId: options.clientId ?? env.TOSSINVEST_CLIENT_ID,
     clientSecret: options.clientSecret ?? env.TOSSINVEST_CLIENT_SECRET,
     account: options.account ?? env.TOSSINVEST_ACCOUNT,
-    baseUrl,
+    baseUrl: resolveOfficialBaseUrl(options, env),
     fetchImpl: options.fetch || globalThis.fetch,
     now: options.now || Date.now,
     sleep: options.sleep || ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
@@ -117,7 +146,12 @@ function resolveConfig(options = {}) {
 }
 
 function collectSecrets(cfg, token) {
-  return [cfg && cfg.clientSecret, token].filter(Boolean);
+  return [
+    cfg && cfg.clientId,
+    cfg && cfg.clientSecret,
+    cfg && cfg.account,
+    token
+  ].filter(Boolean);
 }
 
 function assertClientCredentials(cfg) {
@@ -134,8 +168,8 @@ function assertFetch(cfg) {
   }
 }
 
-function tokenCacheKey(clientId, baseUrl) {
-  return `${clientId}::${baseUrl}`;
+function tokenCacheKey(clientId) {
+  return clientId;
 }
 
 function clearTokenCache() {
@@ -221,6 +255,14 @@ function requireSymbol(symbol) {
   return value;
 }
 
+function requireQueryValue(value, name) {
+  const resolved = String(value ?? "").trim();
+  if (!resolved) {
+    throw new Error(`${name} is required.`);
+  }
+  return resolved;
+}
+
 function buildAuthHeaders(token) {
   if (isBlank(token)) {
     throw new TossCredentialsError("An access token is required to build authorization headers.");
@@ -252,6 +294,7 @@ async function issueAccessToken(options = {}) {
 
   const response = await cfg.fetchImpl(`${cfg.baseUrl}/oauth2/token`, {
     method: "POST",
+    redirect: "error",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json"
@@ -287,7 +330,7 @@ async function getAccessToken(options = {}) {
   const cfg = resolveConfig(options);
   assertClientCredentials(cfg);
 
-  const key = tokenCacheKey(cfg.clientId, cfg.baseUrl);
+  const key = tokenCacheKey(cfg.clientId);
 
   if (options.forceRefresh !== true) {
     const cached = tokenCache.get(key);
@@ -367,7 +410,11 @@ async function tossApiRequest(endpointKey, requestOptions = {}, options = {}) {
       : buildAuthHeaders(token);
     headers.Accept = "application/json";
 
-    const response = await cfg.fetchImpl(url, { method: "GET", headers });
+    const response = await cfg.fetchImpl(url, {
+      method: "GET",
+      redirect: "error",
+      headers
+    });
     const payload = await readJson(response);
 
     if (response.ok) {
@@ -382,7 +429,7 @@ async function tossApiRequest(endpointKey, requestOptions = {}, options = {}) {
     // Expired/invalid token: clear the cache and re-issue exactly once.
     if (response.status === 401 && !tokenRetried) {
       tokenRetried = true;
-      tokenCache.delete(tokenCacheKey(cfg.clientId, cfg.baseUrl));
+      tokenCache.delete(tokenCacheKey(cfg.clientId));
       continue;
     }
 
@@ -449,7 +496,13 @@ function getStockWarnings(symbol, options = {}) {
 function getExchangeRate(options = {}) {
   return tossApiRequest(
     "getExchangeRate",
-    { query: { from: options.from, to: options.to, dateTime: options.dateTime } },
+    {
+      query: {
+        dateTime: options.dateTime,
+        baseCurrency: requireQueryValue(options.baseCurrency, "baseCurrency"),
+        quoteCurrency: requireQueryValue(options.quoteCurrency, "quoteCurrency")
+      }
+    },
     options
   );
 }
