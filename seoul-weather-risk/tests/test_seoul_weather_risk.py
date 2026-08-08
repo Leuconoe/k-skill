@@ -110,13 +110,14 @@ class MockApi:
 class ApiClientTests(unittest.TestCase):
     def setUp(self):
         self.api = MockApi().start()
-        self.previous = {name: os.environ.get(name) for name in (seoul_weather_risk.API_KEY_ENV, seoul_weather_risk.API_BASE_URL_ENV)}
-        os.environ[seoul_weather_risk.API_KEY_ENV] = "test-api-key"
-        os.environ[seoul_weather_risk.API_BASE_URL_ENV] = self.api.base_url
+        self.proxy_base_url_env = "KSKILL_PROXY_BASE_URL"
+        self.previous = {name: os.environ.get(name) for name in (self.proxy_base_url_env, "KSKILL_SEOUL_WEATHER_RISK_API_KEY")}
+        os.environ[self.proxy_base_url_env] = self.api.base_url
+        os.environ["KSKILL_SEOUL_WEATHER_RISK_API_KEY"] = "legacy-user-key-must-not-be-used"
         self.api.responses = {
-            "/skill/v1/bundles/seoul-weather-risk": (200, "application/json", bundle(), {}),
-            f"/skill/v1/products/{PRODUCT_ID}": (200, "application/json", detail(), {}),
-            f"/skill/v1/products/{PRODUCT_ID}/data": (200, "application/json", data(), {}),
+            "/v1/ask-seoul/weather-risk/bundle": (200, "application/json", bundle(), {}),
+            "/v1/ask-seoul/weather-risk/product": (200, "application/json", detail(), {}),
+            "/v1/ask-seoul/weather-risk/data": (200, "application/json", data(), {}),
         }
 
     def tearDown(self):
@@ -127,7 +128,7 @@ class ApiClientTests(unittest.TestCase):
             else:
                 os.environ[name] = value
 
-    def test_query_uses_skill_paths_bearer_auth_and_bounded_parameters(self):
+    def test_query_uses_narrow_proxy_paths_without_user_bearer_auth(self):
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = seoul_weather_risk.run([
@@ -137,16 +138,16 @@ class ApiClientTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(stdout.getvalue())["row_count"], 1)
         self.assertEqual([request["path"] for request in self.api.requests], [
-            "/skill/v1/bundles/seoul-weather-risk",
-            f"/skill/v1/products/{PRODUCT_ID}",
-            f"/skill/v1/products/{PRODUCT_ID}/data",
+            "/v1/ask-seoul/weather-risk/bundle",
+            "/v1/ask-seoul/weather-risk/product",
+            "/v1/ask-seoul/weather-risk/data",
         ])
         query = self.api.requests[-1]["query"]
         self.assertEqual(query, {"place_id": ["place-a"], "from": ["2026-08-01"], "to": ["2026-08-05"], "limit": ["100"], "cursor": ["cursor-1"]})
-        self.assertTrue(all(request["authorization"] == "Bearer test-api-key" for request in self.api.requests))
+        self.assertTrue(all(request["authorization"] is None for request in self.api.requests))
 
     def test_bundle_single_product_drift_fails_closed(self):
-        self.api.responses["/skill/v1/bundles/seoul-weather-risk"] = (200, "application/json", bundle([]), {})
+        self.api.responses["/v1/ask-seoul/weather-risk/bundle"] = (200, "application/json", bundle([]), {})
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             code = seoul_weather_risk.run(["catalog"])
@@ -154,7 +155,7 @@ class ApiClientTests(unittest.TestCase):
         self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "response_contract_invalid")
 
     def test_malformed_success_response_fails_closed(self):
-        self.api.responses["/skill/v1/bundles/seoul-weather-risk"] = (200, "application/json", b"not-json", {})
+        self.api.responses["/v1/ask-seoul/weather-risk/bundle"] = (200, "application/json", b"not-json", {})
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             code = seoul_weather_risk.run(["catalog"])
@@ -162,7 +163,7 @@ class ApiClientTests(unittest.TestCase):
         self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "malformed_response")
 
     def test_http_problem_statuses_are_typed_and_preserve_safe_details(self):
-        endpoint = "/skill/v1/bundles/seoul-weather-risk"
+        endpoint = "/v1/ask-seoul/weather-risk/bundle"
         cases = {
             401: "api_key_missing",
             403: "api_key_forbidden",
@@ -189,34 +190,31 @@ class ApiClientTests(unittest.TestCase):
                 if status == 429:
                     self.assertEqual(error["details"]["retry_after"], "60")
 
-    def test_missing_environment_never_echoes_credentials(self):
-        os.environ.pop(seoul_weather_risk.API_KEY_ENV)
+    def test_disabled_proxy_never_echoes_legacy_user_credentials(self):
+        os.environ[self.proxy_base_url_env] = "off"
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             code = seoul_weather_risk.run(["preflight"])
         self.assertEqual(code, 2)
-        self.assertNotIn("test-api-key", stderr.getvalue())
-        self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "missing_api_key")
+        self.assertNotIn("legacy-user-key-must-not-be-used", stderr.getvalue())
+        self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "proxy_disabled")
 
     def test_non_https_base_url_is_rejected_except_loopback_mock(self):
         with self.assertRaisesRegex(seoul_weather_risk.SkillError, "HTTPS"):
             seoul_weather_risk._api_config({
-                seoul_weather_risk.API_KEY_ENV: "key",
-                seoul_weather_risk.API_BASE_URL_ENV: "http://example.test",
+                self.proxy_base_url_env: "http://example.test",
             })
         config = seoul_weather_risk._api_config({
-            seoul_weather_risk.API_KEY_ENV: "key",
-            seoul_weather_risk.API_BASE_URL_ENV: self.api.base_url,
+            self.proxy_base_url_env: self.api.base_url,
         })
         self.assertFalse(config.base_url.endswith("/"))
         with self.assertRaisesRegex(seoul_weather_risk.SkillError, "origin"):
             seoul_weather_risk._api_config({
-                seoul_weather_risk.API_KEY_ENV: "key",
-                seoul_weather_risk.API_BASE_URL_ENV: "https://api.example.test/untrusted-path",
+                self.proxy_base_url_env: "https://api.example.test/untrusted-path",
             })
 
-    def test_redirect_is_not_followed_with_bearer_credential(self):
-        endpoint = "/skill/v1/bundles/seoul-weather-risk"
+    def test_redirect_is_not_followed_through_proxy_client(self):
+        endpoint = "/v1/ask-seoul/weather-risk/bundle"
         self.api.responses[endpoint] = (302, "application/problem+json", {"detail": "redirect blocked"}, {
             "Location": f"{self.api.base_url}redirect-target",
         })
@@ -229,19 +227,21 @@ class ApiClientTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
-    def test_preflight_is_secret_free_and_offline(self):
-        previous = {name: os.environ.get(name) for name in (seoul_weather_risk.API_KEY_ENV, seoul_weather_risk.API_BASE_URL_ENV)}
+    def test_preflight_is_user_secret_free_and_offline(self):
+        proxy_base_url_env = "KSKILL_PROXY_BASE_URL"
+        previous = {name: os.environ.get(name) for name in (proxy_base_url_env, "KSKILL_SEOUL_WEATHER_RISK_API_KEY")}
         self.addCleanup(lambda: [os.environ.pop(name, None) if value is None else os.environ.__setitem__(name, value) for name, value in previous.items()])
-        os.environ[seoul_weather_risk.API_KEY_ENV] = "secret"
-        os.environ[seoul_weather_risk.API_BASE_URL_ENV] = "https://api.example.test/"
+        os.environ[proxy_base_url_env] = "https://proxy.example.test/"
+        os.environ["KSKILL_SEOUL_WEATHER_RISK_API_KEY"] = "legacy-user-key-must-not-be-used"
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = seoul_weather_risk.run(["preflight"])
         self.assertEqual(code, 0)
         payload = json.loads(stdout.getvalue())
-        self.assertEqual(payload["mode"], "live_https")
+        self.assertEqual(payload["mode"], "hosted_proxy")
         self.assertFalse(payload["live_network"])
-        self.assertNotIn("secret", stdout.getvalue())
+        self.assertFalse(payload["user_api_key_required"])
+        self.assertNotIn("legacy-user-key-must-not-be-used", stdout.getvalue())
 
     def test_parser_has_no_credential_or_base_url_option(self):
         parser = seoul_weather_risk._parser()

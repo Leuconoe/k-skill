@@ -1,16 +1,16 @@
 # seoul-weather-risk
 
-`seoul-weather-risk`는 ASK 서울의 장소별 기상 위험 예상 시간대 단일 제품(`weather_place_risk_window`)을 인증된 읽기 전용 K-Skill API로 탐색하는 클라이언트다.
+`seoul-weather-risk`는 ASK 서울의 장소별 기상 위험 예상 시간대 단일 제품(`weather_place_risk_window`)을 hosted `k-skill-proxy`로 탐색하는 읽기 전용 클라이언트다. 사용자는 ASK Seoul API Key를 발급하거나 저장할 필요가 없다.
 
 ## API 계약
 
-- Base URL: `KSKILL_SEOUL_WEATHER_RISK_API_BASE_URL` (HTTPS origin, 끝 슬래시는 정규화)
-- API Key: `KSKILL_SEOUL_WEATHER_RISK_API_KEY` (`Authorization: Bearer` 헤더)
-- Bundle: `GET /skill/v1/bundles/seoul-weather-risk`
-- Detail: `GET /skill/v1/products/{product_id}`
-- Data: `GET /skill/v1/products/{product_id}/data?limit=1..500&from=&to=&cursor=` 및 공개 projection의 등호 필터
+- Base URL: 기본 `https://k-skill-proxy.nomadamas.org`, self-host 환경에서만 `KSKILL_PROXY_BASE_URL`로 대체한다(HTTPS origin, 끝 슬래시는 정규화).
+- 사용자 인증: 없음. helper는 user-side `Authorization` 헤더를 보내지 않는다.
+- Proxy bundle: `GET /v1/ask-seoul/weather-risk/bundle`
+- Proxy detail: `GET /v1/ask-seoul/weather-risk/product`
+- Proxy data: `GET /v1/ask-seoul/weather-risk/data?limit=1..500&from=&to=&cursor=` 및 `product_row_id`, `place_id`, `forecast_at`, `risk_labels` 등호 필터만 허용한다.
 
-환경변수의 실제 값과 API Key는 문서, shell 인수, 로그, 응답에 포함하지 않는다. base URL이 없거나 HTTPS origin이 아니면 호출 전에 실패한다. 단위 테스트의 loopback mock HTTP만 예외다.
+ASK Seoul 전용 서비스 키와 origin은 proxy 운영 환경의 `ASK_SEOUL_KSKILL_API_KEY`, `ASK_SEOUL_SKILL_API_BASE_URL`에만 둔다. Marketplace에서 이 키는 `k-skill-proxy:seoul-weather-risk` / `skill:seoul-weather-risk:read`로 고정 등록되어 bundle·product·data 읽기 외에는 사용할 수 없다. 키는 사용자 환경·문서·shell 인수·로그·응답에 포함하지 않는다. proxy origin이 HTTPS가 아니면 호출 전에 실패한다. 단위 테스트의 loopback mock HTTP만 예외다.
 
 ## 제품
 
@@ -24,6 +24,7 @@
 
 ## 동작 경계
 
+- proxy는 이 스킬의 bundle, 단일 product, data 세 route만 allowlist하고, 비허용 query field·중복 field·`limit` 범위 밖 입력을 upstream으로 전달하지 않는다.
 - bundle의 `products`가 `weather_place_risk_window` 단일 제품과 다르거나 중복되면 `response_contract_invalid`으로 실패한다.
 - detail/data 응답은 bundle/product ID, page 수, cursor, JSON 계약을 검증한다. malformed JSON도 실패한다.
 - API problem+json의 401, 403, 404, 409, 429, 503은 typed error로 보존한다. `429`의 `Retry-After`와 `request_id`만 안전한 오류 세부 정보로 전달한다.

@@ -17,6 +17,9 @@ client/skill -> k-skill-proxy -> upstream public API
 - `GET /health`
 - `GET /v1/fine-dust/report`
 - `GET /v1/korea-weather/forecast`
+- `GET /v1/ask-seoul/weather-risk/bundle` (ASK 서울 기상 위험 단일 bundle, `ASK_SEOUL_SKILL_API_BASE_URL` + `ASK_SEOUL_KSKILL_API_KEY`)
+- `GET /v1/ask-seoul/weather-risk/product` (ASK 서울 기상 위험 단일 product metadata)
+- `GET /v1/ask-seoul/weather-risk/data` (ASK 서울 기상 위험 data; `product_row_id`, `place_id`, `forecast_at`, `risk_labels`, `from`, `to`, `limit`, `cursor`만 허용)
 - `GET /v1/seoul-subway/arrival`
 - `GET /v1/seoul-density/citydata` (서울 실시간 도시데이터 핫스팟 혼잡도/추정 인구, `SEOUL_OPEN_API_KEY`)
 - `GET /v1/seoul-bike/realtime` (서울 따릉이 실시간 대여정보 `bikeList`, `SEOUL_OPEN_API_KEY`)
@@ -73,6 +76,7 @@ client/skill -> k-skill-proxy -> upstream public API
 - `DATA4LIBRARY_AUTH_KEY=...` (도서관 정보나루 Open API 인증키)
 - `KRX_API_KEY=...`
 - `NAVER_SEARCH_CLIENT_ID=...`, `NAVER_SEARCH_CLIENT_SECRET=...` (선택: 네이버 검색 Open API 쇼핑 검색)
+- `ASK_SEOUL_SKILL_API_BASE_URL=...`, `ASK_SEOUL_KSKILL_API_KEY=...` (ASK 서울 기상 위험 route 전용; `k-skill-proxy:seoul-weather-risk`의 `skill:seoul-weather-risk:read` 서비스 키를 proxy 서버에만 둔다)
 - `KSKILL_PROXY_PORT` (local development only; choose it in your shell)
 
 ## 프로덕션 배포 구조
@@ -99,6 +103,8 @@ VWorld 두 경로는 Cloudflare Worker와 VWorld 사이의 네트워크 호환 �
 ## 사용법
 
 일반 경로는 필요한 쿼리를 그대로 프록시에 넣으면 프록시가 upstream API key를 서버에서 주입합니다. VWorld BYOK 경로만 호출자가 `x-k-skill-vworld-api-key` 헤더를 제공합니다.
+
+ASK 서울 기상 위험 route는 사용자 API Key를 받지 않는다. 세 route와 허용 query field만 upstream `/skill/v1`에 전달하고, 서비스 키는 proxy 서버 환경에서만 `Authorization: Bearer`로 주입한다. Marketplace는 이 키를 `k-skill-proxy:seoul-weather-risk` / `skill:seoul-weather-risk:read`로 등록해 세 개의 read API 이외의 API를 거부한다. 교체 키 smoke test가 성공한 뒤에만 이전 키를 회수하며, 유출·침해 의심 시에는 이전 키를 즉시 회수한다. `GET /health`의 `upstreams.askSeoulWeatherRiskConfigured`가 `true`인지 먼저 확인한다.
 
 요약 endpoint:
 

@@ -15,8 +15,10 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 SKILL_BUNDLE_ID = "seoul-weather-risk"
-API_KEY_ENV = "KSKILL_SEOUL_WEATHER_RISK_API_KEY"
-API_BASE_URL_ENV = "KSKILL_SEOUL_WEATHER_RISK_API_BASE_URL"
+PROXY_BASE_URL_ENV = "KSKILL_PROXY_BASE_URL"
+DEFAULT_PROXY_BASE_URL = "https://k-skill-proxy.nomadamas.org"
+PROXY_DISABLED_VALUES = frozenset({"off", "false", "0", "disable", "disabled", "none"})
+PROXY_ROUTE_ROOT = "/v1/ask-seoul/weather-risk"
 EXACT_PRODUCT_IDS = frozenset({
     "weather_place_risk_window",
 })
@@ -39,7 +41,7 @@ class SkillError(RuntimeError):
 
 
 class _NoRedirect(HTTPRedirectHandler):
-    """Keep the bearer credential on the configured API origin."""
+    """Do not silently move a read request to an unreviewed proxy origin."""
 
     def redirect_request(self, _req: Request, _fp: Any, _code: int, _msg: str, _headers: Any, _newurl: str) -> None:
         return None
@@ -48,7 +50,6 @@ class _NoRedirect(HTTPRedirectHandler):
 @dataclass(frozen=True)
 class ApiConfig:
     base_url: str
-    api_key: str
 
 
 def _json(value: Any) -> str:
@@ -57,20 +58,18 @@ def _json(value: Any) -> str:
 
 def _api_config(environ: dict[str, str] | None = None) -> ApiConfig:
     values = os.environ if environ is None else environ
-    api_key = values.get(API_KEY_ENV, "").strip()
-    base_url = values.get(API_BASE_URL_ENV, "").strip().rstrip("/")
-    if not api_key:
-        raise SkillError("missing_api_key", f"{API_KEY_ENV} 환경변수가 필요합니다.")
-    if not base_url:
-        raise SkillError("missing_api_base_url", f"{API_BASE_URL_ENV} 환경변수가 필요합니다.")
+    configured = values.get(PROXY_BASE_URL_ENV, "").strip()
+    if configured.casefold() in PROXY_DISABLED_VALUES:
+        raise SkillError("proxy_disabled", f"{PROXY_BASE_URL_ENV}가 비활성화되어 있습니다.")
+    base_url = (configured if configured and configured != "replace-me" else DEFAULT_PROXY_BASE_URL).rstrip("/")
 
     parsed = urlparse(base_url)
     local_http = parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
     if (parsed.scheme != "https" and not local_http) or not parsed.netloc or parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
-        raise SkillError("invalid_api_base_url", "API base URL은 HTTPS origin이어야 합니다.")
+        raise SkillError("invalid_proxy_base_url", "k-skill proxy base URL은 HTTPS origin이어야 합니다.")
     if parsed.username or parsed.password:
-        raise SkillError("invalid_api_base_url", "API base URL에 사용자 정보는 포함할 수 없습니다.")
-    return ApiConfig(base_url=base_url, api_key=api_key)
+        raise SkillError("invalid_proxy_base_url", "k-skill proxy base URL에 사용자 정보는 포함할 수 없습니다.")
+    return ApiConfig(base_url=base_url)
 
 
 def _error_payload(raw: bytes) -> dict[str, Any]:
@@ -103,7 +102,6 @@ def _request_json(config: ApiConfig, path: str, query: dict[str, str] | None = N
         url = f"{url}?{urlencode(query)}"
     request = Request(url, headers={
         "Accept": "application/json",
-        "Authorization": f"Bearer {config.api_key}",
         "User-Agent": "k-skill-seoul-weather-risk/1",
     })
     try:
@@ -111,9 +109,16 @@ def _request_json(config: ApiConfig, path: str, query: dict[str, str] | None = N
             raw = response.read()
             content_type = response.headers.get_content_type()
     except HTTPError as exc:
-        raise _problem_error(exc.code, exc.read(), exc.headers) from exc
+        # HTTPError is also a file object. Close it after reading so repeated
+        # typed failures do not leak a response handle into the caller's stderr.
+        raw = exc.read()
+        try:
+            error = _problem_error(exc.code, raw, exc.headers)
+        finally:
+            exc.close()
+        raise error from exc
     except URLError as exc:
-        raise SkillError("network_error", "ASK Seoul API에 연결할 수 없습니다.") from exc
+        raise SkillError("network_error", "k-skill proxy에 연결할 수 없습니다.") from exc
 
     if content_type != "application/json":
         raise SkillError("malformed_response", "ASK Seoul API 성공 응답의 Content-Type이 JSON이 아닙니다.")
@@ -218,17 +223,17 @@ def _validate_product_id(product_id: str) -> None:
 
 
 def _bundle(config: ApiConfig) -> dict[str, Any]:
-    return _validate_bundle(_request_json(config, f"/skill/v1/bundles/{SKILL_BUNDLE_ID}"))
+    return _validate_bundle(_request_json(config, f"{PROXY_ROUTE_ROOT}/bundle"))
 
 
 def _detail(config: ApiConfig, product_id: str) -> dict[str, Any]:
     _validate_product_id(product_id)
-    return _validate_product(_request_json(config, f"/skill/v1/products/{product_id}"), product_id)
+    return _validate_product(_request_json(config, f"{PROXY_ROUTE_ROOT}/product"), product_id)
 
 
 def _data(config: ApiConfig, product_id: str, query: dict[str, str], limit: int) -> dict[str, Any]:
     _validate_product_id(product_id)
-    return _validate_data(_request_json(config, f"/skill/v1/products/{product_id}/data", query), product_id, limit)
+    return _validate_data(_request_json(config, f"{PROXY_ROUTE_ROOT}/data", query), product_id, limit)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -257,10 +262,10 @@ def run(argv: list[str]) -> int:
         if args.command == "preflight":
             result = {
                 "status": "ok",
-                "mode": "live_https",
+                "mode": "hosted_proxy",
                 "live_network": False,
-                "credential_configured": True,
-                "base_url_configured": True,
+                "user_api_key_required": False,
+                "proxy_base_url_configured": True,
             }
         elif args.command == "catalog":
             result = _bundle(config)

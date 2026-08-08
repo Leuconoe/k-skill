@@ -62,6 +62,8 @@ chmod 0600 ~/.config/k-skill/secrets.env
 
 KERIS/RISS 학술자료 검색은 RISS 검색 API가 기관 전용 키를 요구하므로 hosted proxy를 사용하지 않고, 사용자가 직접 발급받은 `KSKILL_RISS_API_KEY`(호환 `RISS_API_KEY`)로 상류를 호출한다. RISS 키는 비영리 기관/대학에만 발급되며 RISS 검색에는 `DATA_GO_KR_API_KEY`를 사용하지 않는다.
 
+ASK 서울 기상 위험 시간대 조회는 기본 hosted proxy를 사용하므로 사용자 API Key가 필요 없다. proxy 운영자만 `ASK_SEOUL_SKILL_API_BASE_URL`과 회수 가능한 전용 `ASK_SEOUL_KSKILL_API_KEY`를 **proxy 서버 환경**에 설정한다. 이 키는 `k-skill-proxy:seoul-weather-risk` principal의 `skill:seoul-weather-risk:read` scope로 발급하며, 사용자 secrets 파일, URL, CLI 인자, 로그에 넣지 않는다.
+
 한국 법령 검색은 기본 hosted proxy(`k-skill-proxy.nomadamas.org`)의 `/v1/korean-law/...` endpoint를 경유하므로 사용자 쪽 `LAW_OC` 가 불필요하다. self-host proxy 운영자만 서버 환경변수 `LAW_OC` 를 채운다(무료 발급: `https://open.law.go.kr`).
 
 한국 부동산 실거래가 조회는 기본 hosted proxy(`k-skill-proxy.nomadamas.org`)를 경유하므로 사용자 쪽 `DATA_GO_KR_API_KEY` 가 불필요하다.
@@ -114,6 +116,7 @@ bash scripts/check-setup.sh
 | 한국 법령 검색 | 사용자 시크릿 불필요 (기본 hosted proxy 사용, 운영자만 `LAW_OC`) |
 | 한국 부동산 실거래가 조회 | 사용자 시크릿 불필요 (기본 hosted proxy 사용) |
 | 한국 특허 정보 검색 | `KIPRIS_PLUS_API_KEY` |
+| ASK 서울 기상 위험 시간대 조회 | 사용자 시크릿 불필요 (기본 hosted proxy 사용, 운영자만 `ASK_SEOUL_SKILL_API_BASE_URL`·`ASK_SEOUL_KSKILL_API_KEY`) |
 | 팝빌 업무 API | `KSKILL_POPBILL_LINK_ID`, `KSKILL_POPBILL_SECRET_KEY`, `KSKILL_POPBILL_CORP_NUM`, 선택 `KSKILL_POPBILL_USER_ID` |
 | 하이패스 영수증 발급 | 사용자 시크릿 불필요 (플랫폼별 `auto` 세션에서 수동 로그인, [브라우저 런타임](browser-runtime.md) 참고) |
 | 한국 주식 정보 조회 | 사용자 시크릿 불필요 (기본 hosted proxy 사용, 운영자만 `KRX_API_KEY`) |

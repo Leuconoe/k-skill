@@ -86,6 +86,11 @@ const {
   proxyKrWhoisDomainRequest,
   proxyKrWhoisIpRequest
 } = require("./kr-whois");
+const {
+  isExpectedAskSeoulWeatherRiskSuccess,
+  normalizeAskSeoulWeatherRiskQuery,
+  proxyAskSeoulWeatherRiskRequest
+} = require("./ask-seoul");
 const AIR_KOREA_UPSTREAM_BASE_URL = "http://apis.data.go.kr";
 const DATA_GO_KR_UPSTREAM_BASE_URL = "https://apis.data.go.kr";
 const DATA4LIBRARY_UPSTREAM_BASE_URL = "https://data4library.kr/api";
@@ -234,6 +239,8 @@ function buildConfig(env = process.env) {
     lawOc: trimOrNull(env.LAW_OC),
     lawReferer: trimOrNull(env.LAW_REFERER),
     lawUserAgent: trimOrNull(env.LAW_USER_AGENT),
+    askSeoulSkillApiBaseUrl: trimOrNull(env.ASK_SEOUL_SKILL_API_BASE_URL),
+    askSeoulKskillApiKey: trimOrNull(env.ASK_SEOUL_KSKILL_API_KEY),
     cacheTtlMs: parseInteger(env.KSKILL_PROXY_CACHE_TTL_MS, 300000),
     cacheMaxEntries: Math.max(1, parseInteger(env.KSKILL_PROXY_CACHE_MAX_ENTRIES, 1000)),
     rateLimitWindowMs: parseInteger(env.KSKILL_PROXY_RATE_LIMIT_WINDOW_MS, 60000),
@@ -2167,7 +2174,8 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         g2bSanctionConfigured: Boolean(config.molitApiKey),
         evChargerConfigured: Boolean(config.evChargerApiKey),
         buildingRegisterConfigured: Boolean(config.buildingRegisterApiKey),
-        koreanLawConfigured: Boolean(config.lawOc)
+        koreanLawConfigured: Boolean(config.lawOc),
+        askSeoulWeatherRiskConfigured: Boolean(config.askSeoulSkillApiBaseUrl && config.askSeoulKskillApiKey)
       },
       auth: {
         tokenRequired: false
@@ -2372,6 +2380,44 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     request,
     reply
   }));
+
+  async function handleAskSeoulWeatherRiskRoute({ operation, request, reply }) {
+    let normalized;
+    try {
+      normalized = normalizeAskSeoulWeatherRiskQuery(operation, request.query || {});
+    } catch (error) {
+      reply.code(400);
+      return { error: "bad_request", message: error.message };
+    }
+
+    const cacheKey = makeCacheKey({ route: `ask-seoul-weather-risk-${operation}`, ...normalized });
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      reply.code(cached.statusCode);
+      reply.header("content-type", cached.contentType);
+      return cached.body;
+    }
+
+    const upstream = await proxyAskSeoulWeatherRiskRequest({
+      operation,
+      params: normalized,
+      baseUrl: config.askSeoulSkillApiBaseUrl,
+      apiKey: config.askSeoulKskillApiKey
+    });
+    if (isExpectedAskSeoulWeatherRiskSuccess(operation, upstream)) {
+      cache.set(cacheKey, upstream, config.cacheTtlMs);
+    }
+    reply.code(upstream.statusCode);
+    reply.header("content-type", upstream.contentType);
+    return upstream.body;
+  }
+
+  app.get("/v1/ask-seoul/weather-risk/bundle", async (request, reply) =>
+    handleAskSeoulWeatherRiskRoute({ operation: "bundle", request, reply }));
+  app.get("/v1/ask-seoul/weather-risk/product", async (request, reply) =>
+    handleAskSeoulWeatherRiskRoute({ operation: "product", request, reply }));
+  app.get("/v1/ask-seoul/weather-risk/data", async (request, reply) =>
+    handleAskSeoulWeatherRiskRoute({ operation: "data", request, reply }));
 
   app.get("/v1/seoul-bike/realtime", async (request, reply) => {
     let normalized;
