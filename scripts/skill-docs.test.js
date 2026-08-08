@@ -1982,11 +1982,11 @@ test("repository docs advertise the kakao-bar-nearby skill across the documented
   assert.match(readme, /\[근처 술집 조회 가이드\]\(docs\/features\/kakao-bar-nearby\.md\)/);
   assert.match(install, /--skill kakao-bar-nearby/);
   assert.match(roadmap, /근처 술집 조회 스킬 출시/);
-  assert.match(sources, /카카오맵 모바일 검색: https:\/\/m\.map\.kakao\.com\/actions\/searchView/);
-  assert.match(sources, /카카오맵 장소 패널 JSON: https:\/\/place-api\.map\.kakao\.com\/places\/panel3\//);
+  assert.match(sources, /카카오맵 근처 술집 후보 검색: https:\/\/dapi\.kakao\.com\/v2\/local\/search\/keyword\.json/);
+  assert.match(sources, /카카오맵 장소 상세 페이지: https:\/\/place\.map\.kakao\.com\/<id>/);
 });
 
-test("kakao-bar-nearby skill documents location-first Kakao Map search with open-now/menu/seating hints", () => {
+test("kakao-bar-nearby documents official API search and detail-page handoff", () => {
   const skillPath = path.join(repoRoot, "kakao-bar-nearby", "SKILL.md");
 
   assert.ok(fs.existsSync(skillPath), "expected kakao-bar-nearby/SKILL.md to exist");
@@ -1999,38 +1999,45 @@ test("kakao-bar-nearby skill documents location-first Kakao Map search with open
   for (const doc of [skill, featureDoc]) {
     assert.match(doc, /현재 위치/);
     assert.match(doc, /서울역|강남|사당|논현/);
-    assert.match(doc, /https:\/\/m\.map\.kakao\.com\/actions\/searchView/);
-    assert.match(doc, /https:\/\/place-api\.map\.kakao\.com\/places\/panel3\//);
+    assert.match(doc, /k-skill-proxy\.nomadamas\.org(?:\/v1\/kakao-map\/search\/keyword)?/);
+    assert.match(doc, /https:\/\/place\.map\.kakao\.com\/<id>/);
+    assert.match(doc, /detailLookup/);
     assert.match(doc, /영업 중|영업전|영업 상태/);
     assert.match(doc, /메뉴/);
     assert.match(doc, /단체석|좌석 옵션|인원 수용/);
     assert.match(doc, /전화번호/);
     assert.match(doc, /kakao-bar-nearby|근처 술집 조회/u);
+    assert.match(doc, /panel3.*기본 검색 경로로 사용하지/u);
   }
 });
 
-test("kakao-bar-nearby package README stays aligned with the Kakao Map live lookup flow", () => {
+test("kakao-bar-nearby package README stays aligned with official search and handoff", () => {
   const packageReadme = read(path.join("packages", "kakao-bar-nearby", "README.md"));
 
   assert.match(packageReadme, /현재 위치를 먼저 물어본다/u);
-  assert.match(packageReadme, /서울역 술집/);
-  assert.match(packageReadme, /https:\/\/m\.map\.kakao\.com\/actions\/searchView/);
-  assert.match(packageReadme, /https:\/\/place-api\.map\.kakao\.com\/places\/panel3\//);
+  assert.match(packageReadme, /Kakao Developers 공식 Local API/);
+  assert.match(packageReadme, /k-skill-proxy\.nomadamas\.org/);
+  assert.match(packageReadme, /https:\/\/place\.map\.kakao\.com\//);
+  assert.match(packageReadme, /detailLookup/);
   assert.match(packageReadme, /searchNearbyBarsByLocationQuery/);
 });
 
-test("kakao-bar-nearby feature doc keeps the verified 2026-03-29 sadang smoke snapshot current", () => {
+test("kakao-bar-nearby feature doc keeps unresolved detail fields explicit", () => {
   const featureDoc = read(path.join("docs", "features", "kakao-bar-nearby.md"));
-  const smoke = findJsonFenceAfterLabel(featureDoc, "## 검증된 live smoke 예시");
 
-  assertKakaoBarNearbySadangSmokeSnapshot(smoke, "feature doc smoke snapshot");
+  assert.match(featureDoc, /"isOpenNow": null/);
+  assert.match(featureDoc, /"openStatus": null/);
+  assert.match(featureDoc, /"menuSamples": \[\]/);
+  assert.match(featureDoc, /"status": "required"/);
+  assert.match(featureDoc, /"source": "kakao-local-rest-api"/);
 });
 
-test("kakao-bar-nearby package README live smoke snapshot matches the verified 2026-03-29 sadang output", () => {
+test("kakao-bar-nearby package README directs enrichment through returned place links", () => {
   const packageReadme = read(path.join("packages", "kakao-bar-nearby", "README.md"));
-  const smoke = findJsonFenceAfterLabel(packageReadme, "## Live smoke snapshot");
 
-  assertKakaoBarNearbySadangSmokeSnapshot(smoke, "package README smoke snapshot");
+  assert.match(packageReadme, /"fetchedPanels": 0/);
+  assert.match(packageReadme, /"url": "https:\/\/place\.map\.kakao\.com\/\.\.\."/);
+  assert.match(packageReadme, /실제로 확인한 값만/u);
 });
 
 test("repository docs advertise the fine-dust-location skill across the documented surfaces", () => {

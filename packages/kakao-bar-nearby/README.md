@@ -1,33 +1,21 @@
 # kakao-bar-nearby
 
-카카오맵 검색 + 장소 패널 JSON 을 사용해 근처 술집을 찾는 Node.js 패키지입니다.
+Kakao Local REST API를 `k-skill-proxy` 경유로 호출해 근처 술집 후보를 찾고, 메뉴·영업 상태·좌석 정보 확인용 카카오맵 상세 링크를 반환하는 Node.js 패키지입니다.
 
 ## 설치
-
-배포 후:
 
 ```bash
 npm install kakao-bar-nearby
 ```
 
-이 저장소에서 개발할 때:
+## 조회 원칙
 
-```bash
-npm install
-```
-
-## 사용 원칙
-
-- 유저 위치는 자동으로 추적하지 않습니다.
-- 먼저 **현재 위치를 먼저 물어본다** 는 규칙을 지키세요.
-- `서울역 술집`, `강남 술집`, `사당 술집` 같은 질의를 카카오맵 모바일 검색으로 조회합니다.
-- 영업 중인 결과를 먼저 정렬하고, 대표 메뉴·좌석 힌트·전화번호를 함께 반환합니다.
-
-## 공식 Kakao Map 표면
-
-- 모바일 검색: `https://m.map.kakao.com/actions/searchView`
-- 장소 패널 JSON: `https://place-api.map.kakao.com/places/panel3/<confirmId>`
-- 장소 상세 페이지: `https://place.map.kakao.com/<confirmId>`
+- 사용 흐름에서는 현재 위치를 먼저 물어본다.
+- 장소 후보와 거리 정보는 Kakao Developers 공식 Local API에서 가져옵니다.
+- 사용자는 Kakao API key를 준비할 필요가 없습니다.
+- 공식 API에 없는 메뉴·현재 영업 상태·좌석 정보는 자동으로 추정하지 않습니다.
+- 각 후보의 `detailLookup.url`을 카카오맵 장소 페이지로 넘겨 후속 확인합니다.
+- 기존 모바일 검색 HTML 및 장소 패널 파서 export는 호환성을 위해 남아 있지만 기본 검색 경로에서는 사용하지 않습니다.
 
 ## 사용 예시
 
@@ -36,11 +24,13 @@ const { searchNearbyBarsByLocationQuery } = require("kakao-bar-nearby");
 
 async function main() {
   const result = await searchNearbyBarsByLocationQuery("서울역", {
-    limit: 5
+    limit: 5,
+    radius: 3000
   });
 
-  console.log(result.anchor);
-  console.log(result.items);
+  for (const item of result.items) {
+    console.log(item.name, item.distanceMeters, item.detailLookup.url);
+  }
 }
 
 main().catch((error) => {
@@ -49,25 +39,55 @@ main().catch((error) => {
 });
 ```
 
-## Live smoke snapshot
+기본 프록시는 `https://k-skill-proxy.nomadamas.org`입니다. 별도 프록시는 `KSKILL_PROXY_BASE_URL` 또는 `proxyBaseUrl` 옵션으로 지정할 수 있습니다.
 
-2026-03-29 에 `사당`, `limit=3`, `panelLimit=8` 로 실제 호출했을 때 상위 결과 예시는 아래와 같았습니다.
+## 반환 구조
 
 ```json
 {
-  "anchor": { "name": "사당1동먹자골목상점가" },
-  "meta": { "openNowCount": 4 },
+  "anchor": {
+    "name": "서울역",
+    "sourceUrl": "https://place.map.kakao.com/..."
+  },
   "items": [
-    { "name": "우미노식탁", "open": "영업 중", "detail": "24:00 까지" },
-    { "name": "방배을지로골뱅이술집포차 사당역점", "open": "영업 중", "detail": "24:00 까지" },
-    { "name": "커먼테이블", "open": "영업 중", "detail": "01:00 까지" }
-  ]
+    {
+      "name": "후보 술집",
+      "distanceMeters": 180,
+      "sourceUrl": "https://place.map.kakao.com/...",
+      "isOpenNow": null,
+      "menuSamples": [],
+      "seatingKeywords": [],
+      "detailLookup": {
+        "status": "required",
+        "url": "https://place.map.kakao.com/...",
+        "fields": [
+          "openStatus",
+          "menuSamples",
+          "seatingKeywords",
+          "capacityHint"
+        ]
+      }
+    }
+  ],
+  "meta": {
+    "source": "kakao-local-rest-api",
+    "fetchedPanels": 0
+  }
 }
 ```
 
+`detailLookup.status`가 `required`이면 상세 정보는 아직 확인되지 않은 상태입니다. 카카오맵 상세 페이지에서 실제로 확인한 값만 후속 응답에 추가하세요.
+
 ## 공개 API
+
+- `searchNearbyBarsByLocationQuery(locationQuery, options?)`
+- `fetchKakaoKeywordSearch(query, params?, options?)`
+- `normalizeKakaoPlaceDocument(document, options?)`
+
+호환성 유지 export:
 
 - `parseSearchResultsHtml(html)`
 - `selectAnchorCandidate(locationQuery, items)`
 - `normalizePlacePanel(panel, searchItem, anchorPoint)`
-- `searchNearbyBarsByLocationQuery(locationQuery, options?)`
+- `fetchSearchResults(query, options?)`
+- `fetchPlacePanel(confirmId, options?)`
