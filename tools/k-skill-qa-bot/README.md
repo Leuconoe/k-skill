@@ -58,7 +58,7 @@ Overridable variables (see `config/defaults.sh`):
 | `LAST_RUN_MIN_AGE` | `259200` | Min seconds between runs (72h) |
 | `GH_REPO` | `NomaDamas/k-skill` | Where to file issues |
 
-`config/skill-overrides.yml` controls per-skill `force_skip` and category overrides. Destructive booking flows (`ktx-booking`, `srt-booking`, `catchtable-sniper`, etc.) and session-required skills (`kakaotalk-mac`, `hipass-receipt`, `toss-securities`, `iros-registry-automation`) are force-skipped by default so the bot never abuses an account.
+`config/skill-overrides.yml` controls per-skill `force_skip` and category overrides. Destructive booking flows (`ktx-booking`, `srt-booking`, etc.) and session-required skills (`kakaotalk-mac`, `toss-securities`, `iros-registry-automation`) are force-skipped by default so the bot never abuses an account.
 
 ## Logs and inspection
 
@@ -90,7 +90,7 @@ bash ~/.local/share/k-skill-qa-bot/uninstall.sh --yes --purge --purge-logs
 - A dedicated LaunchAgent is scheduling isolation only; it is not a separate OS user, container, or filesystem sandbox.
 - The bot-managed clone is not write-protected from the unsandboxed smoke agent; treat it as mutable bot state and judge only against inputs whose provenance is understood.
 - The LLM judge stays on the safer `-s read-only` path with `approval_policy="never"`; read-only/no-approval limits writes and approval prompts, but does not make the judge a no-tools or file-isolated model call. Treat transcript and skill Markdown as untrusted input.
-- 10 destructive/login-required skills are force-skipped before any codex call is issued.
+- 8 destructive/login-required skills are force-skipped before any codex call is issued.
 - Deprecated skills (`~~name~~ ⚠️ 지원 중단` in README) are detected and skipped.
 - `update-clone.sh` refuses any `K_SKILL_CLONE` outside `K_QA_HOME/k-skill-clone` unless `ALLOW_EXTERNAL_CLONE_TARGET=1` (prevents the script from git-reset'ing the wrong directory).
 - `CREATE_ISSUES=false` first-run default prevents accidental issue spam.
