@@ -6,7 +6,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import pathlib
 import sys
+import unicodedata
 from dataclasses import dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -19,6 +21,9 @@ PROXY_BASE_URL_ENV = "KSKILL_PROXY_BASE_URL"
 DEFAULT_PROXY_BASE_URL = "https://k-skill-proxy.nomadamas.org"
 PROXY_DISABLED_VALUES = frozenset({"off", "false", "0", "disable", "disabled", "none"})
 PROXY_ROUTE_ROOT = "/v1/ask-seoul/weather-risk"
+LOCATION_MAPPING_PATH = pathlib.Path(__file__).resolve().parents[1] / "references" / "admin-dong-place-map.json"
+LOCATION_MAPPING_VERSION = "kma_admin_dong_grid_20260325"
+LOCATION_MAPPING_SIZE = 427
 EXACT_PRODUCT_IDS = frozenset({
     "weather_place_risk_window",
 })
@@ -217,6 +222,82 @@ def _filters(values: list[str]) -> dict[str, str]:
     return parsed
 
 
+def _normalize_location_name(value: str) -> str:
+    return " ".join(unicodedata.normalize("NFC", value).strip().split())
+
+
+def _location_mapping_error(message: str) -> SkillError:
+    return SkillError("location_mapping_invalid", message)
+
+
+def _load_location_mapping(path: pathlib.Path = LOCATION_MAPPING_PATH) -> tuple[str, list[dict[str, str]]]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise _location_mapping_error("행정동 매핑 reference를 읽을 수 없습니다.") from exc
+
+    if not isinstance(payload, dict) or payload.get("mapping_version") != LOCATION_MAPPING_VERSION:
+        raise _location_mapping_error("행정동 매핑 버전이 지원 계약과 다릅니다.")
+    if not isinstance(payload.get("source"), str) or not payload["source"]:
+        raise _location_mapping_error("행정동 매핑의 source가 올바르지 않습니다.")
+    if not isinstance(payload.get("generated_at"), str) or not payload["generated_at"]:
+        raise _location_mapping_error("행정동 매핑의 generated_at이 올바르지 않습니다.")
+
+    locations = payload.get("locations")
+    if not isinstance(locations, list) or len(locations) != LOCATION_MAPPING_SIZE:
+        raise _location_mapping_error("행정동 매핑 행 수가 지원 계약과 다릅니다.")
+
+    normalized: list[dict[str, str]] = []
+    place_ids: set[str] = set()
+    location_keys: set[tuple[str, str]] = set()
+    for row in locations:
+        if not isinstance(row, dict) or set(row) != {"admin_dong", "gu", "place_id"}:
+            raise _location_mapping_error("행정동 매핑 행의 필드 계약이 올바르지 않습니다.")
+        if not all(isinstance(row[name], str) and row[name].strip() for name in ("admin_dong", "gu", "place_id")):
+            raise _location_mapping_error("행정동 매핑 행에 비어 있거나 문자열이 아닌 값이 있습니다.")
+
+        admin_dong = _normalize_location_name(row["admin_dong"])
+        gu = _normalize_location_name(row["gu"])
+        place_id = row["place_id"].strip()
+        if not place_id.startswith("seoul_admd_") or len(place_id) != len("seoul_admd_") + 10 or not place_id.removeprefix("seoul_admd_").isdigit():
+            raise _location_mapping_error("행정동 매핑의 place_id 형식이 올바르지 않습니다.")
+        if place_id in place_ids or (admin_dong, gu) in location_keys:
+            raise _location_mapping_error("행정동 매핑에 중복된 place_id 또는 행정동·자치구가 있습니다.")
+
+        place_ids.add(place_id)
+        location_keys.add((admin_dong, gu))
+        normalized.append({"admin_dong": admin_dong, "gu": gu, "place_id": place_id})
+
+    return payload["mapping_version"], normalized
+
+
+def _resolve_admin_dong(admin_dong: str, gu: str | None = None) -> dict[str, str]:
+    normalized_dong = _normalize_location_name(admin_dong)
+    normalized_gu = _normalize_location_name(gu) if gu is not None else None
+    _version, locations = _load_location_mapping()
+
+    candidates = [row for row in locations if row["admin_dong"] == normalized_dong]
+    if not candidates:
+        raise SkillError("unknown_admin_dong", f"지원하는 서울 행정동이 아닙니다: {normalized_dong}")
+
+    if normalized_gu is not None:
+        known_gus = {row["gu"] for row in locations}
+        if normalized_gu not in known_gus:
+            raise SkillError("unknown_gu", f"지원하는 서울 자치구가 아닙니다: {normalized_gu}")
+        candidates = [row for row in candidates if row["gu"] == normalized_gu]
+        if not candidates:
+            raise SkillError("unknown_admin_dong", f"{normalized_gu}의 지원 행정동이 아닙니다: {normalized_dong}")
+
+    candidates.sort(key=lambda item: (item["gu"], item["place_id"]))
+    if len(candidates) > 1:
+        raise SkillError(
+            "ambiguous_admin_dong",
+            "동명이므로 자치구를 함께 입력해야 합니다.",
+            {"candidates": candidates},
+        )
+    return candidates[0]
+
+
 def _validate_product_id(product_id: str) -> None:
     if product_id not in EXACT_PRODUCT_IDS:
         raise SkillError("unknown_product", f"지원하지 않는 product_id입니다: {product_id}")
@@ -248,6 +329,8 @@ def _parser() -> argparse.ArgumentParser:
     query = commands.add_parser("query", help="제품 data page 조회")
     query.add_argument("--product-id", required=True)
     query.add_argument("--filter", action="append", default=[], metavar="COLUMN=VALUE")
+    query.add_argument("--admin-dong", help="서울 행정동 이름")
+    query.add_argument("--gu", help="동명이명 해소용 서울 자치구 이름")
     query.add_argument("--from", dest="from_value")
     query.add_argument("--to", dest="to_value")
     query.add_argument("--limit", type=int, default=100)
@@ -278,6 +361,20 @@ def run(argv: list[str]) -> int:
             _bundle(config)
             detail = _detail(config, args.product_id)
             filters = _filters(args.filter)
+            if args.gu is not None and args.admin_dong is None:
+                raise SkillError("invalid_location_input", "--gu는 --admin-dong과 함께 사용해야 합니다.")
+            if args.admin_dong is not None:
+                if not _normalize_location_name(args.admin_dong):
+                    raise SkillError("invalid_location_input", "--admin-dong은 비어 있을 수 없습니다.")
+                if args.gu is not None and not _normalize_location_name(args.gu):
+                    raise SkillError("invalid_location_input", "--gu는 비어 있을 수 없습니다.")
+                if "place_id" in filters:
+                    raise SkillError(
+                        "conflicting_location_input",
+                        "--admin-dong과 place_id 필터는 동시에 사용할 수 없습니다.",
+                    )
+                resolved = _resolve_admin_dong(args.admin_dong, args.gu)
+                filters["place_id"] = resolved["place_id"]
             allowed_columns = {column["name"] for column in detail["metadata"].get("columns", [])}
             unknown = sorted(set(filters) - allowed_columns)
             if unknown:

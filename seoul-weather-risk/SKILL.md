@@ -1,6 +1,6 @@
 ---
 name: seoul-weather-risk
-description: ASK 서울의 장소별 기상 위험 예상 시간대(weather_place_risk_window) 단일 제품을 hosted k-skill proxy로 읽기 전용 탐색하고 제한 조회한다. 사용자 API Key는 필요하지 않다.
+description: 서울 행정동 이름으로 ASK 서울의 장소별 기상 위험 예상 시간대(weather_place_risk_window) 단일 제품을 hosted k-skill proxy에서 읽기 전용 조회한다. 사용자 API Key와 place_id 입력은 필요하지 않다.
 license: MIT
 metadata:
   category: public-data

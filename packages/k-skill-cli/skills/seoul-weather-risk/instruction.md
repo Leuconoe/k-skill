@@ -2,15 +2,23 @@
 
 ## What this skill does
 
-ASK 서울의 장소별 기상 위험 예상 시간대 단일 제품(`weather_place_risk_window`)을 읽기 전용 스킬로 탐색한다. helper는 hosted `k-skill-proxy`만 호출하며, 사용자 API Key를 발급받거나 저장하지 않는다. 실패 또는 미준비 상태를 fixture나 추정값으로 대체하지 않는다.
+서울 행정동 이름을 정규 `place_id`로 해석해 ASK 서울의 장소별 기상 위험 예상 시간대 단일 제품(`weather_place_risk_window`)을 읽기 전용으로 탐색한다. helper는 hosted `k-skill-proxy`만 호출하며, 사용자 API Key를 발급받거나 저장하지 않는다. 실패 또는 미준비 상태를 fixture나 추정값으로 대체하지 않는다.
 
 ## Product
 
 - `weather_place_risk_window` — 장소별 기상 위험 예상 시간대. 폭염·한파·호우·대설·강풍 후보를 임계값으로 선별한 예보 기반 참고 정보다(기상청 공식 특보가 아님).
-- 질문 예: 특정 장소에서 방문·이동 주의가 필요할 수 있는 예보 시간과 근거는 무엇인가?
+- 질문 예: "잠실본동에서 오늘 방문·이동에 주의할 기상 위험 시간대와 근거를 알려줘."
 - grain: `place_id`와 `forecast_at`마다 한 행.
 
 이 스킬은 단일 제품만 다룬다. bundle에 다른 제품이 섞여 있거나 이 제품이 빠지면 계약 오류로 중단한다.
+
+## Location input
+
+- 자연어 질문의 서울 행정동 이름은 `--admin-dong`에 그대로 전달한다. 사용자가 내부 `place_id`를 알 필요는 없다.
+- 행정동은 Unicode NFC·공백만 정규화한 뒤 정확히 일치시킨다. 오타나 유사 이름을 임의 보정하지 않는다.
+- 동명이명은 자치구를 물어본 뒤 `--gu`를 함께 전달한다. 현재 `신사동`은 강남구와 관악구에 모두 있으므로 자치구 없이 선택하지 않는다.
+- 매핑은 `kma_admin_dong_grid_20260325` 버전의 서울 행정동 427개 reference다.
+- 자동화된 기존 호출은 `--filter place_id=seoul_admd_...`를 계속 사용할 수 있지만 `--admin-dong`과 동시에 사용하지 않는다.
 
 ## Workflow
 
@@ -32,14 +40,24 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- describe --product-id weather_place_risk_window
 ```
 
-4. 공개 projection의 등호 필터와 `1..500` 범위의 limit으로 data page를 조회한다.
+4. 행정동 이름과 `1..500` 범위의 limit으로 data page를 조회한다.
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
   --product-id weather_place_risk_window \
-  --filter place_id=example-place \
+  --admin-dong 잠실본동 \
   --from 2026-08-01 \
   --to 2026-08-07 \
+  --limit 100
+```
+
+동명이명인 `신사동`은 자치구를 확인한 뒤 다음처럼 조회한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
+  --product-id weather_place_risk_window \
+  --admin-dong 신사동 \
+  --gu 강남구 \
   --limit 100
 ```
 
@@ -49,6 +67,7 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 
 - table name, SQL, join, sort, aggregate를 입력받지 않는다.
 - 알 수 없는 제품이나 필터를 추측해 보정하지 않는다.
+- 행정동 이름을 fuzzy match하거나 모호한 후보 중 하나로 임의 선택하지 않는다. helper는 로컬 reference에서 `place_id`를 해석하고 proxy에는 행정동·자치구 문자열을 보내지 않는다.
 - 기본 proxy origin은 `https://k-skill-proxy.nomadamas.org`이다. 별도 self-host proxy를 쓸 때만 `KSKILL_PROXY_BASE_URL`을 HTTPS origin으로 설정한다. 값은 명령행 인수, 문서, 로그에 넣지 않는다.
 - 사용자 API Key와 `Authorization` 헤더를 사용하지 않는다. ASK Seoul 전용 서비스 키는 proxy 운영 환경에만 두며, Marketplace의 `k-skill-proxy:seoul-weather-risk` principal에 `skill:seoul-weather-risk:read` scope로 등록한다. 이 scope는 bundle·product·data 읽기만 허용하고 다른 Marketplace API를 거부한다. 사용자 환경·응답·로그에는 키가 존재하지 않는다.
 - proxy는 bundle, 단일 product, 그 data 조회만 노출한다. `table name`, SQL, join, sort, aggregate 및 비허용 query field는 upstream으로 전달하지 않는다.
@@ -64,6 +83,10 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 ## Failure modes
 
 - `invalid_limit`: `1..500` 밖의 limit
+- `invalid_location_input`, `conflicting_location_input`: 행정동·자치구·직접 `place_id` 입력 조합 오류
+- `unknown_admin_dong`, `unknown_gu`: reference에 없는 행정동 또는 자치구
+- `ambiguous_admin_dong`: 동명이므로 `--gu`가 필요함. `details.candidates`에서 가능한 자치구를 확인한다.
+- `location_mapping_invalid`: bundled 행정동 reference의 버전·스키마·행 수 계약 오류
 - `proxy_disabled`, `invalid_proxy_base_url`: proxy 환경 설정 오류
 - `unauthorized`/`api_key_missing`(401), `forbidden`/`api_key_forbidden`(403), `unknown_product`(404)
 - `cursor_expired`(409), `rate_limited`(429), `product_not_ready`(503)
