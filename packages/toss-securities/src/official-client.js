@@ -106,7 +106,10 @@ function redactDeep(value, secrets = []) {
 
   if (typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, redactDeep(item, secrets)])
+      Object.entries(value).map(([key, item]) => [
+        redact(key, secrets),
+        redactDeep(item, secrets)
+      ])
     );
   }
 

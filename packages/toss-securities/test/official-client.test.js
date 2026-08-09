@@ -313,6 +313,42 @@ test("numeric account identifiers cannot disable error data redaction", async ()
   );
 });
 
+test("error data object keys cannot expose credentials or access tokens", async () => {
+  const fetchImpl = makeFetch([
+    tokenOk(),
+    jsonResponse({
+      status: 400,
+      body: {
+        error: {
+          code: "invalid-request",
+          message: "request failed",
+          data: {
+            [CLIENT_SECRET]: "secret key",
+            nested: {
+              [ACCESS_TOKEN]: "token key"
+            },
+            safe: "keep-me"
+          }
+        }
+      }
+    })
+  ]);
+
+  await assert.rejects(
+    () => getPrices("005930", baseOptions({ fetch: fetchImpl })),
+    (error) => {
+      assert.ok(error instanceof TossApiError);
+      const serialized = JSON.stringify(error.data);
+      assert.ok(!serialized.includes(CLIENT_SECRET), "client secret key must be redacted");
+      assert.ok(!serialized.includes(ACCESS_TOKEN), "access token key must be redacted");
+      assert.equal(error.data["[REDACTED]"], "secret key");
+      assert.equal(error.data.nested["[REDACTED]"], "token key");
+      assert.equal(error.data.safe, "keep-me");
+      return true;
+    }
+  );
+});
+
 test("a 401 re-issues the token exactly once, then throws on a second 401", async () => {
   const fetchImpl = makeFetch([
     tokenOk(),
