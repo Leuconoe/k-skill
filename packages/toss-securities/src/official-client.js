@@ -89,11 +89,28 @@ function redactDeep(value, secrets = []) {
   if (value === undefined || value === null) {
     return value;
   }
-  try {
-    return JSON.parse(redact(JSON.stringify(value), secrets));
-  } catch {
-    return value;
+
+  if (typeof value === "string") {
+    return redact(value, secrets);
   }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return secrets.some((secret) => String(secret) === String(value))
+      ? "[REDACTED]"
+      : value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => redactDeep(item, secrets));
+  }
+
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, redactDeep(item, secrets)])
+    );
+  }
+
+  return value;
 }
 
 function resolveOfficialBaseUrl(options, env) {

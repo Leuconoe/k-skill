@@ -280,6 +280,39 @@ test("thrown errors never expose credentials, account identifiers, or access tok
   );
 });
 
+test("numeric account identifiers cannot disable error data redaction", async () => {
+  const account = 12345678;
+  const fetchImpl = makeFetch([
+    tokenOk(),
+    jsonResponse({
+      status: 400,
+      body: {
+        error: {
+          code: "invalid-account",
+          message: "request failed",
+          data: {
+            accountSeq: account,
+            note: `token ${ACCESS_TOKEN} used with secret ${CLIENT_SECRET}`
+          }
+        }
+      }
+    })
+  ]);
+
+  await assert.rejects(
+    () => getBuyingPower(baseOptions({ fetch: fetchImpl, account })),
+    (error) => {
+      assert.ok(error instanceof TossApiError);
+      const serialized = JSON.stringify(error.data);
+      assert.ok(!serialized.includes(String(account)), "numeric account identifier must be redacted");
+      assert.ok(!serialized.includes(CLIENT_SECRET), "client secret must be redacted");
+      assert.ok(!serialized.includes(ACCESS_TOKEN), "access token must be redacted");
+      assert.equal(error.data.accountSeq, "[REDACTED]");
+      return true;
+    }
+  );
+});
+
 test("a 401 re-issues the token exactly once, then throws on a second 401", async () => {
   const fetchImpl = makeFetch([
     tokenOk(),
