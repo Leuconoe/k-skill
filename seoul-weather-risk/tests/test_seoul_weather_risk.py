@@ -412,12 +412,12 @@ class LocationMappingTests(unittest.TestCase):
             "place_id": "seoul_admd_1120069000",
         })
 
-    def test_resolve_admin_dong_resolves_every_numeric_je_omission_alias_with_gu(self):
+    def test_resolve_admin_dong_resolves_every_map_derived_je_variant_with_gu(self):
         _version, locations = seoul_weather_risk._load_location_mapping()
-        numeric_je_rows = [row for row in locations if re.search(r"제(?=\d)", row["admin_dong"])]
+        je_rows = [row for row in locations if "제" in row["admin_dong"]]
 
-        self.assertTrue(numeric_je_rows)
-        for row in numeric_je_rows:
+        self.assertTrue(je_rows)
+        for row in je_rows:
             with self.subTest(row=row):
                 alias = re.sub(r"제(?=\d)", "", row["admin_dong"])
                 self.assertEqual(seoul_weather_risk._resolve_admin_dong(alias, row["gu"]), row)
