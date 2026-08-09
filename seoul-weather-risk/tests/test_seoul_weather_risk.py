@@ -402,6 +402,28 @@ class LocationMappingTests(unittest.TestCase):
             "place_id": "seoul_admd_1120069000",
         })
 
+    def test_resolve_admin_dong_accepts_je_omission_aliases(self):
+        self.assertEqual(
+            seoul_weather_risk._resolve_admin_dong("창신1동")["place_id"],
+            "seoul_admd_1111067000",
+        )
+        self.assertEqual(
+            seoul_weather_risk._resolve_admin_dong("자양1동")["place_id"],
+            "seoul_admd_1121582000",
+        )
+
+    def test_resolve_admin_dong_accepts_numeric_punctuation_aliases(self):
+        expected = "seoul_admd_1111061500"
+
+        self.assertEqual(
+            seoul_weather_risk._resolve_admin_dong("종로1·2·3·4가동")["place_id"],
+            expected,
+        )
+        self.assertEqual(
+            seoul_weather_risk._resolve_admin_dong("종로1234가동")["place_id"],
+            expected,
+        )
+
     def test_resolve_admin_dong_requires_gu_for_duplicate_name(self):
         with self.assertRaises(seoul_weather_risk.SkillError) as raised:
             seoul_weather_risk._resolve_admin_dong("신사동")
