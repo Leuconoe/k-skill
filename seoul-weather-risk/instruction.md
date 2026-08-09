@@ -15,8 +15,10 @@
 ## Location input
 
 - 자연어 질문의 서울 행정동 이름은 `--admin-dong`에 그대로 전달한다. 사용자가 내부 `place_id`를 알 필요는 없다.
-- 행정동은 Unicode NFC·공백만 정규화한 뒤 정확히 일치시킨다. 오타나 유사 이름을 임의 보정하지 않는다.
-- 확인된 표기 별칭 `성수2가3동`만 정규 행정동 `성수2가제3동`으로 해석한다. 그 밖의 오타·유사 이름은 보정하지 않는다.
+- 입력은 Unicode NFC와 앞뒤·내부 공백을 정규화한다. 정규화한 공식 행정동명에 정확히 일치하면 그 결과를 별칭보다 먼저 사용한다.
+- 정확 일치가 없을 때만 mapping에서 결정적으로 만들 수 있는 표기 별칭을 적용한다. 숫자 바로 앞의 `제`만 생략할 수 있으며(예: `성수2가제3동` → `성수2가3동`), 숫자 구분점은 마침표(`.`)·가운데점(`·`)·생략의 세 형태를 모두 허용한다(예: `종로1.2.3.4가동`, `종로1·2·3·4가동`, `종로1234가동`). 그 밖의 별칭은 만들지 않는다.
+- 별칭 단계에서 후보가 둘 이상이면 `--gu`로 좁힌다. `--gu` 없이 남는 충돌은 `ambiguous_admin_dong`으로 유지하며 임의 선택하지 않는다.
+- 오타, 유사 이름, 생활권·통칭 또는 부분 이름(예: `성수동`)은 fuzzy match하거나 추측하지 않으며 `unknown_admin_dong`으로 처리한다.
 - 동명이명은 자치구를 물어본 뒤 `--gu`를 함께 전달한다. 현재 `신사동`은 강남구와 관악구에 모두 있으므로 자치구 없이 선택하지 않는다.
 - 매핑은 `kma_admin_dong_grid_20260325` 버전의 서울 행정동 427개 reference다.
 - 자동화된 기존 호출은 `--filter place_id=seoul_admd_...`를 계속 사용할 수 있지만 `--admin-dong`과 동시에 사용하지 않는다.
@@ -81,7 +83,7 @@ MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
 
 - table name, SQL, join, sort, aggregate를 입력받지 않는다.
 - 알 수 없는 제품이나 필터를 추측해 보정하지 않는다.
-- 행정동 이름을 fuzzy match하거나 모호한 후보 중 하나로 임의 선택하지 않는다. helper는 로컬 reference에서 `place_id`를 해석하고 proxy에는 행정동·자치구 문자열을 보내지 않는다.
+- 행정동 이름을 fuzzy match하거나 모호한 후보 중 하나로 임의 선택하지 않는다. 생활권·통칭 또는 부분 이름(예: `성수동`)도 행정동으로 추측하지 않는다. helper는 로컬 reference에서 `place_id`를 해석하고 proxy에는 행정동·자치구 문자열을 보내지 않는다.
 - 기본 proxy origin은 `https://k-skill-proxy.nomadamas.org`이다. 별도 self-host proxy를 쓸 때만 `KSKILL_PROXY_BASE_URL`을 HTTPS origin으로 설정한다. 값은 명령행 인수, 문서, 로그에 넣지 않는다.
 - hosted-proxy 모드에서는 사용자 API Key와 `Authorization` 헤더를 사용하지 않는다. ASK Seoul 전용 서비스 키는 proxy 운영 환경에만 두며, Marketplace의 `k-skill-proxy:seoul-weather-risk` principal에 `skill:seoul-weather-risk:read` scope로 등록한다. 이 scope는 bundle·product·data 읽기만 허용하고 다른 Marketplace API를 거부한다. local-direct 모드에서만 현재 작업 폴더 `.env`의 `MARKETPLACE_API_KEY`를 세 direct read 경로에 전달하며, 어떤 모드에서도 키를 출력·로그·skill 파일에 넣지 않는다.
 - proxy는 bundle, 단일 product, 그 data 조회만 노출한다. `table name`, SQL, join, sort, aggregate 및 비허용 query field는 upstream으로 전달하지 않는다.
@@ -98,8 +100,8 @@ MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
 
 - `invalid_limit`: `1..500` 밖의 limit
 - `invalid_location_input`, `conflicting_location_input`: 행정동·자치구·직접 `place_id` 입력 조합 오류
-- `unknown_admin_dong`, `unknown_gu`: reference에 없는 행정동 또는 자치구
-- `ambiguous_admin_dong`: 동명이므로 `--gu`가 필요함. `details.candidates`에서 가능한 자치구를 확인한다.
+- `unknown_admin_dong`, `unknown_gu`: reference에 없는 행정동 또는 자치구. 오타·생활권·부분 이름(예: `성수동`)은 `unknown_admin_dong`이다.
+- `ambiguous_admin_dong`: 동명이거나 별칭 후보가 충돌해 `--gu`가 필요함. `details.candidates`에서 가능한 자치구를 확인한다.
 - `location_mapping_invalid`: bundled 행정동 reference의 버전·스키마·행 수 계약 오류
 - `proxy_disabled`, `invalid_proxy_base_url`: proxy 환경 설정 오류
 - `local_direct_not_configured`, `invalid_local_direct_base_url`: local-direct 환경 설정 오류
