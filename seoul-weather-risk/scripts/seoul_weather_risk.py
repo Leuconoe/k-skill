@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import sys
 import unicodedata
 from dataclasses import dataclass
@@ -33,9 +34,6 @@ PROXY_ROUTE_ROOT = "/v1/ask-seoul/weather-risk"
 LOCATION_MAPPING_PATH = pathlib.Path(__file__).resolve().parents[1] / "references" / "admin-dong-place-map.json"
 LOCATION_MAPPING_VERSION = "kma_admin_dong_grid_20260325"
 LOCATION_MAPPING_SIZE = 427
-ADMIN_DONG_ALIASES = {
-    "성수2가3동": "성수2가제3동",
-}
 EXACT_PRODUCT_IDS = frozenset({
     "weather_place_risk_window",
 })
@@ -340,15 +338,42 @@ def _load_location_mapping(path: pathlib.Path = LOCATION_MAPPING_PATH) -> tuple[
     return payload["mapping_version"], normalized
 
 
+def _alias_keys(canonical: str) -> set[str]:
+    compact = re.sub(r"\s+", "", canonical)
+    without_je = re.sub(r"제(?=\d)", "", compact)
+    return {
+        compact,
+        without_je,
+        compact.replace(".", "·"),
+        compact.replace(".", ""),
+        without_je.replace(".", "·"),
+        without_je.replace(".", ""),
+    }
+
+
+def _location_indexes(locations: list[dict[str, str]]) -> tuple[dict[str, list[dict[str, str]]], dict[str, list[dict[str, str]]]]:
+    canonical_index: dict[str, list[dict[str, str]]] = {}
+    alias_index: dict[str, list[dict[str, str]]] = {}
+    for row in locations:
+        canonical_index.setdefault(row["admin_dong"], []).append(row)
+        for alias in _alias_keys(row["admin_dong"]):
+            alias_index.setdefault(alias, []).append(row)
+    return canonical_index, alias_index
+
+
 def _resolve_admin_dong(admin_dong: str, gu: str | None = None) -> dict[str, str]:
     normalized_dong = _normalize_location_name(admin_dong)
-    normalized_dong = ADMIN_DONG_ALIASES.get(normalized_dong, normalized_dong)
     normalized_gu = _normalize_location_name(gu) if gu is not None else None
     _version, locations = _load_location_mapping()
 
-    candidates = [row for row in locations if row["admin_dong"] == normalized_dong]
+    canonical_index, alias_index = _location_indexes(locations)
+    candidates = canonical_index.get(normalized_dong)
+    if candidates is None:
+        candidates = alias_index.get(re.sub(r"\s+", "", normalized_dong))
     if not candidates:
         raise SkillError("unknown_admin_dong", f"지원하는 서울 행정동이 아닙니다: {normalized_dong}")
+
+    candidates = list(candidates)
 
     if normalized_gu is not None:
         known_gus = {row["gu"] for row in locations}

@@ -4,6 +4,7 @@ import io
 import json
 import os
 import pathlib
+import re
 import sys
 import tempfile
 import threading
@@ -393,7 +394,16 @@ class LocationMappingTests(unittest.TestCase):
 
         self.assertEqual(resolved["place_id"], "seoul_admd_1171065000")
 
-    def test_resolve_admin_dong_recognizes_explicit_spelling_alias(self):
+    def test_resolve_admin_dong_normalizes_internal_whitespace(self):
+        resolved = seoul_weather_risk._resolve_admin_dong(unicodedata.normalize("NFD", "  잠실 본동  "))
+
+        self.assertEqual(resolved, {
+            "admin_dong": "잠실본동",
+            "gu": "송파구",
+            "place_id": "seoul_admd_1171065000",
+        })
+
+    def test_resolve_admin_dong_recognizes_map_derived_je_alias(self):
         resolved = seoul_weather_risk._resolve_admin_dong("성수2가3동")
 
         self.assertEqual(resolved, {
@@ -402,19 +412,33 @@ class LocationMappingTests(unittest.TestCase):
             "place_id": "seoul_admd_1120069000",
         })
 
-    def test_resolve_admin_dong_accepts_je_omission_aliases(self):
+    def test_resolve_admin_dong_resolves_every_numeric_je_omission_alias_with_gu(self):
+        _version, locations = seoul_weather_risk._load_location_mapping()
+        numeric_je_rows = [row for row in locations if re.search(r"제(?=\d)", row["admin_dong"])]
+
+        self.assertTrue(numeric_je_rows)
+        for row in numeric_je_rows:
+            with self.subTest(row=row):
+                alias = re.sub(r"제(?=\d)", "", row["admin_dong"])
+                self.assertEqual(seoul_weather_risk._resolve_admin_dong(alias, row["gu"]), row)
+
+    def test_resolve_admin_dong_does_not_omit_non_numeric_je(self):
         self.assertEqual(
-            seoul_weather_risk._resolve_admin_dong("창신1동")["place_id"],
-            "seoul_admd_1111067000",
+            seoul_weather_risk._resolve_admin_dong("제기동", "동대문구")["place_id"],
+            "seoul_admd_1123054500",
         )
-        self.assertEqual(
-            seoul_weather_risk._resolve_admin_dong("자양1동")["place_id"],
-            "seoul_admd_1121582000",
-        )
+
+        with self.assertRaises(seoul_weather_risk.SkillError) as raised:
+            seoul_weather_risk._resolve_admin_dong("기동", "동대문구")
+        self.assertEqual(raised.exception.code, "unknown_admin_dong")
 
     def test_resolve_admin_dong_accepts_numeric_punctuation_aliases(self):
         expected = "seoul_admd_1111061500"
 
+        self.assertEqual(
+            seoul_weather_risk._resolve_admin_dong("종로1.2.3.4가동")["place_id"],
+            expected,
+        )
         self.assertEqual(
             seoul_weather_risk._resolve_admin_dong("종로1·2·3·4가동")["place_id"],
             expected,
@@ -423,6 +447,37 @@ class LocationMappingTests(unittest.TestCase):
             seoul_weather_risk._resolve_admin_dong("종로1234가동")["place_id"],
             expected,
         )
+
+    def test_resolve_admin_dong_resolves_every_dot_variant_with_gu(self):
+        _version, locations = seoul_weather_risk._load_location_mapping()
+        dotted_rows = [row for row in locations if "." in row["admin_dong"]]
+
+        self.assertTrue(dotted_rows)
+        for row in dotted_rows:
+            with self.subTest(row=row, variant="canonical"):
+                self.assertEqual(seoul_weather_risk._resolve_admin_dong(row["admin_dong"], row["gu"]), row)
+            with self.subTest(row=row, variant="middle_dot"):
+                self.assertEqual(seoul_weather_risk._resolve_admin_dong(row["admin_dong"].replace(".", "·"), row["gu"]), row)
+            with self.subTest(row=row, variant="omitted_dot"):
+                self.assertEqual(seoul_weather_risk._resolve_admin_dong(row["admin_dong"].replace(".", ""), row["gu"]), row)
+
+    def test_location_indexes_retain_colliding_aliases_and_resolve_exact_first(self):
+        alias_source = {"admin_dong": "예제1동", "gu": "가구", "place_id": "seoul_admd_0000000001"}
+        canonical_match = {"admin_dong": "예1동", "gu": "나구", "place_id": "seoul_admd_0000000002"}
+        locations = [alias_source, canonical_match]
+
+        canonical_index, alias_index = seoul_weather_risk._location_indexes(locations)
+        self.assertEqual(canonical_index["예1동"], [canonical_match])
+        self.assertEqual(alias_index["예1동"], locations)
+
+        with patch.object(seoul_weather_risk, "_load_location_mapping", return_value=("test", locations)):
+            self.assertEqual(seoul_weather_risk._resolve_admin_dong("예1동"), canonical_match)
+
+            with self.assertRaises(seoul_weather_risk.SkillError) as raised:
+                seoul_weather_risk._resolve_admin_dong("예 1동")
+            self.assertEqual(raised.exception.code, "ambiguous_admin_dong")
+            self.assertEqual(raised.exception.details["candidates"], locations)
+            self.assertEqual(seoul_weather_risk._resolve_admin_dong("예 1동", "가구"), alias_source)
 
     def test_resolve_admin_dong_requires_gu_for_duplicate_name(self):
         with self.assertRaises(seoul_weather_risk.SkillError) as raised:
@@ -439,14 +494,24 @@ class LocationMappingTests(unittest.TestCase):
 
         self.assertEqual(resolved["place_id"], "seoul_admd_1168051000")
 
-    def test_resolve_admin_dong_rejects_unknown_dong_and_gu(self):
+    def test_resolve_admin_dong_rejects_unknown_or_broad_dong_and_gu(self):
         with self.assertRaises(seoul_weather_risk.SkillError) as unknown_dong:
             seoul_weather_risk._resolve_admin_dong("없는동")
         self.assertEqual(unknown_dong.exception.code, "unknown_admin_dong")
 
+        for admin_dong in ("성수동", "종로"):
+            with self.subTest(admin_dong=admin_dong):
+                with self.assertRaises(seoul_weather_risk.SkillError) as broad_dong:
+                    seoul_weather_risk._resolve_admin_dong(admin_dong)
+                self.assertEqual(broad_dong.exception.code, "unknown_admin_dong")
+
         with self.assertRaises(seoul_weather_risk.SkillError) as unknown_gu:
             seoul_weather_risk._resolve_admin_dong("잠실본동", "없는구")
         self.assertEqual(unknown_gu.exception.code, "unknown_gu")
+
+        with self.assertRaises(seoul_weather_risk.SkillError) as wrong_gu:
+            seoul_weather_risk._resolve_admin_dong("잠실본동", "강남구")
+        self.assertEqual(wrong_gu.exception.code, "unknown_admin_dong")
 
     def test_load_location_mapping_rejects_invalid_reference(self):
         with tempfile.TemporaryDirectory() as directory:
