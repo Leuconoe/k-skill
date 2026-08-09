@@ -2127,51 +2127,30 @@ test("repository docs advertise the toss-securities skill across the documented 
   assert.match(readme, /\[토스증권 조회 가이드\]\(docs\/features\/toss-securities\.md\)/);
   assert.match(install, /--skill toss-securities/);
   assert.match(roadmap, /토스증권 조회 스킬 출시/);
-  assert.match(sources, /tossinvest-cli: https:\/\/github\.com\/JungHoonGhae\/tossinvest-cli/);
+  assert.match(sources, /토스증권 공식 Open API 문서: https:\/\/developers\.tossinvest\.com\/docs/);
 });
 
-test("toss-securities skill documents the official Open API and tossctl fallback workflow", () => {
-  const skillPath = path.join(repoRoot, "toss-securities", "SKILL.md");
+test("toss-securities skill source and bundled metadata stay synchronized", () => {
+  const sourceManifest = readJson(path.join("toss-securities", "skill.json"));
+  const bundledManifest = readJson(
+    path.join("packages", "k-skill-cli", "skills", "toss-securities", "skill.json")
+  );
 
-  assert.ok(fs.existsSync(skillPath), "expected toss-securities/SKILL.md to exist");
-
-  const skill = read(path.join("toss-securities", "SKILL.md"));
-  const featureDoc = read(path.join("docs", "features", "toss-securities.md"));
-
-  assert.match(skill, /^name: toss-securities$/m);
-
-  for (const doc of [skill, featureDoc]) {
-    // Official Open API path (primary).
-    assert.match(doc, /openapi\.tossinvest\.com|developers\.tossinvest\.com/);
-    assert.match(doc, /TOSSINVEST_CLIENT_ID/);
-    assert.match(doc, /X-Tossinvest-Account/);
-    assert.match(doc, /\/oauth2\/token/);
-    // tossctl fallback path (retained).
-    assert.match(doc, /tossctl/);
-    assert.match(doc, /JungHoonGhae\/tossinvest-cli/);
-    assert.match(doc, /auth login/);
-    assert.match(doc, /account summary/);
-    assert.match(doc, /portfolio positions/);
-    assert.match(doc, /quote get/);
-    assert.match(doc, /watchlist list/);
-    assert.match(doc, /read-only|조회 전용/u);
-    assert.doesNotMatch(doc, /order place/);
-  }
+  assert.deepEqual(bundledManifest, sourceManifest);
+  assert.deepEqual(sourceManifest.profiles, ["vault", "action:account"]);
 });
 
-test("toss-securities package exposes safe read-only official + tossctl helpers", () => {
+test("toss-securities package exposes only official read-only helpers", () => {
   const pkg = require(path.join(repoRoot, "packages", "toss-securities", "src", "index.js"));
+  const official = require(path.join(
+    repoRoot,
+    "packages",
+    "toss-securities",
+    "src",
+    "official-client.js"
+  ));
 
-  // tossctl fallback wrapper (retained).
-  assert.equal(typeof pkg.buildReadOnlyCommand, "function");
-  assert.equal(typeof pkg.runReadOnlyCommand, "function");
-  assert.equal(typeof pkg.getAccountSummary, "function");
-  assert.equal(typeof pkg.getPortfolioPositions, "function");
-  assert.equal(typeof pkg.getQuote, "function");
-  assert.equal(typeof pkg.getQuoteBatch, "function");
-  assert.equal(typeof pkg.listWatchlist, "function");
-
-  // Official Open API client (primary).
+  assert.deepEqual(Object.keys(pkg).sort(), Object.keys(official).sort());
   assert.equal(typeof pkg.issueAccessToken, "function");
   assert.equal(typeof pkg.getPrices, "function");
   assert.equal(typeof pkg.getHoldings, "function");
@@ -2186,20 +2165,14 @@ test("toss-securities package exposes safe read-only official + tossctl helpers"
   assert.equal(pkg.cancelOrder, undefined);
 });
 
-test("toss-securities package README stays aligned with the official-first read-only contract", () => {
-  const packageReadme = read(path.join("packages", "toss-securities", "README.md"));
+test("toss-securities package metadata excludes the retired fallback", () => {
+  const packageJson = readJson(path.join("packages", "toss-securities", "package.json"));
+  const parserPath = path.join(repoRoot, "packages", "toss-securities", "src", "parse.js");
 
-  // Official Open API path (primary).
-  assert.match(packageReadme, /official.*Open API|공식 Open API/i);
-  assert.match(packageReadme, /TOSSINVEST_CLIENT_ID/);
-  assert.match(packageReadme, /X-Tossinvest-Account/);
-  // tossctl fallback path (retained).
-  assert.match(packageReadme, /read-only tossctl wrapper/i);
-  assert.match(packageReadme, /brew tap JungHoonGhae\/tossinvest-cli/);
-  assert.match(packageReadme, /account summary/);
-  assert.match(packageReadme, /quote get/);
-  assert.match(packageReadme, /order place/);
-  assert.match(packageReadme, /지원하지 않음|not supported/u);
+  assert.equal(packageJson.name, "toss-securities");
+  assert.ok(packageJson.keywords.includes("openapi"));
+  assert.ok(!packageJson.keywords.includes("tossctl"));
+  assert.equal(fs.existsSync(parserPath), false);
 });
 
 test("pack:dry-run includes the toss-securities workspace", () => {
@@ -2207,6 +2180,23 @@ test("pack:dry-run includes the toss-securities workspace", () => {
 
   assert.match(packageJson.scripts["pack:dry-run"], /workspace toss-securities/);
   assert.match(packageJson.scripts["pack:dry-run"], /workspace used-car-price-search/);
+});
+
+test("toss-securities pack dry-run ships only the official client surface", () => {
+  const packResult = JSON.parse(
+    childProcess.execFileSync("npm", ["pack", "--workspace", "toss-securities", "--json", "--dry-run"], {
+      cwd: repoRoot,
+      encoding: "utf8"
+    }),
+  );
+
+  const files = packResult[0]?.files?.map((entry) => entry.path).sort() || [];
+  assert.deepEqual(files, [
+    "README.md",
+    "package.json",
+    "src/index.js",
+    "src/official-client.js"
+  ]);
 });
 
 test("package-lock captures the toss-securities workspace metadata for npm ci", () => {

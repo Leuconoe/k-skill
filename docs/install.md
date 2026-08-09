@@ -397,8 +397,6 @@ HWP Node API 예시는 전역 `NODE_PATH` 대신 로컬 프로젝트에 `npm ins
 ```bash
 brew tap NomaDamas/katok https://github.com/NomaDamas/katok.git
 brew install katok
-brew tap JungHoonGhae/tossinvest-cli
-brew install tossctl
 ```
 
 Cargo로 설치할 수도 있다.
@@ -408,7 +406,7 @@ cargo install katok
 export PATH="$HOME/.cargo/bin:$PATH"
 ```
 
-`toss-securities` 스킬은 공식 토스증권 Open API를 우선 사용한다. 공식 경로를 쓰려면 발급받은 자격증명을 사용자 환경변수로 둔다(공유 프록시로 보내지 않고 토스 서버로 직접 호출한다). `tossctl` 설치는 공식 credentials가 없을 때의 fallback 경로용이다.
+`toss-securities` 스킬은 공식 토스증권 Open API만 사용한다. 발급받은 자격증명을 사용자 환경변수로 두며, 공유 프록시로 보내지 않고 토스 서버로 직접 호출한다. 공식 credentials가 없거나 공식 API가 제공하지 않는 기능은 비공식 경로로 우회하지 않는다.
 
 ```bash
 export TOSSINVEST_CLIENT_ID=...        # 필수

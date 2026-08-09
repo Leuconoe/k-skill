@@ -42,7 +42,6 @@
 - 국민권익위원회 지방의회 국외출장 실태 보도자료: https://www.acrc.go.kr/board.es?act=view&bid=4A&list_no=83269&mid=a10402010000 — 항공료 조작, 외유성 논란 등은 단건 공개 보고서에서 단정하지 않고, 외부 감사자료 대조가 필요한 별도 확장 항목의 참고 사례로 사용한다.
 - 국민권익위원회 실태점검 정책브리핑: https://www.korea.kr/news/policyNewsView.do?newsId=148937518 — 243개 지방의회 실태점검에서 항공권 조작, 여비 허위청구, 관광 목적 비용 부풀리기, 과도한 수행인원, 출장 중 부적절 물품 구매 등이 드러났다고 설명한다. 이 자료의 문제 유형은 공개 문서에서 원문 인용으로 확인 가능한 검토 신호와 외부 감사자료 없이는 판단 불가한 항목으로 분리해 사용한다.
 - 한겨레 선관위 몰디브·코타키나발루 출장 보도: https://www.hani.co.kr/arti/politics/politics_general/1263881.html — 최근 5년 선관위 직원 국외출장 107회, 461명, 총 예산 24억5255만원 및 몰디브·코타키나발루 등 휴양지 논란을 보도했다. 이 보도는 최근 논란 맥락을 설명하는 보조 자료일 뿐 감사·법적 판단 근거로 사용하지 않는다.
-- tossinvest-cli: https://github.com/JungHoonGhae/tossinvest-cli
 - 토스증권 공식 Open API 문서: https://developers.tossinvest.com/docs
 - 토스증권 공식 Open API OpenAPI JSON (source of truth): https://openapi.tossinvest.com/openapi-docs/latest/openapi.json
 - 토스증권 공식 Open API 개요: https://openapi.tossinvest.com/openapi-docs/overview.md — 서버 host `https://openapi.tossinvest.com`. OAuth2 Client Credentials(`POST /oauth2/token`) 토큰으로 호출하며, 계좌·자산·주문 API는 `X-Tossinvest-Account` 헤더가 추가로 필요하다. 사용자별 민감 자격증명이므로 `k-skill-proxy` 가 아니라 사용자 환경에서 직접 호출한다.
