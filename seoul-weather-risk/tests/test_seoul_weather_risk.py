@@ -5,8 +5,10 @@ import json
 import os
 import pathlib
 import sys
+import tempfile
 import threading
 import unittest
+import unicodedata
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -146,6 +148,49 @@ class ApiClientTests(unittest.TestCase):
         self.assertEqual(query, {"place_id": ["place-a"], "from": ["2026-08-01"], "to": ["2026-08-05"], "limit": ["100"], "cursor": ["cursor-1"]})
         self.assertTrue(all(request["authorization"] is None for request in self.api.requests))
 
+    def test_query_maps_admin_dong_to_place_id_before_proxy_request(self):
+        self.api.responses["/v1/ask-seoul/weather-risk/data"] = (
+            200, "application/json", data(limit=1), {},
+        )
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = seoul_weather_risk.run([
+                "query", "--product-id", PRODUCT_ID,
+                "--admin-dong", "잠실본동", "--limit", "1",
+            ])
+
+        self.assertEqual(code, 0)
+        query = self.api.requests[-1]["query"]
+        self.assertEqual(query, {
+            "place_id": ["seoul_admd_1171065000"],
+            "limit": ["1"],
+        })
+        self.assertNotIn("admin_dong", query)
+        self.assertNotIn("gu", query)
+
+    def test_query_rejects_gu_without_admin_dong(self):
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            code = seoul_weather_risk.run([
+                "query", "--product-id", PRODUCT_ID, "--gu", "송파구",
+            ])
+
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "invalid_location_input")
+        self.assertEqual(len(self.api.requests), 2)
+
+    def test_query_rejects_admin_dong_with_place_id_filter(self):
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            code = seoul_weather_risk.run([
+                "query", "--product-id", PRODUCT_ID,
+                "--admin-dong", "잠실본동", "--filter", "place_id=place-a",
+            ])
+
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "conflicting_location_input")
+        self.assertEqual(len(self.api.requests), 2)
+
     def test_bundle_single_product_drift_fails_closed(self):
         self.api.responses["/v1/ask-seoul/weather-risk/bundle"] = (200, "application/json", bundle([]), {})
         stderr = io.StringIO()
@@ -224,6 +269,71 @@ class ApiClientTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertEqual(json.loads(stderr.getvalue())["error"]["code"], "api_error")
         self.assertEqual([request["path"] for request in self.api.requests], [endpoint])
+
+
+class LocationMappingTests(unittest.TestCase):
+    def test_admin_dong_reference_has_expected_version_and_unique_place_ids(self):
+        mapping_path = ROOT / "seoul-weather-risk" / "references" / "admin-dong-place-map.json"
+        payload = json.loads(mapping_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["mapping_version"], "kma_admin_dong_grid_20260325")
+        self.assertEqual(len(payload["locations"]), 427)
+        self.assertEqual(len({row["place_id"] for row in payload["locations"]}), 427)
+        self.assertEqual(
+            sorted(row["gu"] for row in payload["locations"] if row["admin_dong"] == "신사동"),
+            ["강남구", "관악구"],
+        )
+
+    def test_resolve_admin_dong_returns_canonical_place_id(self):
+        resolved = seoul_weather_risk._resolve_admin_dong("  잠실본동  ")
+
+        self.assertEqual(resolved, {
+            "admin_dong": "잠실본동",
+            "gu": "송파구",
+            "place_id": "seoul_admd_1171065000",
+        })
+
+    def test_resolve_admin_dong_normalizes_unicode_nfc(self):
+        resolved = seoul_weather_risk._resolve_admin_dong(unicodedata.normalize("NFD", "잠실본동"))
+
+        self.assertEqual(resolved["place_id"], "seoul_admd_1171065000")
+
+    def test_resolve_admin_dong_requires_gu_for_duplicate_name(self):
+        with self.assertRaises(seoul_weather_risk.SkillError) as raised:
+            seoul_weather_risk._resolve_admin_dong("신사동")
+
+        self.assertEqual(raised.exception.code, "ambiguous_admin_dong")
+        self.assertEqual(raised.exception.details["candidates"], [
+            {"admin_dong": "신사동", "gu": "강남구", "place_id": "seoul_admd_1168051000"},
+            {"admin_dong": "신사동", "gu": "관악구", "place_id": "seoul_admd_1162068500"},
+        ])
+
+    def test_resolve_admin_dong_uses_gu_to_disambiguate(self):
+        resolved = seoul_weather_risk._resolve_admin_dong("신사동", "강남구")
+
+        self.assertEqual(resolved["place_id"], "seoul_admd_1168051000")
+
+    def test_resolve_admin_dong_rejects_unknown_dong_and_gu(self):
+        with self.assertRaises(seoul_weather_risk.SkillError) as unknown_dong:
+            seoul_weather_risk._resolve_admin_dong("없는동")
+        self.assertEqual(unknown_dong.exception.code, "unknown_admin_dong")
+
+        with self.assertRaises(seoul_weather_risk.SkillError) as unknown_gu:
+            seoul_weather_risk._resolve_admin_dong("잠실본동", "없는구")
+        self.assertEqual(unknown_gu.exception.code, "unknown_gu")
+
+    def test_load_location_mapping_rejects_invalid_reference(self):
+        with tempfile.TemporaryDirectory() as directory:
+            invalid_path = pathlib.Path(directory) / "mapping.json"
+            invalid_path.write_text(json.dumps({
+                "mapping_version": "wrong-version",
+                "locations": [],
+            }), encoding="utf-8")
+
+            with self.assertRaises(seoul_weather_risk.SkillError) as raised:
+                seoul_weather_risk._load_location_mapping(invalid_path)
+
+        self.assertEqual(raised.exception.code, "location_mapping_invalid")
 
 
 class CliTests(unittest.TestCase):
