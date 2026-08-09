@@ -19,11 +19,23 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 SKILL_BUNDLE_ID = "seoul-weather-risk"
 PROXY_BASE_URL_ENV = "KSKILL_PROXY_BASE_URL"
 DEFAULT_PROXY_BASE_URL = "https://k-skill-proxy.nomadamas.org"
+LOCAL_DIRECT_ENV = "KSKILL_LOCAL_DIRECT"
+SKILL_API_BASE_URL_ENV = "ASK_SEOUL_SKILL_API_BASE_URL"
+MARKETPLACE_API_KEY_ENV = "MARKETPLACE_API_KEY"
 PROXY_DISABLED_VALUES = frozenset({"off", "false", "0", "disable", "disabled", "none"})
+LOCAL_DIRECT_ENABLED_VALUES = frozenset({"1", "true", "on", "yes"})
+LOCAL_DIRECT_DOTENV_NAMES = frozenset({
+    LOCAL_DIRECT_ENV,
+    SKILL_API_BASE_URL_ENV,
+    MARKETPLACE_API_KEY_ENV,
+})
 PROXY_ROUTE_ROOT = "/v1/ask-seoul/weather-risk"
 LOCATION_MAPPING_PATH = pathlib.Path(__file__).resolve().parents[1] / "references" / "admin-dong-place-map.json"
 LOCATION_MAPPING_VERSION = "kma_admin_dong_grid_20260325"
 LOCATION_MAPPING_SIZE = 427
+ADMIN_DONG_ALIASES = {
+    "성수2가3동": "성수2가제3동",
+}
 EXACT_PRODUCT_IDS = frozenset({
     "weather_place_risk_window",
 })
@@ -55,14 +67,54 @@ class _NoRedirect(HTTPRedirectHandler):
 @dataclass(frozen=True)
 class ApiConfig:
     base_url: str
+    mode: str = "hosted_proxy"
+    bearer_token: str | None = None
 
 
 def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
+def _local_direct_config(values: dict[str, str]) -> ApiConfig:
+    base_url = values.get(SKILL_API_BASE_URL_ENV, "").strip()
+    bearer_token = values.get(MARKETPLACE_API_KEY_ENV, "").strip()
+    if not base_url or base_url == "replace-me":
+        raise SkillError("local_direct_not_configured", "local direct API base URL이 필요합니다.")
+    if not bearer_token or bearer_token == "replace-me":
+        raise SkillError("local_direct_not_configured", "local direct Marketplace API key가 필요합니다.")
+
+    parsed = urlparse(base_url)
+    local_http = parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
+    if (parsed.scheme != "https" and not local_http) or not parsed.netloc or parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
+        raise SkillError("invalid_local_direct_base_url", "local direct API base URL은 HTTPS origin이어야 합니다.")
+    if parsed.username or parsed.password:
+        raise SkillError("invalid_local_direct_base_url", "local direct API base URL에 사용자 정보는 포함할 수 없습니다.")
+    return ApiConfig(base_url=base_url.rstrip("/"), mode="local_direct", bearer_token=bearer_token)
+
+
+def _current_directory_dotenv() -> dict[str, str]:
+    path = pathlib.Path.cwd() / ".env"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+
+    values: dict[str, str] = {}
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        name, value = stripped.split("=", 1)
+        name = name.strip()
+        if name in LOCAL_DIRECT_DOTENV_NAMES:
+            values[name] = value.strip().strip('"').strip("'")
+    return values
+
+
 def _api_config(environ: dict[str, str] | None = None) -> ApiConfig:
-    values = os.environ if environ is None else environ
+    values = ({**_current_directory_dotenv(), **os.environ} if environ is None else environ)
+    if values.get(LOCAL_DIRECT_ENV, "").strip().casefold() in LOCAL_DIRECT_ENABLED_VALUES:
+        return _local_direct_config(values)
     configured = values.get(PROXY_BASE_URL_ENV, "").strip()
     if configured.casefold() in PROXY_DISABLED_VALUES:
         raise SkillError("proxy_disabled", f"{PROXY_BASE_URL_ENV}가 비활성화되어 있습니다.")
@@ -105,10 +157,13 @@ def _request_json(config: ApiConfig, path: str, query: dict[str, str] | None = N
     url = f"{config.base_url}{path}"
     if query:
         url = f"{url}?{urlencode(query)}"
-    request = Request(url, headers={
+    headers = {
         "Accept": "application/json",
         "User-Agent": "k-skill-seoul-weather-risk/1",
-    })
+    }
+    if config.bearer_token:
+        headers["Authorization"] = f"Bearer {config.bearer_token}"
+    request = Request(url, headers=headers)
     try:
         with build_opener(_NoRedirect).open(request, timeout=15) as response:
             raw = response.read()
@@ -123,7 +178,7 @@ def _request_json(config: ApiConfig, path: str, query: dict[str, str] | None = N
             exc.close()
         raise error from exc
     except URLError as exc:
-        raise SkillError("network_error", "k-skill proxy에 연결할 수 없습니다.") from exc
+        raise SkillError("network_error", "ASK Seoul API에 연결할 수 없습니다.") from exc
 
     if content_type != "application/json":
         raise SkillError("malformed_response", "ASK Seoul API 성공 응답의 Content-Type이 JSON이 아닙니다.")
@@ -222,6 +277,20 @@ def _filters(values: list[str]) -> dict[str, str]:
     return parsed
 
 
+def _time_bound(value: str, edge: str) -> str:
+    if (
+        len(value) == len("YYYY-MM-DD")
+        and value[4] == "-"
+        and value[7] == "-"
+        and value[:4].isdigit()
+        and value[5:7].isdigit()
+        and value[8:10].isdigit()
+    ):
+        suffix = "00:00:00" if edge == "from" else "23:59:59"
+        return f"{value} {suffix}"
+    return value
+
+
 def _normalize_location_name(value: str) -> str:
     return " ".join(unicodedata.normalize("NFC", value).strip().split())
 
@@ -273,6 +342,7 @@ def _load_location_mapping(path: pathlib.Path = LOCATION_MAPPING_PATH) -> tuple[
 
 def _resolve_admin_dong(admin_dong: str, gu: str | None = None) -> dict[str, str]:
     normalized_dong = _normalize_location_name(admin_dong)
+    normalized_dong = ADMIN_DONG_ALIASES.get(normalized_dong, normalized_dong)
     normalized_gu = _normalize_location_name(gu) if gu is not None else None
     _version, locations = _load_location_mapping()
 
@@ -304,16 +374,22 @@ def _validate_product_id(product_id: str) -> None:
 
 
 def _bundle(config: ApiConfig) -> dict[str, Any]:
+    if config.mode == "local_direct":
+        return _validate_bundle(_request_json(config, f"/skill/v1/bundles/{SKILL_BUNDLE_ID}"))
     return _validate_bundle(_request_json(config, f"{PROXY_ROUTE_ROOT}/bundle"))
 
 
 def _detail(config: ApiConfig, product_id: str) -> dict[str, Any]:
     _validate_product_id(product_id)
+    if config.mode == "local_direct":
+        return _validate_product(_request_json(config, f"/skill/v1/products/{product_id}"), product_id)
     return _validate_product(_request_json(config, f"{PROXY_ROUTE_ROOT}/product"), product_id)
 
 
 def _data(config: ApiConfig, product_id: str, query: dict[str, str], limit: int) -> dict[str, Any]:
     _validate_product_id(product_id)
+    if config.mode == "local_direct":
+        return _validate_data(_request_json(config, f"/skill/v1/products/{product_id}/data", query), product_id, limit)
     return _validate_data(_request_json(config, f"{PROXY_ROUTE_ROOT}/data", query), product_id, limit)
 
 
@@ -345,10 +421,11 @@ def run(argv: list[str]) -> int:
         if args.command == "preflight":
             result = {
                 "status": "ok",
-                "mode": "hosted_proxy",
+                "mode": config.mode,
                 "live_network": False,
-                "user_api_key_required": False,
-                "proxy_base_url_configured": True,
+                "user_api_key_required": config.mode == "local_direct",
+                "proxy_base_url_configured": config.mode == "hosted_proxy",
+                "local_direct_base_url_configured": config.mode == "local_direct",
             }
         elif args.command == "catalog":
             result = _bundle(config)
@@ -381,9 +458,9 @@ def run(argv: list[str]) -> int:
                 raise SkillError("unknown_filter", f"공개 projection에 없는 필터입니다: {', '.join(unknown)}")
             request_query = {**filters, "limit": str(args.limit)}
             if args.from_value is not None:
-                request_query["from"] = args.from_value
+                request_query["from"] = _time_bound(args.from_value, "from")
             if args.to_value is not None:
-                request_query["to"] = args.to_value
+                request_query["to"] = _time_bound(args.to_value, "to")
             if args.cursor is not None:
                 request_query["cursor"] = args.cursor
             result = _data(config, args.product_id, request_query, args.limit)
