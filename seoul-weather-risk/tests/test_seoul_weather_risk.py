@@ -461,6 +461,26 @@ class LocationMappingTests(unittest.TestCase):
             with self.subTest(row=row, variant="omitted_dot"):
                 self.assertEqual(seoul_weather_risk._resolve_admin_dong(row["admin_dong"].replace(".", ""), row["gu"]), row)
 
+    def test_alias_keys_generate_combined_je_and_punctuation_variants(self):
+        _version, locations = seoul_weather_risk._load_location_mapping()
+        row = next(row for row in locations if row["admin_dong"] == "면목제3.8동")
+
+        aliases = seoul_weather_risk._alias_keys(row["admin_dong"])
+        self.assertTrue({"면목3·8동", "면목38동"}.issubset(aliases))
+
+    def test_resolve_admin_dong_resolves_every_generated_map_alias_with_gu(self):
+        _version, locations = seoul_weather_risk._load_location_mapping()
+        checked_aliases = 0
+        for row in locations:
+            for alias in seoul_weather_risk._alias_keys(row["admin_dong"]):
+                if alias == row["admin_dong"]:
+                    continue
+                with self.subTest(row=row, alias=alias):
+                    self.assertEqual(seoul_weather_risk._resolve_admin_dong(alias, row["gu"]), row)
+                checked_aliases += 1
+
+        self.assertGreater(checked_aliases, 0)
+
     def test_location_indexes_retain_colliding_aliases_and_resolve_exact_first(self):
         alias_source = {"admin_dong": "예제1동", "gu": "가구", "place_id": "seoul_admd_0000000001"}
         canonical_match = {"admin_dong": "예1동", "gu": "나구", "place_id": "seoul_admd_0000000002"}
