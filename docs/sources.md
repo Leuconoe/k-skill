@@ -42,7 +42,6 @@
 - 국민권익위원회 지방의회 국외출장 실태 보도자료: https://www.acrc.go.kr/board.es?act=view&bid=4A&list_no=83269&mid=a10402010000 — 항공료 조작, 외유성 논란 등은 단건 공개 보고서에서 단정하지 않고, 외부 감사자료 대조가 필요한 별도 확장 항목의 참고 사례로 사용한다.
 - 국민권익위원회 실태점검 정책브리핑: https://www.korea.kr/news/policyNewsView.do?newsId=148937518 — 243개 지방의회 실태점검에서 항공권 조작, 여비 허위청구, 관광 목적 비용 부풀리기, 과도한 수행인원, 출장 중 부적절 물품 구매 등이 드러났다고 설명한다. 이 자료의 문제 유형은 공개 문서에서 원문 인용으로 확인 가능한 검토 신호와 외부 감사자료 없이는 판단 불가한 항목으로 분리해 사용한다.
 - 한겨레 선관위 몰디브·코타키나발루 출장 보도: https://www.hani.co.kr/arti/politics/politics_general/1263881.html — 최근 5년 선관위 직원 국외출장 107회, 461명, 총 예산 24억5255만원 및 몰디브·코타키나발루 등 휴양지 논란을 보도했다. 이 보도는 최근 논란 맥락을 설명하는 보조 자료일 뿐 감사·법적 판단 근거로 사용하지 않는다.
-- tossinvest-cli: https://github.com/JungHoonGhae/tossinvest-cli
 - 토스증권 공식 Open API 문서: https://developers.tossinvest.com/docs
 - 토스증권 공식 Open API OpenAPI JSON (source of truth): https://openapi.tossinvest.com/openapi-docs/latest/openapi.json
 - 토스증권 공식 Open API 개요: https://openapi.tossinvest.com/openapi-docs/overview.md — 서버 host `https://openapi.tossinvest.com`. OAuth2 Client Credentials(`POST /oauth2/token`) 토큰으로 호출하며, 계좌·자산·주문 API는 `X-Tossinvest-Account` 헤더가 추가로 필요하다. 사용자별 민감 자격증명이므로 `k-skill-proxy` 가 아니라 사용자 환경에서 직접 호출한다.
@@ -196,8 +195,8 @@
 - 당근알바 검색 Remix data route: https://www.daangn.com/kr/jobs/?_data=routes/kr.jobs._index
 - 당근중고차 검색 Remix data route: https://www.daangn.com/kr/cars/?_data=routes/kr.cars._index
 - 당근부동산 상세 페이지: https://realty.daangn.com/articles/<id>
-- 카카오맵 모바일 검색: https://m.map.kakao.com/actions/searchView
-- 카카오맵 장소 패널 JSON: https://place-api.map.kakao.com/places/panel3/<confirmId>
+- 카카오맵 근처 술집 후보 검색: https://dapi.kakao.com/v2/local/search/keyword.json — `kakao-bar-nearby`가 `k-skill-proxy`의 `/v1/kakao-map/search/keyword`를 통해 기준 장소와 술집 후보를 조회한다.
+- 카카오맵 장소 상세 페이지: https://place.map.kakao.com/<id> — Kakao Local 응답의 `place_url`을 메뉴·현재 영업 상태·좌석 옵션 확인용 브라우저 핸드오프로 사용한다.
 - 조선왕조실록 메인: https://sillok.history.go.kr
 - 조선왕조실록 검색 결과: https://sillok.history.go.kr/search/searchResultList.do
 - 조선왕조실록 기사 상세: https://sillok.history.go.kr/id/kda_12512030_002
@@ -221,6 +220,7 @@
 - GeekNews public RSS/Atom feed: https://feeds.feedburner.com/geeknews-feed
 - GeekNews home: https://news.hada.io
 - 기상청 단기예보 조회서비스: https://www.data.go.kr/data/15084084/openapi.do
+- ASK 서울 K-Skill API(기상청 단기예보 2차 가공, 공공누리 제1유형·출처표시 기상청): https://ask-seoul.kr/skill-openapi.json
 - 에어코리아 대기오염정보: https://www.data.go.kr/data/15073861/openapi.do
 - 에어코리아 측정소정보: https://www.data.go.kr/data/15073877/openapi.do
 - 한강홍수통제소 Open API 레퍼런스: https://www.hrfco.go.kr/web/openapiPage/reference.do
