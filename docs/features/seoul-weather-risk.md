@@ -4,13 +4,22 @@
 
 > 이 결과는 예보값을 기준으로 만든 참고 정보이며, **기상청 공식 특보를 대체하지 않습니다.** 외출·운영·안전 판단에는 공식 기상청 발표를 함께 확인하세요.
 
-## 먼저 알아둘 것
+## 이 기능으로 할 수 있는 일
 
-- 제품은 `weather_place_risk_window` 하나만 제공합니다.
-- 사용자는 `place_id`나 ASK 서울 API Key를 알거나 발급받을 필요가 없습니다.
-- 기본 hosted `k-skill-proxy`가 인증과 ASK 서울 API 호출을 대신합니다.
-- 조회는 읽기 전용이며 SQL, 테이블명, 조인, 집계, 임의 정렬을 입력할 수 없습니다.
-- 현재 행정동 매핑은 `kma_admin_dong_grid_20260325` 버전의 서울 427개 항목을 기준으로 합니다.
+- 서울 행정동 이름으로 장소별 기상 위험 예상 시간대를 조회합니다.
+- 폭염·한파·호우·대설·강풍 후보와 예보 시각(`forecast_at`)을 확인합니다.
+- 동명이명 행정동은 자치구(`--gu`)를 지정해 정확한 장소로 좁힐 수 있습니다.
+- 제품 게시 상태, 공개 컬럼, 페이지별 행 수와 게시 버전(`publication_id`)을 함께 확인합니다.
+
+이 스킬은 ASK 서울 Marketplace의 `weather_place_risk_window` **단일 제품**만 읽습니다. 조회 결과가 없거나 제품이 준비되지 않았을 때 임의의 예시·fixture 데이터를 대신 반환하지 않습니다.
+
+## 먼저 필요한 것
+
+- 인터넷 연결
+- Node.js와 `npx`
+- [공통 설치 가이드](../install.md) 및 [보안/시크릿 정책](../security-and-secrets.md) 확인
+
+사용자 API Key는 필요하지 않습니다. 기본 hosted proxy가 ASK 서울 API 인증을 대신하므로, 일반 사용자는 별도 키를 발급받거나 secrets 파일을 만들지 않아도 됩니다.
 
 ## 설치
 
@@ -20,7 +29,37 @@
 npx --yes skills add NomaDamas/k-skill --skill seoul-weather-risk -g
 ```
 
-## 가장 빠른 사용법
+## 필요한 환경변수
+
+- 없음. `KSKILL_PROXY_BASE_URL`은 self-host 또는 별도 proxy를 사용할 때만 설정하는 선택 항목입니다.
+- 환경변수를 비워 두면 기본 hosted `https://k-skill-proxy.nomadamas.org`를 사용합니다.
+
+ASK 서울 전용 서비스 키와 upstream origin은 proxy 운영 환경에서만 관리합니다. 사용자 환경변수, URL, 명령행 인수, 문서, 로그에는 넣지 않습니다.
+
+## 기본 경로
+
+기본적으로 다음 세 read-only route를 proxy가 중계합니다.
+
+- bundle: `GET /v1/ask-seoul/weather-risk/bundle`
+- product metadata: `GET /v1/ask-seoul/weather-risk/product`
+- data page: `GET /v1/ask-seoul/weather-risk/data`
+
+사용자는 이 route를 직접 조합하기보다 아래 CLI 흐름을 사용하는 것을 권장합니다. proxy 운영·self-host가 필요한 경우에는 [k-skill 프록시 서버 가이드](k-skill-proxy.md)를 참고하세요.
+
+## 입력값
+
+| 입력 | 설명 |
+| --- | --- |
+| `--admin-dong` | 서울 행정동 이름. 내부 `place_id`를 몰라도 됨 |
+| `--gu` | 동명이명 해소용 자치구. `--admin-dong`과 함께 사용 |
+| `--from` / `--to` | KST 기준 조회 범위. 날짜만 입력하면 하루의 시작·끝 시각으로 확장 |
+| `--limit` | 페이지 행 수, `1`~`500`, 기본값 `100` |
+| `--cursor` | 같은 `publication_id`의 다음 페이지를 조회할 때 사용 |
+| `--filter` | `column=value` 형식의 공개 컬럼 필터 |
+
+`--product-id`는 항상 `weather_place_risk_window`를 사용합니다. `--admin-dong`과 `--filter place_id=...`는 동시에 사용할 수 없습니다.
+
+## 기본 흐름
 
 스킬을 설치한 뒤에는 자연어로 다음처럼 요청하면 됩니다.
 
@@ -98,18 +137,6 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 
 지원하지 않는 이름을 억지로 보정하지 않는 것은 잘못된 장소의 기상 정보를 보여주는 것을 막기 위한 안전장치입니다.
 
-## 조회 옵션
-
-| 옵션 | 필수 | 설명 |
-| --- | --- | --- |
-| `--product-id` | 예 | 항상 `weather_place_risk_window` 사용 |
-| `--admin-dong` | 조건부 | 서울 행정동 이름. `--filter place_id=...`와 동시에 사용할 수 없음 |
-| `--gu` | 아니오 | 동명이명을 자치구로 좁힐 때 `--admin-dong`과 함께 사용 |
-| `--from` / `--to` | 아니오 | KST 조회 시작·종료 시각 또는 날짜 |
-| `--limit` | 아니오 | 한 페이지 행 수, `1`~`500`, 기본값 `100` |
-| `--cursor` | 아니오 | 이전 응답의 `next_cursor`를 같은 publication에서 이어 조회 |
-| `--filter` | 아니오 | `column=value` 형식의 공개 컬럼 필터. 자동화 호환용 `place_id` 필터도 지원 |
-
 `--admin-dong`을 사용하지 않는 기존 자동화는 다음처럼 `place_id`를 직접 필터링할 수 있습니다.
 
 ```bash
@@ -171,7 +198,7 @@ MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
 
 이 값은 사용자의 로컬 검증용이며 저장소에 커밋하지 않습니다. API Key를 채팅, 명령행 인수, URL query string, 문서, 로그에 넣지 마세요. hosted proxy 운영용 ASK 서울 전용 서비스 키는 proxy 서버 환경에서만 관리됩니다.
 
-## 이 스킬로 할 수 없는 것
+## 주의할 점
 
 - 기상청 공식 특보를 발령하거나 대체하는 판단
 - 행정동을 좌표·생활권·통칭으로 추정하는 검색
