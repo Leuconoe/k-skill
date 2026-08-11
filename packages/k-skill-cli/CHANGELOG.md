@@ -1,5 +1,12 @@
 # @nomadamas/k-skill
 
+## 0.2.3
+
+### Patch Changes
+
+- 0aa0a2d: Remove a discontinued clinic-search skill from the bundled CLI assets.
+- 7daf89a: store-longevity-radar 스킬과 상가업소 시계열 장수 점포 추출 helper를 CLI 번들에 추가한다.
+
 ## 0.2.2
 
 ### Patch Changes
