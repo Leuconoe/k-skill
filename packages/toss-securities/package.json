@@ -1,6 +1,6 @@
 {
   "name": "toss-securities",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Read-only client for the official Toss Securities Open API with OAuth2",
   "license": "MIT",
   "main": "src/index.js",
