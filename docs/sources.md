@@ -220,6 +220,7 @@
 - GeekNews public RSS/Atom feed: https://feeds.feedburner.com/geeknews-feed
 - GeekNews home: https://news.hada.io
 - 기상청 단기예보 조회서비스: https://www.data.go.kr/data/15084084/openapi.do
+- ASK 서울 K-Skill API(기상청 단기예보 2차 가공, 공공누리 제1유형·출처표시 기상청): https://ask-seoul.kr/skill-openapi.json
 - 에어코리아 대기오염정보: https://www.data.go.kr/data/15073861/openapi.do
 - 에어코리아 측정소정보: https://www.data.go.kr/data/15073877/openapi.do
 - 한강홍수통제소 Open API 레퍼런스: https://www.hrfco.go.kr/web/openapiPage/reference.do

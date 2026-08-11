@@ -63,6 +63,28 @@ systemctl --user status k-skill-proxy-tunnel.service
 
 The `.env` file stays on `gpu01` and must not be copied into the repository.
 
+## ASK Seoul weather-risk route handoff
+
+Before deploying the `seoul-weather-risk` proxy route, ASK Seoul must issue a **dedicated, revocable service key**. Do not use a maintainer's or contributor's personal Marketplace key. The Marketplace registers this key as the following fixed service principal and scope:
+
+| Field | Fixed value |
+| --- | --- |
+| service principal | `k-skill-proxy:seoul-weather-risk` |
+| scope | `skill:seoul-weather-risk:read` |
+| permitted Marketplace APIs | `GET /skill/v1/bundles/seoul-weather-risk`, `GET /skill/v1/products/weather_place_risk_window`, `GET /skill/v1/products/weather_place_risk_window/data` |
+| excluded APIs | every `/api/v1/*` API and every other `/skill/v1/*` product |
+
+Store only these two values in the existing gpu01 runtime `.env`:
+
+```dotenv
+ASK_SEOUL_SKILL_API_BASE_URL=https://<ask-seoul-skill-origin>
+ASK_SEOUL_KSKILL_API_KEY=<dedicated-service-key>
+```
+
+The key is not a user credential: it is sent only from the proxy process to the fixed ASK Seoul `/skill/v1` paths. Do not deploy this route until the Marketplace has applied the service-key scope migration and registered this principal.
+
+Rotate the key by registering a replacement with the same scope, replacing only the gpu01 runtime secret, restarting/smoke-testing the proxy, and then revoking the old key. If the proxy is disabled or suspected compromised, revoke its key immediately; the Marketplace must deny it before any daily-quota accounting. Never paste a key into an issue, PR, shell argument, URL, or log.
+
 ## Usage stats dashboard
 
 Endpoint call statistics (`routeUsage` log lines) are collected into Loki by

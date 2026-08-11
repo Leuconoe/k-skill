@@ -121,6 +121,7 @@
     "./seoul-bike",
     "./seoul-density",
     "./seoul-subway-arrival",
+    "./seoul-weather-risk",
     "./sh-notice-search",
     "./srt-booking",
     "./store-longevity-radar",
