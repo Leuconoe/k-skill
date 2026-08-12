@@ -15,19 +15,10 @@ import csv
 import io
 import json
 import math
-import os
 import re
 import sys
-import time
-import urllib.error
-import urllib.request
 import zipfile
-
-DATASET_PAGE = "https://www.data.go.kr/data/15083033/fileData.do"
-DOWNLOAD_URL = "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId={fid}&fileDetailSn=1"
-UA = "Mozilla/5.0 (compatible; k-skill-store-longevity-radar)"
-CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "k-skill", "store-longevity-radar")
-CACHE_TTL = 24 * 3600
+from store_longevity_download import download_latest_zip
 
 DEFAULT_CODES = ["G21302", "G21306"]          # 문구/회화용품 소매업, 장난감 소매업 (2022~ 코드체계)
 DEFAULT_KEYWORDS = ["문구", "문방구", "완구", "장난감"]
@@ -41,47 +32,6 @@ COLS = ["상가업소번호", "상호명", "상권업종소분류코드", "상�
 
 def log(msg):
     print(msg, file=sys.stderr)
-
-
-def http_get(url, timeout=60):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
-    return urllib.request.urlopen(req, timeout=timeout)
-
-
-def discover_atch_file_id():
-    """데이터셋 페이지에서 현재 분기 파일 ID를 찾는다 (분기마다 갱신됨)."""
-    html = http_get(DATASET_PAGE).read().decode("utf-8", "replace")
-    ids = re.findall(r"FILE_[0-9]{6,}", html)
-    if not ids:
-        raise SystemExit(json.dumps({"status": "unavailable",
-                                     "note": "데이터셋 페이지에서 파일 ID를 찾지 못함. 수동 확인: " + DATASET_PAGE},
-                                    ensure_ascii=False))
-    return ids[0]
-
-
-def download_latest_zip():
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    path = os.path.join(CACHE_DIR, "sdc_latest.zip")
-    if os.path.exists(path) and time.time() - os.path.getmtime(path) < CACHE_TTL:
-        log(f"cache hit: {path}")
-        return path
-    try:
-        fid = discover_atch_file_id()
-        log(f"downloading {fid} (수백 MB, 수 분 소요) ...")
-        tmp = path + ".part"
-        with http_get(DOWNLOAD_URL.format(fid=fid), timeout=1800) as r, open(tmp, "wb") as f:
-            while True:
-                chunk = r.read(1 << 20)
-                if not chunk:
-                    break
-                f.write(chunk)
-        os.replace(tmp, path)
-    except (TimeoutError, urllib.error.URLError) as exc:
-        raise SystemExit(json.dumps({
-            "status": "unavailable",
-            "note": f"공공데이터포털 접속 또는 다운로드 실패: {exc}. 수동 확인: {DATASET_PAGE}",
-        }, ensure_ascii=False)) from None
-    return path
 
 
 def norm_name(s):
