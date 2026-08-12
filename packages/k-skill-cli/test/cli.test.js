@@ -172,6 +172,16 @@ test("runner selection honors shebangs and executes bundled Node helpers", () =>
   assert.equal(JSON.parse(result.stdout).counts.characters, 3);
 });
 
+test("runner selection lets KSKILL_PYTHON override Python shebangs", () => {
+  const pythonScript = resolveBundledAsset("seoul-weather-risk", "scripts/seoul_weather_risk.py");
+  const defaultRunner = resolveRunner(pythonScript);
+  const runner = resolveRunner(pythonScript, { KSKILL_PYTHON: "python-custom" });
+
+  assert.equal(defaultRunner.command, process.platform === "win32" ? "python" : "python3");
+  assert.equal(runner.command, "python-custom");
+  assert.deepEqual(runner.args, [pythonScript]);
+});
+
 test("assembled instructions match committed snapshots", () => {
   const snapshotDir = path.join(__dirname, "snapshots");
   const update = process.env.UPDATE_SNAPSHOTS === "1";
