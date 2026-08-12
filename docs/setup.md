@@ -1,6 +1,6 @@
 # 공통 설정 가이드
 
-`k-skill` 전체 스킬을 설치한 뒤, 인증 정보가 필요한 기능(SRT 예매, KTX 예매, 자연휴양림 빈 객실 조회, KOSIS `bigdata`/`--direct` 조회용 `KSKILL_KOSIS_API_KEY` (https://kosis.kr/openapi/ 에서 무료 발급), 한국 법령 검색의 로컬 CLI/MCP 경로용 `LAW_OC`, 한국 특허 정보 검색의 KIPRIS Plus 경로용 `KIPRIS_PLUS_API_KEY`, self-host 프록시 운영용 서울 지하철/한국 날씨/미세먼지/한강홍수통제소/식약처/KOSIS/Kakao upstream key, 또는 배포 확인이 끝난 proxy URL 공유)이 있으면 이 절차를 진행하면 된다. 미세먼지, 한강 수위, 주유소 가격, 부동산 실거래가, 한국 주식 정보 조회, 생활쓰레기 배출정보 조회, 학교 급식 식단 조회, 의약품 안전 체크, 식품 안전 체크는 기본 hosted proxy를 쓰므로 사용자 쪽 키가 불필요하다. KOSIS 일반 조회와 Kakao Local geocoding도 기본 hosted proxy를 쓰므로 사용자 쪽 키가 불필요하다(단, hosted 프록시 운영 측에서 `DATA_GO_KR_API_KEY`·`KEDU_INFO_KEY`·`DATA4LIBRARY_AUTH_KEY`·`FOODSAFETYKOREA_API_KEY`·`KOSIS_API_KEY`·`KAKAO_REST_API_KEY` 등은 서버에 설정되어 있어야 한다).
+`k-skill` 전체 스킬을 설치한 뒤, 인증 정보가 필요한 기능(자연휴양림 빈 객실 조회, KOSIS `bigdata`/`--direct` 조회용 `KSKILL_KOSIS_API_KEY` (https://kosis.kr/openapi/ 에서 무료 발급), 한국 법령 검색의 로컬 CLI/MCP 경로용 `LAW_OC`, 한국 특허 정보 검색의 KIPRIS Plus 경로용 `KIPRIS_PLUS_API_KEY`, self-host 프록시 운영용 서울 지하철/한국 날씨/미세먼지/한강홍수통제소/식약처/KOSIS/Kakao upstream key, 또는 배포 확인이 끝난 proxy URL 공유)이 있으면 이 절차를 진행하면 된다. KTX·SRT 운행시간표 조회는 공식 공개 파일을 사용하므로 철도 회원 credential이 필요하지 않다. 미세먼지, 한강 수위, 주유소 가격, 부동산 실거래가, 한국 주식 정보 조회, 생활쓰레기 배출정보 조회, 학교 급식 식단 조회, 의약품 안전 체크, 식품 안전 체크는 기본 hosted proxy를 쓰므로 사용자 쪽 키가 불필요하다. KOSIS 일반 조회와 Kakao Local geocoding도 기본 hosted proxy를 쓰므로 사용자 쪽 키가 불필요하다(단, hosted 프록시 운영 측에서 `DATA_GO_KR_API_KEY`·`KEDU_INFO_KEY`·`DATA4LIBRARY_AUTH_KEY`·`FOODSAFETYKOREA_API_KEY`·`KOSIS_API_KEY`·`KAKAO_REST_API_KEY` 등은 서버에 설정되어 있어야 한다).
 
 ## Credential resolution order
 
@@ -21,10 +21,6 @@
 ```bash
 mkdir -p ~/.config/k-skill
 cat > ~/.config/k-skill/secrets.env <<'EOF'
-KSKILL_SRT_ID=replace-me
-KSKILL_SRT_PASSWORD=replace-me
-KSKILL_KTX_ID=replace-me
-KSKILL_KTX_PASSWORD=replace-me
 KSKILL_FORESTTRIP_ID=replace-me
 KSKILL_FORESTTRIP_PASSWORD=replace-me
 # KOSIS 일반 조회는 hosted proxy 사용. bigdata/--direct 때만 채운다.
@@ -108,8 +104,6 @@ bash scripts/check-setup.sh
 
 | 기능 | 필요한 값 |
 | --- | --- |
-| SRT 예매 | `KSKILL_SRT_ID`, `KSKILL_SRT_PASSWORD` |
-| KTX 예매 | `KSKILL_KTX_ID`, `KSKILL_KTX_PASSWORD` |
 | 고속버스 예매 | 사용자 시크릿 불필요 (조회·좌석 단계는 공식 KOBUS HTTP 흐름, 돌쇠는 `clarify` 승인 후 공식 결제까지, generic은 수동 handoff) |
 | 시외버스 예매 | 사용자 시크릿 불필요 (조회·좌석 단계는 공식 티머니 HTTP 흐름, 돌쇠는 `clarify` 승인 후 공식 결제까지, generic은 수동 handoff) |
 | 자연휴양림 빈 객실 조회 | `KSKILL_FORESTTRIP_ID`, `KSKILL_FORESTTRIP_PASSWORD` |
@@ -139,8 +133,8 @@ bash scripts/check-setup.sh
 
 ## 다음에 볼 문서
 
-- [SRT 예매 가이드](features/srt-booking.md)
-- [KTX 예매 가이드](features/ktx-booking.md)
+- [SRT 운행시간표 조회 가이드](features/srt-booking.md) — credential 불필요
+- [KTX 운행시간표 조회 가이드](features/ktx-booking.md) — credential 불필요
 - [고속버스 예매 가이드](features/express-bus-booking.md)
 - [시외버스 예매 가이드](features/intercity-bus-booking.md)
 - [자연휴양림 빈 객실 조회 가이드](features/foresttrip-vacancy.md)

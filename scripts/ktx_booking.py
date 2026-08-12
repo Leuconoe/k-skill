@@ -13,18 +13,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
-from datetime import datetime
-from io import BytesIO
 import json
 import re
 import sys
-from typing import Any, Iterable
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from datetime import date as calendar_date
+from datetime import datetime, time
+from io import BytesIO
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from openpyxl import load_workbook
-
 
 BOARD_URL = "https://www.korail.com/com/userBoard.do?schBcid=ticketTable&mode=list"
 FILE_BASE_URL = "https://www.korail.com/file/cubedata/COMMON/"
@@ -231,7 +232,7 @@ def validate_date(value: str) -> str:
     if not re.fullmatch(r"\d{8}", value):
         raise ValueError("date must use YYYYMMDD")
     try:
-        datetime.strptime(value, "%Y%m%d")
+        calendar_date(int(value[:4]), int(value[4:6]), int(value[6:]))
     except ValueError as exc:
         raise ValueError("date must use a valid YYYYMMDD value") from exc
     return value
@@ -241,7 +242,7 @@ def validate_time(value: str) -> str:
     if not re.fullmatch(r"\d{4}", value):
         raise ValueError("time must use HHMM")
     try:
-        datetime.strptime(value, "%H%M")
+        time.fromisoformat(f"{value[:2]}:{value[2:]}")
     except ValueError as exc:
         raise ValueError("time must use a valid HHMM value") from exc
     return f"{value[:2]}:{value[2:]}"

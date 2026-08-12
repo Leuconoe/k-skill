@@ -94,5 +94,9 @@ npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- source
 
 ## Notes
 
-- 법적·약관상 배경은 `references/AUTOMATION-LEGAL-STATEMENT.md`를 읽는다.
+- 법적·약관상 배경은 다음 명령으로 읽는다.
+
+```bash
+npx -y @nomadamas/k-skill@0 read srt-booking references/AUTOMATION-LEGAL-STATEMENT.md
+```
 - 이 스킬이 조회하는 것은 공개 운행계획이며 실시간 예약 가능 좌석이 아니다.

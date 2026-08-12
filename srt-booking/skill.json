@@ -7,10 +7,6 @@
     {
       "from": "scripts/srt_booking.py",
       "to": "scripts/srt_booking.py"
-    },
-    {
-      "from": "scripts/srt_seats.py",
-      "to": "scripts/srt_seats.py"
     }
   ]
 }

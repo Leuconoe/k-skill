@@ -21,10 +21,6 @@
 - 퍼미션: `0600` (owner-only read/write)
 
 ```dotenv
-KSKILL_SRT_ID=replace-me
-KSKILL_SRT_PASSWORD=replace-me
-KSKILL_KTX_ID=replace-me
-KSKILL_KTX_PASSWORD=replace-me
 KSKILL_FORESTTRIP_ID=replace-me
 KSKILL_FORESTTRIP_PASSWORD=replace-me
 # 일반 KOSIS 조회는 hosted proxy 사용. direct/bigdata 또는 proxy 서버 운영 때만 필요.
@@ -85,10 +81,6 @@ ASK 서울 기상 위험 시간대 조회도 기본 hosted proxy를 사용하므
 
 ## Standard variable names
 
-- `KSKILL_SRT_ID`
-- `KSKILL_SRT_PASSWORD`
-- `KSKILL_KTX_ID`
-- `KSKILL_KTX_PASSWORD`
 - `KSKILL_FORESTTRIP_ID`
 - `KSKILL_FORESTTRIP_PASSWORD`
 - `KSKILL_KOSIS_API_KEY` (KOSIS `bigdata`/`--direct`, 또는 proxy 서버 `KOSIS_API_KEY` 대체 env)

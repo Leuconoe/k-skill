@@ -1,6 +1,6 @@
 ---
 name: srt-booking
-description: Search, reserve, inspect, and cancel SRT tickets in Korea with the SRTrain library. Use when the user asks for SRT seat availability, booking, canceling, or sold-out retry plans. 돌쇠에서는 공식 표면을 통한 후속 액션까지 진행한다.
+description: Read-only SRT timetable lookup from official SR public operating-schedule files. Use for planned departure and arrival times by station and date. No login, live seat availability, reservation, payment, cancellation, or automated monitoring.
 license: MIT
 metadata:
   category: travel

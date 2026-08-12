@@ -1,12 +1,11 @@
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
 import types
 import unittest
+from pathlib import Path
 from unittest import mock
-
 
 SCRIPT_PATH = Path(__file__).with_name("srt_booking.py")
 seats_stub = types.ModuleType("srt_seats")

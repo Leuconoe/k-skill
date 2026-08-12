@@ -13,20 +13,20 @@ pays, cancels, polls, or stores the downloaded document.
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
-from datetime import datetime
-from html import unescape
-from html.parser import HTMLParser
 import json
-from pathlib import Path
 import re
 import subprocess
 import sys
 import tempfile
+from dataclasses import asdict, dataclass
+from datetime import date as calendar_date
+from datetime import time
+from html import unescape
+from html.parser import HTMLParser
+from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPCookieProcessor, Request, build_opener
-
 
 ARCHIVE_URL = "https://etk.srail.kr/cms/archive.do?pageId=TK0402050000"
 DOWNLOAD_URL = "https://www.srail.or.kr/cms/attach/download.do"
@@ -211,7 +211,7 @@ def validate_date(value: str) -> str:
     if not re.fullmatch(r"\d{8}", value):
         raise ValueError("date must use YYYYMMDD")
     try:
-        datetime.strptime(value, "%Y%m%d")
+        calendar_date(int(value[:4]), int(value[4:6]), int(value[6:]))
     except ValueError as exc:
         raise ValueError("date must use a valid YYYYMMDD value") from exc
     return value
@@ -221,7 +221,7 @@ def validate_time(value: str) -> str:
     if not re.fullmatch(r"\d{4}", value):
         raise ValueError("time must use HHMM")
     try:
-        datetime.strptime(value, "%H%M")
+        time.fromisoformat(f"{value[:2]}:{value[2:]}")
     except ValueError as exc:
         raise ValueError("time must use a valid HHMM value") from exc
     return f"{value[:2]}:{value[2:]}"

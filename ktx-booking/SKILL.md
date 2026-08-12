@@ -1,6 +1,6 @@
 ---
 name: ktx-booking
-description: Search, reserve, inspect, and cancel KTX or Korail tickets in Korea with the korail2 + pycryptodome Python packages. Use when the user asks for KTX seats, Korail bookings, train changes, reservation status, remaining seat numbers, car-by-car seats, or power-outlet/good-seat tips. 돌쇠에서는 공식 표면을 통한 후속 액션까지 진행한다.
+description: Read-only KTX timetable lookup from official Korail public schedule files. Use for planned departure and arrival times by station and date. No login, live seat availability, reservation, payment, cancellation, or automated monitoring.
 license: MIT
 metadata:
   category: travel

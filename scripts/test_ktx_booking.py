@@ -1,11 +1,10 @@
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 from unittest import mock
-
 
 SCRIPT_PATH = Path(__file__).with_name("ktx_booking.py")
 SPEC = importlib.util.spec_from_file_location("ktx_booking", SCRIPT_PATH)

@@ -34,8 +34,8 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 
 | 할 수 있는 일 | 스킬 이름 | 설명 | 사용자 로그인 | 문서 |
 | --- | --- | --- | --- | --- |
-| SRT 예매 | `srt-booking` | SRT 열차 조회·좌석 확인·예약·취소 | 필요 | [SRT 예매 가이드](docs/features/srt-booking.md) |
-| KTX 예매 | `ktx-booking` | KTX/Korail 좌석번호·콘센트 좌석 확인·예약·취소 | 필요 | [KTX 예매 가이드](docs/features/ktx-booking.md) |
+| SRT 운행시간표 조회 | `srt-booking` | 에스알 공식 공개 시간표 기반 계획 시각 조회 전용 | 불필요 | [SRT 운행시간표 조회 가이드](docs/features/srt-booking.md) |
+| KTX 운행시간표 조회 | `ktx-booking` | 코레일 공식 공개 시간표 기반 계획 시각 조회 전용 | 불필요 | [KTX 운행시간표 조회 가이드](docs/features/ktx-booking.md) |
 | 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
 | 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
 | 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 빈 객실 조회와 예약 지원 | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
@@ -186,8 +186,8 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 
 ## 포함된 기능
 
-- [SRT 예매](docs/features/srt-booking.md)
-- [KTX 예매](docs/features/ktx-booking.md)
+- [SRT 운행시간표 조회](docs/features/srt-booking.md)
+- [KTX 운행시간표 조회](docs/features/ktx-booking.md)
 - [고속버스 예매](docs/features/express-bus-booking.md)
 - [시외버스 예매](docs/features/intercity-bus-booking.md)
 - [자연휴양림 빈 객실 조회](docs/features/foresttrip-vacancy.md)

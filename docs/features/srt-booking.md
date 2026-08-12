@@ -1,95 +1,67 @@
-# SRT 예매 가이드
+# SRT 운행시간표 조회 가이드
 
-## 이 기능으로 할 수 있는 일
+## 조회 전용 기능
 
-- 수서 출발 SRT 열차 조회
-- 좌석 가능 여부 확인
-- 호차별 남은 좌석번호 확인
-- 특정 좌석 공석 여부 확인
-- 예약 진행
-- 예약 내역 확인
-- 예약 취소
+`srt-booking`은 주식회사 에스알이 공개한 최신 SRT 운행시각표 HWP를 임시로 내려받아 계획 출발·도착 시각을 조회한다.
 
-## 먼저 필요한 것
+- 회원가입·로그인 불필요
+- credential 불필요
+- 실시간 잔여석·좌석번호 조회 없음
+- 예약·예약대기·결제·취소 없음
+- 자동 재조회·매진 감시 없음
 
-- Python 3.10+
-- `python3 -m pip install SRTrain`
-- [공통 설정 가이드](../setup.md) 완료
-- [보안/시크릿 정책](../security-and-secrets.md) 확인
+## 필요한 것
 
-## 필요한 환경변수
+- Node.js 18+
+- `npx`
+- Python 3
 
-- `KSKILL_SRT_ID`
-- `KSKILL_SRT_PASSWORD`
-
-### Credential resolution order
-
-1. **이미 환경변수에 있으면** 그대로 사용한다.
-2. **돌쇠 credential mode이면** provisioned `vault-run` capability를 사용하고, 없으면 `request_vault_credential`로 앱 vault 입력 UI를 호출한다.
-3. **그 밖의 host vault가 있으면** 모델에 평문을 노출하지 않는 방식으로 주입한다.
-4. **generic fallback이면** `~/.config/k-skill/secrets.env`를 퍼미션 `0600`으로 사용한다.
+helper는 공식 HWP를 임시 디렉터리에 저장하고 `npx -y kordoc`으로 Markdown 변환한 뒤 원문과 변환물을 즉시 삭제한다.
 
 ## 입력값
 
 - 출발역
 - 도착역
 - 날짜: `YYYYMMDD`
-- 희망 시작 시각: `HHMMSS`
-- 인원 수
-- 좌석 선호
-- 좌석 상세 조건: 객실 등급, 호차 번호, 좌석 번호, 빈 좌석만 보기, 탐색 우선순위
+- 시작·종료 시각: `HHMM`
+- 최대 결과 수
 
-## 기본 흐름
-
-1. `SRTrain` 패키지가 없으면 다른 방법으로 우회하지 말고 먼저 전역 설치합니다.
-2. `KSKILL_SRT_ID`, `KSKILL_SRT_PASSWORD` 가 없으면 credential resolution order에 따라 확보합니다.
-3. 먼저 helper 로 열차를 조회합니다.
-4. 후보 열차의 출발/도착 시각, 좌석 여부, 운임을 보여줍니다.
-5. 사용자가 좌석번호, 호차별 잔여석, 특정 좌석 공석 여부를 물으면 `seats` 로 상세 좌석을 먼저 확인합니다.
-6. 대상 열차가 명확할 때만 예약합니다.
-7. 예약 확인/취소는 예약을 다시 식별한 뒤 진행합니다.
-
-## 예시
+## 조회 예시
 
 ```bash
-npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- search 수서 부산 20260328 080000 --time-limit 120000 --limit 5
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- \
+  search \
+  --dep 수서 \
+  --arr 부산 \
+  --date 20260820 \
+  --time 0600 \
+  --time-limit 1200 \
+  --limit 5
 ```
 
-상세 좌석 확인:
+현재 사용 중인 에스알 공식 원본만 확인:
 
 ```bash
-npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id>
+npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- source
 ```
 
-특정 호차의 빈 좌석만 확인:
+## 결과 해석
 
-```bash
-npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --available-only
-```
+`trains`에는 열차번호와 계획 출발·도착 시각이 포함된다. `source`에는 공식 시간표 기준일, 첨부 번호와 다운로드 URL이 포함된다.
 
-특정 좌석이 비었는지 확인:
+이 결과는 **공개 운행계획**이며 다음 정보는 제공하지 않는다.
 
-```bash
-npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 --train-id <train_id> --car-no 5 --seat 11A
-```
+- 실제 운휴·지연·편성 변경
+- 실시간 좌석 판매 상태
+- 호차·좌석번호
+- 운임·할인 적용 결과
 
-탐색 순서 조정:
+구매가 필요하면 결과의 `booking_url`을 사용자가 직접 열어 공식 SRT 표면에서 확인한다.
 
-```bash
-npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- seats 수서 부산 20260328 080000 \
-  --train-id <train_id> \
-  --car-priority center \
-  --seat-priority window-forward \
-  --available-only
-```
+## 안전 경계
 
-`seats` 응답은 호차별 `available_seat_count`, `available_seats`, 좌석별 순방향/역방향, 창측/내측, 특정 좌석 요청 시 `requested_seat_available` 을 JSON 으로 반환합니다. 이 단계는 좌석을 선택하거나 선점하지 않고, 예약 전 확인만 합니다.
-
-## 주의할 점
-
-- credential은 환경변수로 주입합니다.
-- 상세 좌석 확인은 SRT 웹 좌석선택 페이지의 공개 HTML을 조회 전용으로 파싱합니다.
-- 예약번호, 운임, 구입기한이 반환되면 **좌석 확보는 완료**되었다고 안내합니다.
-- 돌쇠에서 사용자가 예매 완료를 요청하면 CloakBrowser의 공식 SRT 결제 화면에서 같은 예약을 확인하고, 결제 직전 `clarify`로 열차·승객·좌석 등급·총액을 승인받은 뒤 결제를 실행해 결제 완료 상태와 영수증을 확인합니다.
-- generic runtime에서는 예약번호와 구입기한을 제공하고 결제를 handoff합니다.
-- 매진 시 공격적인 재시도 루프는 피합니다.
+- 계정 ID·비밀번호를 요구하거나 저장하지 않는다.
+- `SRTrain`, SRT 앱 내부 API 또는 좌석선택 내부 endpoint를 사용하지 않는다.
+- 한 사용자 요청에 대해 한 번 조회하고 polling을 시작하지 않는다.
+- CAPTCHA·차단·접근 제한을 우회하지 않는다.
+- 자세한 배경은 [`AUTOMATION-LEGAL-STATEMENT.md`](../../srt-booking/references/AUTOMATION-LEGAL-STATEMENT.md)를 참고한다.
