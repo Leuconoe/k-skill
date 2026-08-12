@@ -1,6 +1,6 @@
 ---
 name: k-skill-setup
-description: After installing the full k-skill bundle, configure and verify the shared cross-platform setup, then optionally wire update checks and GitHub starring with explicit user consent.
+description: Install the k-skill bundle, use the unified CLI, resolve credentials, verify the runtime, and optionally configure update checks and GitHub starring.
 license: MIT
 metadata:
   category: setup
