@@ -49,7 +49,6 @@ const EXCLUDED_DIRS = new Set([
   ".idea",
   "docs",
   "dist",
-  "legacy",
   "node_modules",
   "packages",
   "python-packages",
@@ -57,10 +56,6 @@ const EXCLUDED_DIRS = new Set([
   "examples",
   "tools",
 ]);
-
-// Skills that exist on disk but must not ship in the plugin (e.g. upstream
-// blocked automation and the skill no longer works).
-const EXCLUDED_SKILLS = new Set(["blue-ribbon-nearby", "naver-map-route"]);
 
 // Identity fields used when the manifest does not exist yet. Existing values
 // are never overwritten; only missing keys are backfilled.
@@ -91,7 +86,6 @@ function discoverSkillPaths(root) {
     if (!entry.isDirectory()) continue;
     if (entry.name.startsWith(".")) continue;
     if (EXCLUDED_DIRS.has(entry.name)) continue;
-    if (EXCLUDED_SKILLS.has(entry.name)) continue;
     const skillMd = path.join(root, entry.name, "SKILL.md");
     if (fs.existsSync(skillMd)) {
       skills.push(`./${entry.name}`);
@@ -182,7 +176,6 @@ if (require.main === module) {
 
 module.exports = {
   EXCLUDED_DIRS,
-  EXCLUDED_SKILLS,
   DEFAULT_MANIFEST,
   discoverSkillPaths,
   buildManifest,
