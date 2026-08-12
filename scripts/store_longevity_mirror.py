@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import os
+import subprocess
 import zipfile
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
@@ -19,7 +20,6 @@ from scripts.store_longevity_source import (
     DATASET_PAGE,
     DOWNLOAD_URL,
     MirrorError,
-    download_source_zip,
     load_remote_manifest,
     resolve_source_file_id,
 )
@@ -67,6 +67,32 @@ def sha256_file(path: Path) -> str:
         while chunk := source.read(1 << 20):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def download_source_snapshot(url: str, path: Path) -> None:
+    try:
+        subprocess.run(
+            [
+                "curl",
+                "--fail",
+                "--show-error",
+                "--location",
+                "--ipv4",
+                "--connect-timeout",
+                "60",
+                "--retry",
+                "5",
+                "--retry-all-errors",
+                "--referer",
+                DATASET_PAGE,
+                "--output",
+                str(path),
+                url,
+            ],
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise MirrorError(f"source download failed: {exc}") from exc
 
 
 def validate_zip(path: Path) -> ZipSummary:
@@ -148,7 +174,10 @@ def run(args: PrepareArgs) -> dict[str, object]:
     output_dir.mkdir(parents=True, exist_ok=True)
     zip_path = output_dir / f"{source_file_id}.zip"
     partial_path = zip_path.with_suffix(".zip.part")
-    download_source_zip(source_file_id, partial_path)
+    download_source_snapshot(
+        DOWNLOAD_URL.format(file_id=source_file_id),
+        partial_path,
+    )
     summary = validate_zip(partial_path)
     os.replace(partial_path, zip_path)
 

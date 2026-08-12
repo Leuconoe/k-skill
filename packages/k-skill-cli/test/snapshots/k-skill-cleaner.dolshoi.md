@@ -53,7 +53,7 @@ npx -y @nomadamas/k-skill@0 exec k-skill-cleaner scripts/k_skill_cleaner.py -- \
   --skills-root . \
   --scan-default-logs \
   --days 90 \
-  --never-use blue-ribbon-nearby,lotto-results \
+  --never-use lotto-results,market-kurly-search \
   --keep k-skill-setup,k-skill-cleaner
 ```
 
