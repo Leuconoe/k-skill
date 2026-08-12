@@ -17,6 +17,12 @@ These rules are repo-specific and apply to everything under this directory.
 - For release or packaging changes, run `npm run ci`.
 - Keep release docs, workflow files, and package metadata aligned in the same change.
 
+## Skill deletion rules
+
+- When a skill is removed, delete its source, generated copies, package code, tests, fixtures, documentation, proxy helpers, and registry metadata from the repository.
+- Do **not** preserve removed skills or related code under `legacy/`, `archive/`, `deprecated/`, `retired/`, or any similar in-repository holding directory.
+- If future reimplementation may be useful, track the intent and requirements in a GitHub issue; Git history remains the source for retrieving deleted implementations.
+
 ## Testing anti-patterns
 
 - **Never write tests that assert `.changeset/*.md` files exist.** Changesets are consumed (deleted) by `changeset version` during the release flow. Any test guarding changeset file presence will break CI on the version-bump commit and block the release pipeline.

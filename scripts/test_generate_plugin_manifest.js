@@ -12,7 +12,6 @@ const {
   serialize,
   run,
   manifestPathFor,
-  EXCLUDED_SKILLS,
 } = require("./generate-plugin-manifest.js");
 
 /** Create a throwaway repo-like tree and return its root path. */
@@ -49,27 +48,6 @@ test("discoverSkillPaths excludes infrastructure dirs and nested fixtures", () =
     // Dot-directory must be skipped regardless of contents.
     ".github/SKILL.md": SKILL_FM,
   });
-  assert.deepEqual(discoverSkillPaths(root), ["./lotto-results"]);
-});
-
-test("discoverSkillPaths drops deprecated EXCLUDED_SKILLS", () => {
-  assert.ok(EXCLUDED_SKILLS.has("blue-ribbon-nearby"));
-  const root = makeFixtureRoot({
-    "blue-ribbon-nearby/SKILL.md": SKILL_FM,
-    "lotto-results/SKILL.md": SKILL_FM,
-  });
-  assert.deepEqual(discoverSkillPaths(root), ["./lotto-results"]);
-});
-
-test("discoverSkillPaths ignores legacy skills even when they contain SKILL.md", () => {
-  const root = makeFixtureRoot({
-    "legacy/blue-ribbon-nearby/SKILL.md": SKILL_FM,
-    "legacy/naver-map-route/SKILL.md": SKILL_FM,
-    "naver-map-route/SKILL.md": SKILL_FM,
-    "lotto-results/SKILL.md": SKILL_FM,
-  });
-
-  assert.ok(EXCLUDED_SKILLS.has("naver-map-route"));
   assert.deepEqual(discoverSkillPaths(root), ["./lotto-results"]);
 });
 

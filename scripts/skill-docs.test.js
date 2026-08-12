@@ -1880,41 +1880,19 @@ test("kleague-results package README stays aligned with the official K League JS
   assert.match(packageReadme, /FC서울/);
 });
 
-test("unsupported naver map and blue ribbon skills are archived outside default docs", () => {
+test("unsupported naver map and blue ribbon skills are removed from the repository", () => {
   const readme = read("README.md");
   const install = read(path.join("docs", "install.md"));
   const sources = read(path.join("docs", "sources.md"));
-  const legacyReadmePath = path.join(repoRoot, "legacy", "README.md");
-  const blueRibbonSkillPath = path.join(repoRoot, "legacy", "unsupported-skills", "blue-ribbon-nearby", "SKILL.md");
-  const naverMapSkillPath = path.join(repoRoot, "legacy", "unsupported-skills", "naver-map-route", "SKILL.md");
-  const blueRibbonDocPath = path.join(
-    repoRoot,
-    "legacy",
-    "unsupported-skills",
-    "blue-ribbon-nearby",
-    "docs",
-    "features",
-    "blue-ribbon-nearby.md",
-  );
-  const naverMapDocPath = path.join(
-    repoRoot,
-    "legacy",
-    "unsupported-skills",
-    "naver-map-route",
-    "docs",
-    "features",
-    "naver-map-route.md",
-  );
-
-  assert.ok(fs.existsSync(legacyReadmePath), "expected legacy/README.md to explain archived unsupported skills");
-  assert.ok(fs.existsSync(blueRibbonSkillPath), "expected blue-ribbon-nearby SKILL.md to be preserved under legacy");
-  assert.ok(fs.existsSync(naverMapSkillPath), "expected naver-map-route SKILL.md to be preserved under legacy");
-  assert.ok(fs.existsSync(blueRibbonDocPath), "expected blue-ribbon-nearby feature doc to be preserved under legacy");
-  assert.ok(fs.existsSync(naverMapDocPath), "expected naver-map-route feature doc to be preserved under legacy");
+  const qaClassifier = read(path.join("tools", "k-skill-qa-bot", "bin", "classify-skill.py"));
+  const cleanerInstruction = read(path.join("k-skill-cleaner", "instruction.md"));
   assert.ok(!fs.existsSync(path.join(repoRoot, "blue-ribbon-nearby", "SKILL.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "naver-map-route", "SKILL.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "docs", "features", "blue-ribbon-nearby.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "docs", "features", "naver-map-route.md")));
+  assert.ok(!fs.existsSync(path.join(repoRoot, "packages", "blue-ribbon-nearby", "package.json")));
+  assert.doesNotMatch(qaClassifier, /blue-ribbon-nearby|naver-map-route/);
+  assert.doesNotMatch(cleanerInstruction, /blue-ribbon-nearby|naver-map-route/);
 
   for (const doc of [readme, install, sources]) {
     assert.doesNotMatch(doc, /blue-ribbon-nearby|naver-map-route/);
@@ -4362,14 +4340,13 @@ test("README skill table includes inline-code skill names for every documented r
   }
 });
 
-test("legacy blue ribbon package is not part of npm workspaces or pack dry run", () => {
+test("removed blue ribbon package is not part of npm workspaces or pack dry run", () => {
   const packageJson = readJson("package.json");
   const packageLock = readJson("package-lock.json");
   const packScript = packageJson.scripts["pack:dry-run"];
 
   assert.doesNotMatch(packScript, /workspace blue-ribbon-nearby(?:\s|$)/);
   assert.ok(!fs.existsSync(path.join(repoRoot, "packages", "blue-ribbon-nearby", "package.json")));
-  assert.ok(fs.existsSync(path.join(repoRoot, "legacy", "unsupported-packages", "blue-ribbon-nearby", "package.json")));
   assert.ok(!Object.hasOwn(packageLock.packages, "packages/blue-ribbon-nearby"));
   assert.ok(!Object.hasOwn(packageLock.packages, "node_modules/blue-ribbon-nearby"));
 });
