@@ -85,6 +85,26 @@ class SrtLiveReadOnlyTests(unittest.TestCase):
         for name in ("command_reserve", "command_cancel", "command_reservations", "command_payment"):
             self.assertFalse(hasattr(srt_booking, name))
 
+    def test_station_input_drops_a_trailing_station_suffix(self) -> None:
+        self.assertEqual(srt_booking.normalize_station("수서역"), "수서")
+        self.assertEqual(srt_booking.normalize_station(" 부산 "), "부산")
+        self.assertEqual(srt_booking.normalize_station("없는역"), "없는역")
+
+    def test_search_normalizes_station_input_before_querying(self) -> None:
+        client = FakeSRT("", "", False)
+        with mock.patch.object(srt_booking, "build_client", return_value=client):
+            srt_booking.search_live_timetable(
+                dep="수서역",
+                arr="부산역",
+                date="20260819",
+                earliest="0600",
+                latest="1200",
+                limit=5,
+            )
+
+        _name, kwargs = client.calls[0]
+        self.assertEqual((kwargs["dep"], kwargs["arr"]), ("수서", "부산"))
+
     def test_cli_bad_date_fails_before_client_creation(self) -> None:
         result = subprocess.run(
             [

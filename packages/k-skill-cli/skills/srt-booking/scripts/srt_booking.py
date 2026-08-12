@@ -16,7 +16,7 @@ from datetime import time
 from typing import Any
 
 from SRT import SRT
-from SRT.constants import API_ENDPOINTS
+from SRT.constants import API_ENDPOINTS, STATION_CODE
 from SRT.errors import SRTError
 
 BOOKING_URL = "https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000"
@@ -40,6 +40,16 @@ def source_info() -> dict[str, str]:
 
 def format_time(value: str) -> str:
     return f"{value[:2]}:{value[2:4]}"
+
+
+def normalize_station(value: str) -> str:
+    """Accept common "...역" input for a canonical SRT station name."""
+    name = value.strip()
+    if name in STATION_CODE:
+        return name
+    if name.endswith("역") and name[:-1] in STATION_CODE:
+        return name[:-1]
+    return name
 
 
 def normalize_train(train: Any) -> dict[str, Any]:
@@ -72,8 +82,8 @@ def search_live_timetable(
         raise ValueError("--time must not be later than --time-limit")
     client = build_client()
     trains = client.search_train(
-        dep=dep,
-        arr=arr,
+        dep=normalize_station(dep),
+        arr=normalize_station(arr),
         date=date,
         time=start,
         time_limit=end,

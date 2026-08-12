@@ -43,7 +43,7 @@ npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- source
 ## Workflow
 
 1. 출발역, 도착역, 날짜, 시간대를 확인한다.
-2. `search`를 한 번 실행한다.
+2. `search`를 한 번 실행한다. `수서역`처럼 `역`이 붙은 입력은 helper가 표준 역명으로 정규화한다.
 3. 현재 운행 후보를 제시한다.
 4. 좌석 구매가 필요하면 `booking_url`을 제공하고 종료한다.
 5. 사용자가 다시 요청하지 않는 한 polling·매진 감시를 시작하지 않는다.

@@ -45,7 +45,7 @@ npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- source
 ## Workflow
 
 1. 출발역, 도착역, 날짜, 시간대를 확인한다.
-2. `search`를 한 번 실행한다.
+2. `search`를 한 번 실행한다. `서울역`처럼 `역`이 붙은 입력은 helper가 표준 역명으로 정규화한다.
 3. 요청 역과 정확히 일치하는 후보만 제시한다.
 4. 좌석 구매가 필요하면 `booking_url`을 제공하고 종료한다.
 5. 사용자가 다시 요청하지 않는 한 polling·매진 감시를 시작하지 않는다.
@@ -64,7 +64,8 @@ npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- source
 - `MACRO ERROR` 또는 코레일의 접근 제한
 - upstream `korail2` 호환 revision 설치 실패
 - 날짜·시간 또는 역명 오류
-- 조건에 맞는 열차 없음
+- 요청 역과 코레일이 반환한 역이 불일치(오류로 중단하며 반환된 역명을 함께 보고한다)
+- 조건에 맞는 열차 없음(`count: 0`으로 정상 종료한다)
 
 이 경우 차단을 우회하지 않고 [코레일 공식 조회 페이지](https://www.korail.com/ticket/train/schedule)를 안내한다.
 

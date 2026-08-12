@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import re
 import subprocess
 import sys
 import unittest
@@ -6,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 SCRIPT_PATH = Path(__file__).with_name("ktx_booking.py")
+REPO_ROOT = SCRIPT_PATH.parent.parent
 SPEC = importlib.util.spec_from_file_location("ktx_booking", SCRIPT_PATH)
 assert SPEC and SPEC.loader
 ktx_booking = importlib.util.module_from_spec(SPEC)
@@ -93,6 +96,70 @@ class KtxLiveReadOnlyTests(unittest.TestCase):
     def test_module_has_no_state_changing_command_functions(self) -> None:
         for name in ("command_reserve", "command_cancel", "command_reservations", "command_payment"):
             self.assertFalse(hasattr(ktx_booking, name))
+
+    def test_station_input_drops_a_trailing_station_suffix(self) -> None:
+        self.assertEqual(ktx_booking.normalize_station("서울역"), "서울")
+        self.assertEqual(ktx_booking.normalize_station(" 부산 "), "부산")
+        self.assertEqual(ktx_booking.normalize_station("광주송정역"), "광주송정")
+
+    def test_search_normalizes_station_input_before_querying(self) -> None:
+        client = FakeKorail("", "", False)
+        with mock.patch.object(ktx_booking, "build_client", return_value=client):
+            result = ktx_booking.search_live_timetable(
+                dep="서울역",
+                arr="부산역",
+                date="20260819",
+                earliest="0600",
+                latest="1200",
+                limit=5,
+            )
+
+        _name, kwargs = client.calls[0]
+        self.assertEqual((kwargs["dep"], kwargs["arr"]), ("서울", "부산"))
+        self.assertEqual(result["count"], 1)
+
+    def test_station_mismatch_raises_instead_of_returning_empty(self) -> None:
+        class OnlyAdjacentKorail(FakeKorail):
+            def search_train(self, **kwargs):
+                self.calls.append(("search_train", kwargs))
+                return [AdjacentTrain()]
+
+        client = OnlyAdjacentKorail("", "", False)
+        with mock.patch.object(ktx_booking, "build_client", return_value=client):
+            with self.assertRaises(ValueError) as caught:
+                ktx_booking.search_live_timetable(
+                    dep="서울",
+                    arr="부산",
+                    date="20260819",
+                    earliest="0600",
+                    latest="1200",
+                    limit=5,
+                )
+
+        self.assertIn("청량리→부전", str(caught.exception))
+
+    def test_no_train_in_window_still_returns_an_empty_result(self) -> None:
+        client = FakeKorail("", "", False)
+        with mock.patch.object(ktx_booking, "build_client", return_value=client):
+            result = ktx_booking.search_live_timetable(
+                dep="서울",
+                arr="부산",
+                date="20260819",
+                earliest="2000",
+                latest="2300",
+                limit=5,
+            )
+
+        self.assertEqual(result["count"], 0)
+
+    def test_test_environment_installs_the_runtime_korail2_revision(self) -> None:
+        pinned = re.search(r"korail2 @ (git\+\S+)\"", SCRIPT_PATH.read_text())
+        assert pinned
+        prepare = json.loads((REPO_ROOT / "package.json").read_text())["scripts"][
+            "prepare:python-test-env"
+        ]
+
+        self.assertIn(pinned.group(1), prepare)
 
     def test_cli_bad_time_fails_before_client_creation(self) -> None:
         result = subprocess.run(

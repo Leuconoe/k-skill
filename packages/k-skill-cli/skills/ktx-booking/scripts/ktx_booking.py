@@ -45,6 +45,14 @@ def format_time(value: str) -> str:
     return f"{value[:2]}:{value[2:4]}"
 
 
+def normalize_station(value: str) -> str:
+    """Accept common "...역" input for a canonical Korail station name."""
+    name = value.strip()
+    if len(name) > 2 and name.endswith("역"):
+        return name[:-1]
+    return name
+
+
 def normalize_train(train: Any) -> dict[str, Any]:
     return {
         "train_no": str(train.train_no),
@@ -73,6 +81,8 @@ def search_live_timetable(
     end = validate_time(latest)
     if start > end:
         raise ValueError("--time must not be later than --time-limit")
+    dep = normalize_station(dep)
+    arr = normalize_station(arr)
     client = build_client()
     trains = client.search_train(
         dep=dep,
@@ -83,13 +93,19 @@ def search_live_timetable(
         include_no_seats=True,
         include_waiting_list=False,
     )
-    results = [
-        normalize_train(train)
-        for train in trains
-        if start <= str(train.dep_time) <= end
-        and str(train.dep_name) == dep
-        and str(train.arr_name) == arr
-    ][:limit]
+    in_window = [train for train in trains if start <= str(train.dep_time) <= end]
+    matched = [
+        train
+        for train in in_window
+        if str(train.dep_name) == dep and str(train.arr_name) == arr
+    ]
+    if in_window and not matched:
+        returned = sorted({f"{train.dep_name}→{train.arr_name}" for train in in_window})
+        raise ValueError(
+            f"요청한 역({dep}→{arr})과 정확히 일치하는 열차가 없습니다. "
+            f"코레일이 반환한 역: {', '.join(returned)}"
+        )
+    results = [normalize_train(train) for train in matched][:limit]
     return {
         "count": len(results),
         "trains": results,
