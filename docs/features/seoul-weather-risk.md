@@ -65,7 +65,22 @@ ASK 서울 전용 서비스 키와 upstream origin은 proxy 운영 환경에서�
 
 > 잠실본동의 이번 주 기상 위험 시간대와 각 위험 판정의 근거를 알려줘.
 
-CLI에서 직접 확인하려면 아래 순서대로 실행합니다. 먼저 연결 상태를 확인하고, 제품이 게시 가능한지 확인한 다음, 실제 데이터를 조회합니다.
+일반적인 오늘 위험 시간대 질문은 아래 fast path를 한 번만 실행합니다. bundled 행정동 매핑과 날짜·limit 검증은 유지하면서 hosted data route만 호출하므로 bundle·product metadata 왕복을 생략합니다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query --fast \
+  --product-id weather_place_risk_window \
+  --admin-dong 잠실본동 \
+  --from 2026-08-12 \
+  --to 2026-08-12 \
+  --limit 100
+```
+
+`--fast`에서는 `--filter` 대신 `--admin-dong`, `--gu`, 날짜, `--limit`, `--cursor`를 사용합니다. `product_not_ready` 또는 계약 오류가 나오면 fixture로 대체하지 말고 게시 계약 진단을 수행합니다.
+
+## 게시 계약 진단
+
+아래 단계는 일반 질문마다 실행하지 않고, fast path 오류나 게시 상태 점검이 필요할 때만 실행합니다.
 
 ### 1. 연결·실행 모드 확인
 
@@ -101,7 +116,7 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 
 제품의 기본 단위(grain)는 `place_id`와 `forecast_at` 조합입니다. `describe` 응답의 `metadata.columns`에서 실제 공개 컬럼을 확인한 뒤 필요한 필터만 사용하세요.
 
-### 4. 행정동으로 조회
+### 4. full-contract 행정동 조회
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
@@ -111,6 +126,8 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
   --to 2026-08-17 \
   --limit 100
 ```
+
+`--filter`가 필요하면 `--fast`를 빼고 이 full-contract 경로를 사용합니다. data 응답의 `publication_id`, `row_count`, `rows`, `has_more`, `next_cursor`를 확인하고 다음 page에는 같은 publication의 cursor만 재사용합니다.
 
 `--from`과 `--to`에 날짜만 넣으면 KST 기준으로 각각 `00:00:00`, `23:59:59`로 확장됩니다. 특정 시각이 필요하면 `2026-08-11 09:00:00`처럼 명시하세요.
 

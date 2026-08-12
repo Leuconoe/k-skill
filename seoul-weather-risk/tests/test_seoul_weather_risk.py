@@ -156,6 +156,27 @@ class ApiClientTests(unittest.TestCase):
         })
         self.assertTrue(all(request["authorization"] is None for request in self.api.requests))
 
+    def test_fast_query_uses_only_data_route_without_metadata_round_trips(self):
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = seoul_weather_risk.run([
+                "query", "--fast", "--product-id", PRODUCT_ID,
+                "--admin-dong", "잠실본동", "--from", "2026-08-05", "--to", "2026-08-05", "--limit", "100",
+            ])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(stdout.getvalue())["row_count"], 1)
+        self.assertEqual([request["path"] for request in self.api.requests], [
+            "/v1/ask-seoul/weather-risk/data",
+        ])
+        self.assertEqual(self.api.requests[0]["query"], {
+            "place_id": ["seoul_admd_1171065000"],
+            "from": ["2026-08-05 00:00:00"],
+            "to": ["2026-08-05 23:59:59"],
+            "limit": ["100"],
+        })
+        self.assertIsNone(self.api.requests[0]["authorization"])
+
     def test_local_direct_settings_are_ignored_and_hosted_proxy_remains_the_only_route(self):
         with patch.dict(os.environ, {
             "KSKILL_LOCAL_DIRECT": "1",

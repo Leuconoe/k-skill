@@ -48,7 +48,34 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 ## Workflow
 
-1. 환경 설정만 먼저 확인한다. 이 명령은 네트워크를 호출하지 않는다.
+### Standard user query (fast path)
+
+사용자가 오늘 위험 시간대를 묻는 기본 경로는 `query --fast` 한 번만 실행한다. 이 경로는 bundled 행정동 매핑과 날짜·limit 검증을 유지하면서 hosted data route만 한 번 호출하므로 bundle·product metadata 왕복을 생략한다. `--fast`에서는 `--filter`를 사용하지 않고 `--admin-dong`, `--gu`, 날짜, `--limit`, `--cursor`만 사용한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query --fast \
+  --product-id weather_place_risk_window \
+  --admin-dong 잠실본동 \
+  --from 2026-08-12 \
+  --to 2026-08-12 \
+  --limit 100
+```
+
+동명이명인 `신사동`은 자치구를 확인한 뒤 fast path에도 `--gu`를 함께 전달한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query --fast \
+  --product-id weather_place_risk_window \
+  --admin-dong 신사동 \
+  --gu 강남구 \
+  --limit 100
+```
+
+`--filter`가 필요하거나 게시 계약을 점검해야 할 때는 `--fast`를 빼고 full-contract query를 사용한다. fast query가 `product_not_ready` 또는 계약 오류를 반환하면 fixture나 추정값으로 대체하지 말고 아래 진단 흐름을 수행한다.
+
+### Contract diagnostics (only when needed)
+
+1. 환경 설정만 확인한다. 이 명령은 네트워크를 호출하지 않는다.
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- preflight
@@ -66,28 +93,7 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- describe --product-id weather_place_risk_window
 ```
 
-4. 행정동 이름과 `1..500` 범위의 limit으로 data page를 조회한다.
-
-```bash
-npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
-  --product-id weather_place_risk_window \
-  --admin-dong 잠실본동 \
-  --from 2026-08-01 \
-  --to 2026-08-07 \
-  --limit 100
-```
-
-동명이명인 `신사동`은 자치구를 확인한 뒤 다음처럼 조회한다.
-
-```bash
-npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
-  --product-id weather_place_risk_window \
-  --admin-dong 신사동 \
-  --gu 강남구 \
-  --limit 100
-```
-
-응답의 `registration_ready`, `publication_id`, `blockers`를 먼저 확인한다. data 응답의 `next_cursor`는 같은 제품의 다음 page에만 그대로 재사용한다. publication이 바뀌면 cursor는 `409`로 만료된다.
+진단 응답의 `registration_ready`, `publication_id`, `blockers`를 확인한다. fast/full data 응답의 `next_cursor`는 같은 제품의 다음 page에만 그대로 재사용하며 publication이 바뀌면 cursor는 `409`로 만료된다.
 
 ## Boundaries
 
