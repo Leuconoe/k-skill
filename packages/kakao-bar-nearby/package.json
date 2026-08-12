@@ -1,6 +1,6 @@
 {
   "name": "kakao-bar-nearby",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Official Kakao Local API nearby bar search with Kakao Map detail-link handoff",
   "license": "MIT",
   "main": "src/index.js",
