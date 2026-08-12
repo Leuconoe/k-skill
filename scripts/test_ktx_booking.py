@@ -1,5 +1,4 @@
 import importlib.util
-import json
 import subprocess
 import sys
 import unittest
@@ -14,93 +13,88 @@ sys.modules[SPEC.name] = ktx_booking
 SPEC.loader.exec_module(ktx_booking)
 
 
-BOARD_PAYLOAD = {
-    "boardList": [
-        {
-            "bdIdx": 1,
-            "bdCode": "_ticketTable02",
-            "bdTitle": "KTX 시간표(2026. 9. 1. 기준)",
-            "fileId": ["jfile/202608/01/current.xlsx"],
-            "regdt": "2026-08-01",
-        },
-        {
-            "bdIdx": 2,
-            "bdCode": "_ticketTable02",
-            "bdTitle": "KTX 시간표(2026. 8. 1. 기준)",
-            "fileId": ["jfile/202607/01/old.xlsx"],
-            "regdt": "2026-07-01",
-        },
-    ]
-}
+class FakeTrain:
+    train_no = "75"
+    train_type_name = "KTX-산천"
+    dep_date = "20260819"
+    dep_time = "060300"
+    arr_time = "084900"
+    dep_name = "서울"
+    arr_name = "부산"
+    def has_general_seat(self):
+        return True
+
+    def has_special_seat(self):
+        return False
 
 
-class KtxReadOnlyTests(unittest.TestCase):
+class AdjacentTrain(FakeTrain):
+    train_no = "703"
+    dep_name = "청량리"
+    arr_name = "부전"
+
+
+class FakeKorail:
+    def __init__(self, korail_id, korail_pw, auto_login):
+        self.init = (korail_id, korail_pw, auto_login)
+        self.calls = []
+
+    def search_train(self, **kwargs):
+        self.calls.append(("search_train", kwargs))
+        return [FakeTrain(), AdjacentTrain()]
+
+    def reserve(self, *_args, **_kwargs):
+        raise AssertionError("reserve must never be called")
+
+    def cancel(self, *_args, **_kwargs):
+        raise AssertionError("cancel must never be called")
+
+
+class KtxLiveReadOnlyTests(unittest.TestCase):
     def test_parser_exposes_only_search_and_source(self) -> None:
         parser = ktx_booking.build_parser()
         subcommands = parser._subparsers._group_actions[0].choices
 
         self.assertEqual(set(subcommands), {"search", "source"})
-        for removed in ("reserve", "cancel", "reservations", "seats", "ncard-list"):
-            self.assertNotIn(removed, subcommands)
 
-    def test_search_never_requires_credentials(self) -> None:
-        self.assertNotIn("KSKILL_KTX_ID", SCRIPT_PATH.read_text())
-        self.assertNotIn("KSKILL_KTX_PASSWORD", SCRIPT_PATH.read_text())
-        self.assertFalse(hasattr(ktx_booking, "build_client"))
+    def test_helper_uses_live_korail2_not_file_transport(self) -> None:
+        source = SCRIPT_PATH.read_text()
+        self.assertIn("korail2", source)
+        self.assertNotIn("openpyxl", source)
+        self.assertNotIn("userBoard.do", source)
+        self.assertNotIn("cubedata", source)
 
-    def test_choose_latest_timetable_uses_current_official_attachment(self) -> None:
-        selected = ktx_booking.choose_latest_timetable(BOARD_PAYLOAD)
+    def test_search_uses_anonymous_client_and_only_search_train(self) -> None:
+        client = FakeKorail("", "", False)
+        with mock.patch.object(ktx_booking, "build_client", return_value=client):
+            result = ktx_booking.search_live_timetable(
+                dep="서울",
+                arr="부산",
+                date="20260819",
+                earliest="0600",
+                latest="1200",
+                limit=5,
+            )
 
-        self.assertEqual(selected.title, "KTX 시간표(2026. 9. 1. 기준)")
-        self.assertEqual(
-            selected.download_url,
-            "https://www.korail.com/file/cubedata/COMMON/jfile/202608/01/current.xlsx",
-        )
+        self.assertEqual(client.init, ("", "", False))
+        self.assertEqual([name for name, _kwargs in client.calls], ["search_train"])
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["trains"][0]["train_no"], "75")
+        self.assertEqual(result["trains"][0]["dep_time"], "06:03")
+        self.assertEqual(result["source"]["transport"], "korail2")
 
-    def test_choose_timetable_for_date_does_not_use_future_schedule(self) -> None:
-        selected = ktx_booking.choose_timetable_for_date(BOARD_PAYLOAD, "20260820")
+    def test_source_reports_live_schedule_endpoint_only(self) -> None:
+        source = ktx_booking.source_info()
 
-        self.assertEqual(selected.title, "KTX 시간표(2026. 8. 1. 기준)")
-        self.assertTrue(selected.download_url.endswith("/old.xlsx"))
+        self.assertEqual(source["mode"], "live")
+        self.assertIn("ScheduleView", source["endpoint"])
+        self.assertNotIn("Reservation", source["endpoint"])
 
-    def test_parse_rows_filters_route_time_and_ktx_only(self) -> None:
-        rows = [
-            ["", "열차번호", "편성", "서울", "대전", "부산"],
-            ["", "101", "KTX", "07:00", "08:00", "09:40"],
-            ["", "1201", "무궁화", "07:10", "08:30", "12:00"],
-            ["", "103", "KTX", "09:00", "10:00", "11:40"],
-        ]
+    def test_module_has_no_state_changing_command_functions(self) -> None:
+        for name in ("command_reserve", "command_cancel", "command_reservations", "command_payment"):
+            self.assertFalse(hasattr(ktx_booking, name))
 
-        results = ktx_booking.parse_timetable_rows(
-            rows,
-            dep="서울",
-            arr="부산",
-            earliest="06:00",
-            latest="08:00",
-        )
-
-        self.assertEqual(
-            results,
-            [
-                {
-                    "train_no": "101",
-                    "dep": "서울",
-                    "arr": "부산",
-                    "dep_time": "07:00",
-                    "arr_time": "09:40",
-                }
-            ],
-        )
-
-    def test_parse_rows_returns_empty_for_unknown_station(self) -> None:
-        rows = [["", "열차번호", "편성", "서울", "부산"], ["", "101", "KTX", "07:00", "09:40"]]
-
-        self.assertEqual(
-            ktx_booking.parse_timetable_rows(rows, dep="수서", arr="부산", earliest="00:00", latest="23:59"),
-            [],
-        )
-
-    def test_cli_bad_time_fails_without_network(self) -> None:
+    def test_cli_bad_time_fails_before_client_creation(self) -> None:
         result = subprocess.run(
             [
                 sys.executable,
@@ -111,7 +105,7 @@ class KtxReadOnlyTests(unittest.TestCase):
                 "--arr",
                 "부산",
                 "--date",
-                "20260820",
+                "20260819",
                 "--time",
                 "2500",
             ],
@@ -120,38 +114,8 @@ class KtxReadOnlyTests(unittest.TestCase):
             text=True,
         )
 
-        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 2)
         self.assertIn("HHMM", result.stderr)
-
-    def test_search_fetches_each_official_resource_once(self) -> None:
-        workbook = mock.Mock()
-        workbook.sheetnames = ["경부선"]
-        worksheet = mock.Mock()
-        worksheet.iter_rows.return_value = iter(
-            [["", "열차번호", "편성", "서울", "부산"], ["", "101", "KTX", "07:00", "09:40"]]
-        )
-        workbook.__getitem__ = mock.Mock(return_value=worksheet)
-
-        with (
-            mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD) as fetch_json,
-            mock.patch.object(ktx_booking, "download_bytes", return_value=b"xlsx") as download,
-            mock.patch.object(ktx_booking, "load_workbook_bytes", return_value=workbook),
-        ):
-            output = ktx_booking.search_public_timetable(
-                dep="서울",
-                arr="부산",
-                date="20260820",
-                earliest="0600",
-                latest="0800",
-                limit=5,
-            )
-
-        fetch_json.assert_called_once()
-        download.assert_called_once()
-        self.assertEqual(output["count"], 1)
-        self.assertEqual(output["source"]["operator"], "한국철도공사")
-        self.assertEqual(output["booking_url"], "https://www.korail.com/ticket/train/schedule")
-        self.assertEqual(json.dumps(output, ensure_ascii=False).count("101"), 1)
 
 
 if __name__ == "__main__":

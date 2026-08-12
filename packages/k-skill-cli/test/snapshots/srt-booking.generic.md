@@ -15,105 +15,76 @@ Runtime mode: generic
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path srt-booking <relative-path>` only when another tool explicitly requires a filesystem path.
 - Read bundled references through `npx -y @nomadamas/k-skill@0 read srt-booking references/<file>`.
 
-# SRT Timetable Lookup
+# SRT Live Timetable Lookup
 
 ## What this skill does
 
-주식회사 에스알이 로그인 없이 공개하는 최신 SRT 운행시각표 HWP를 내려받아 `kordoc`으로 임시 변환하고, 출발역·도착역·출발시간 조건에 맞는 열차를 찾는다.
+`SRTrain`의 시간표 검색 경로를 이용해 현재 SRT 운행 후보와 일반실·특실 예약 가능 여부를 조회한다.
 
-이 스킬은 **조회 전용**이다.
+이 스킬은 회원 로그인 불필요한 **라이브 조회 전용**이다.
 
-- 회원 로그인, 자격증명, SRTrain 또는 SRT 내부 예약 API를 사용하지 않는다.
-- 실시간 잔여석, 호차별 좌석번호, 예약 상태를 조회하지 않는다.
-- 예약, 예약대기, 결제, 취소, 자동 재조회 또는 좌석 선점을 실행하지 않는다.
-- 결과에는 사용자가 직접 확인할 SRT 공식 예매 페이지 링크만 제공한다.
-
-공개 운행시각표는 계획 시각표다. 실제 운휴·지연·편성 변경과 좌석 판매 상태는 공식 SRT 페이지에서 사용자가 직접 확인해야 한다.
+- `auto_login=False` 익명 client를 사용한다.
+- NetFunnel 대기열과 시간표 검색 요청만 실행한다.
+- 예약, 예약대기, 좌석 선점, 결제, 취소, 자동 재조회는 실행하지 않는다.
+- 정확한 호차·좌석번호를 조회하지 않는다.
+- 구매는 공식 SRT 페이지에서 사용자가 직접 진행한다.
 
 ## Commands
-
-실행 전 helper 위치를 확인한다.
-
-```bash
-npx -y @nomadamas/k-skill@0 files srt-booking
-```
-
-### 시간표 조회
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- \
   search \
   --dep 수서 \
   --arr 부산 \
-  --date 20260820 \
+  --date 20260819 \
   --time 0600 \
   --time-limit 1200 \
-  --limit 10
+  --limit 5
 ```
 
-입력:
-
-- `--dep`: 출발역 이름
-- `--arr`: 도착역 이름
-- `--date`: `YYYYMMDD`
-- `--time`: 가장 이른 출발시각 `HHMM`
-- `--time-limit`: 가장 늦은 출발시각 `HHMM`
-- `--limit`: 최대 결과 수, 1–50
-
-출력:
-
-- `trains[].train_no`
-- `trains[].dep`, `trains[].arr`
-- `trains[].dep_time`, `trains[].arr_time`
-- `source.title`, `source.effective_date`, `source.download_url`
-- `booking_url`
-- `schedule_note`
-
-### 현재 공식 원본 확인
+현재 라이브 조회 endpoint와 안전 경계:
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec srt-booking scripts/srt_booking.py -- source
 ```
 
+출력:
+
+- 열차번호·열차종류
+- 출발역·도착역
+- 현재 출발·도착 시각
+- 일반실·특실 예약 가능 여부
+- 사용한 라이브 search endpoint
+- 공식 SRT 페이지
+
 ## Workflow
 
-1. 사용자가 출발역, 도착역, 날짜와 희망 시간대를 주지 않았다면 필요한 값만 확인한다.
-2. `search`를 정확히 한 번 실행한다.
-3. 운행 후보와 공식 원본 기준일을 함께 보여준다.
+1. 출발역, 도착역, 날짜, 시간대를 확인한다.
+2. `search`를 한 번 실행한다.
+3. 현재 운행 후보를 제시한다.
 4. 좌석 구매가 필요하면 `booking_url`을 제공하고 종료한다.
-5. 결과가 없으면 역명·시간대를 확인하되 자동 polling 또는 반복 감시를 시작하지 않는다.
+5. 사용자가 다시 요청하지 않는 한 polling·매진 감시를 시작하지 않는다.
 
 ## Hard boundaries
 
-- `KSKILL_SRT_ID`, `KSKILL_SRT_PASSWORD` 또는 다른 회원 credential을 요구하지 않는다.
-- `SRTrain`, 비공개 앱 API 또는 좌석선택 내부 endpoint를 사용하지 않는다.
-- 예약·예약대기·결제·취소·승차권 변경을 지원한다고 표현하지 않는다.
-- CAPTCHA, anti-bot, 접근 제한 또는 차단을 우회하지 않는다.
-- 사용자의 한 번의 질문을 장기 실행 감시나 반복 요청으로 확장하지 않는다.
-- 공개 시간표에 없는 좌석·판매상태·지연정보를 추측하지 않는다.
-
-## Temporary document handling
-
-- 공식 HWP 첨부는 임시 디렉터리에만 저장한다.
-- `npx -y kordoc`으로 Markdown을 만든 뒤 helper 종료 시 HWP와 Markdown을 함께 삭제한다.
-- 원문이나 변환물을 credential 저장소, repository 또는 장기 cache에 보관하지 않는다.
+- `KSKILL_SRT_ID`, `KSKILL_SRT_PASSWORD` 또는 회원 로그인을 요구하지 않는다.
+- helper에 `reserve`, `reservations`, `cancel`, `payment`, waiting-list 명령을 추가하지 않는다.
+- 예약 endpoint, 결제 endpoint 또는 계정 endpoint를 호출하지 않는다.
+- NetFunnel key를 예약·선점 자동화에 사용하지 않는다.
+- CAPTCHA·접근 거부·계정 제한이 발생하면 즉시 중단한다.
+- 사용자 요청 한 번을 반복 수집이나 장기 실행으로 확장하지 않는다.
 
 ## Failure modes
 
-- 에스알 공식 시간표 게시판 또는 첨부 파일 접근 실패
-- `npx` 또는 `kordoc`을 실행할 수 없음
-- HWP 형식 변경으로 Markdown 변환 실패
-- 입력한 역이 최신 공개 시간표에 없음
-- 날짜·시간 형식 오류
-- 조건에 맞는 계획 열차 없음
+- NetFunnel 대기 또는 SRT 접근 제한
+- `SRTrain` 설치·호환성 문제
+- 날짜·시간 또는 역명 오류
+- 조건에 맞는 열차 없음
 
-이 경우 오류를 그대로 설명하고 [SRT 공식 예매 페이지](https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000)에서 직접 확인하도록 안내한다.
+이 경우 차단을 우회하지 않고 [SRT 공식 조회 페이지](https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000)를 안내한다.
 
-## Notes
-
-- 법적·약관상 배경은 다음 명령으로 읽는다.
+## Legal notice
 
 ```bash
 npx -y @nomadamas/k-skill@0 read srt-booking references/AUTOMATION-LEGAL-STATEMENT.md
 ```
-- 이 스킬이 조회하는 것은 공개 운행계획이며 실시간 예약 가능 좌석이 아니다.

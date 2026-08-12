@@ -1,8 +1,8 @@
 {
   "name": "ktx-booking",
-  "description": "Read-only KTX timetable lookup from official Korail public schedule files. Use for planned departure and arrival times by station and date. No login, live seat availability, reservation, payment, cancellation, or automated monitoring.",
+  "description": "Read-only live KTX timetable and seat-availability lookup through the korail2 search path. No login, reservation, payment, cancellation, exact seat selection, or automated monitoring.",
   "profiles": [],
-  "frontmatter": "name: ktx-booking\ndescription: Read-only KTX timetable lookup from official Korail public schedule files. Use for planned departure and arrival times by station and date. No login, live seat availability, reservation, payment, cancellation, or automated monitoring.\nlicense: MIT\nmetadata:\n  category: travel\n  locale: ko-KR\n  phase: v1",
+  "frontmatter": "name: ktx-booking\ndescription: Read-only live KTX timetable and seat-availability lookup through the korail2 search path. No login, reservation, payment, cancellation, exact seat selection, or automated monitoring.\nlicense: MIT\nmetadata:\n  category: travel\n  locale: ko-KR\n  phase: v1",
   "bundle": [
     {
       "from": "scripts/ktx_booking.py",

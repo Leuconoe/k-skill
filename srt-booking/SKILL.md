@@ -1,6 +1,6 @@
 ---
 name: srt-booking
-description: Read-only SRT timetable lookup from official SR public operating-schedule files. Use for planned departure and arrival times by station and date. No login, live seat availability, reservation, payment, cancellation, or automated monitoring.
+description: Read-only live SRT timetable and seat-availability lookup through the SRTrain search path. No login, reservation, payment, cancellation, exact seat selection, or automated monitoring.
 license: MIT
 metadata:
   category: travel
