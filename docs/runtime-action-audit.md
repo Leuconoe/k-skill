@@ -137,7 +137,6 @@
 | `subway-lost-property` | `lookup` | LOST112·운영기관 공식 표면의 검색 조건과 결과를 정리 |
 | `ticket-availability` | `booking` | 공식 일정·좌석 선택 → 예약·선점 → `clarify` 후 필요한 결제 |
 | `toss-securities` | `account` | 지원되는 계정 작업 수행 → 비가역 변경 직전 `clarify` |
-| `used-car-price-search` | `commerce` | 공식 상품 선택 → 장바구니/checkout 준비 → `clarify` 후 주문·결제 |
 | `yebigun-training` | `legal` | 공식 예비군 표면에서 로그인·일정 확인·신청 준비를 진행하고 `clarify` 후 허용된 신청 |
 | `zipcode-search` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 
@@ -161,7 +160,6 @@
 | `market-kurly-search` | [#454](https://github.com/NomaDamas/k-skill/issues/454) |
 | `ohou-today-deal` | [#448](https://github.com/NomaDamas/k-skill/issues/448) |
 | `olive-young-search` | [#449](https://github.com/NomaDamas/k-skill/issues/449) |
-| `used-car-price-search` | [#451](https://github.com/NomaDamas/k-skill/issues/451) |
 
 이슈가 완료되기 전에는 해당 스킬의 현재 조회/링크 기능을 실제 구매 완료로
 과장하지 않는다. 공식 표면이 후속 거래를 지원하지 않는 것으로 확인되면

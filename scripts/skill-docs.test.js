@@ -203,7 +203,7 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
     .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
     .sort();
 
-  assert.equal(skillDirs.length, 122);
+  assert.equal(skillDirs.length, 121);
 
   for (const skillName of skillDirs) {
     const skill = readRaw(path.join(skillName, "SKILL.md"));
@@ -323,7 +323,6 @@ test("actionable skills publish a Dolshoi action path", () => {
     "subway-lost-property",
     "ticket-availability",
     "toss-securities",
-    "used-car-price-search",
     "yebigun-training",
   ];
 
@@ -522,23 +521,6 @@ test("repository docs advertise the kakaotalk-mac skill", () => {
   assert.match(install, /--skill kakaotalk-mac/);
 });
 
-test("repository docs advertise the used-car-price-search skill", () => {
-  const readme = read("README.md");
-  const install = read(path.join("docs", "install.md"));
-  const featureDocPath = path.join(repoRoot, "docs", "features", "used-car-price-search.md");
-  const skillPath = path.join(repoRoot, "used-car-price-search", "SKILL.md");
-
-  assert.ok(fs.existsSync(featureDocPath), "expected docs/features/used-car-price-search.md to exist");
-  assert.ok(fs.existsSync(skillPath), "expected used-car-price-search/SKILL.md to exist");
-  assert.match(readme, /\| 중고차 가격 조회 \|/);
-  assert.match(readme, /\[중고차 가격 조회 가이드\]\(docs\/features\/used-car-price-search\.md\)/);
-  assert.match(install, /--skill used-car-price-search/);
-  assert.match(
-    install,
-    /npm install -g kordoc pdfjs-dist kbo-game kbl-results kleague-results lck-analytics toss-securities k-lotto coupang-product-search used-car-price-search cheap-gas-nearby public-restroom-nearby korean-law-mcp/,
-  );
-});
-
 test("repository docs advertise the public-restroom-nearby skill", () => {
   const readme = read("README.md");
   const install = read(path.join("docs", "install.md"));
@@ -689,34 +671,6 @@ test("repository docs advertise the MFDS public-health skills and mandatory symp
     assert.match(doc, /119|응급실/);
   }
 });
-test("used-car-price-search docs document the provider survey and SK direct surface", () => {
-  const skill = read(path.join("used-car-price-search", "SKILL.md"));
-  const featureDoc = read(path.join("docs", "features", "used-car-price-search.md"));
-  const sources = read(path.join("docs", "sources.md"));
-  const roadmap = read(path.join("docs", "roadmap.md"));
-
-  for (const doc of [skill, featureDoc]) {
-    assert.match(doc, /SK렌터카|SK렌터카 다이렉트|타고BUY/);
-    assert.match(doc, /롯데렌탈|롯데오토옥션/);
-    assert.match(doc, /레드캡렌터카/);
-    assert.match(doc, /MCP/i);
-    assert.match(doc, /Skill/i);
-    assert.match(doc, /https:\/\/www\.skdirect\.co\.kr\/tb/);
-    assert.match(doc, /__NEXT_DATA__/);
-    assert.match(doc, /인수가/);
-    assert.match(doc, /월\s*렌트료|월\s*요금|월\s*가격/);
-    assert.match(doc, /10회 이상|최소 10회/);
-  }
-
-  assert.match(featureDoc, /2026-04-02/);
-  assert.match(featureDoc, /inventory 규모는 시점에 따라 변동될 수/);
-  assert.doesNotMatch(featureDoc, /총 `\d+대`/);
-  assert.match(sources, /https:\/\/www\.skdirect\.co\.kr\/tb/);
-  assert.match(sources, /https:\/\/www\.lotteautoauction\.net\/hp\/pub\/cmm\/viewMain\.do/);
-  assert.match(sources, /https:\/\/biz\.redcap\.co\.kr\/rent\//);
-  assert.match(roadmap, /중고차 가격 조회 스킬 출시/);
-});
-
 test("seoul subway docs default to the hosted proxy when KSKILL_PROXY_BASE_URL is unset", () => {
   const readme = read("README.md");
   const setup = read(path.join("docs", "setup.md"));
@@ -2179,7 +2133,6 @@ test("pack:dry-run includes the toss-securities workspace", () => {
   const packageJson = JSON.parse(read("package.json"));
 
   assert.match(packageJson.scripts["pack:dry-run"], /workspace toss-securities/);
-  assert.match(packageJson.scripts["pack:dry-run"], /workspace used-car-price-search/);
 });
 
 test("toss-securities pack dry-run ships only the official client surface", () => {
@@ -4369,7 +4322,6 @@ const README_SKILL_NAME_COLUMN_MAPPING = [
   ["택배 배송조회", "delivery-tracking"],
   ["쿠팡 상품 검색", "coupang-product-search"],
   ["번개장터 검색", "bunjang-search"],
-  ["중고차 가격 조회", "used-car-price-search"],
   ["한국어 맞춤법 검사", "korean-spell-check"],
   ["네이버 블로그 리서치", "naver-blog-research"],
   ["네이버 쇼핑 가격비교", "naver-shopping-search"],

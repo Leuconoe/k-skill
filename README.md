@@ -134,7 +134,6 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 | 당근부동산 검색 | `daangn-realty-search` | 당근부동산 공개 웹 데이터 표면으로 지역 기반 부동산 매물 검색과 상세 확인 | 불필요 | [당근부동산 검색 가이드](docs/features/daangn-realty-search.md) |
 | 당근알바 검색 | `daangn-jobs-search` | 당근알바 공개 웹 데이터 표면으로 키워드·지역 기반 알바 공고 검색과 상세 조회 | 불필요 | [당근알바 검색 가이드](docs/features/daangn-jobs-search.md) |
 | 당근중고차 검색 | `daangn-cars-search` | 당근중고차 공개 웹 데이터 표면으로 지역·가격 조건 기반 차량 검색과 상세 조회 | 불필요 | [당근중고차 검색 가이드](docs/features/daangn-cars-search.md) |
-| 중고차 가격 조회 | `used-car-price-search` | 중고차 인수가/월 렌트료 비교 조회 | 불필요 | [중고차 가격 조회 가이드](docs/features/used-car-price-search.md) |
 | 한국어 맞춤법 검사 | `korean-spell-check` | 한국어 텍스트 맞춤법/문법 검사 및 교정안 정리 | 불필요 | [한국어 맞춤법 검사 가이드](docs/features/korean-spell-check.md) |
 | 네이버 블로그 리서치 | `naver-blog-research` | 네이버 블로그 검색, 원문 읽기, 이미지 다운로드, 한국어 콘텐츠 교차 검증 | 불필요 | [네이버 블로그 리서치 가이드](docs/features/naver-blog-research.md) |
 | 네이버 쇼핑 가격비교 | `naver-shopping-search` | 네이버 검색 Open API 우선, 공개 BFF JSON fallback으로 상품 후보·현재 노출가·판매처 링크 비교 | 불필요 | [네이버 쇼핑 가격비교 가이드](docs/features/naver-shopping-search.md) |
@@ -281,7 +280,6 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 - [당근부동산 검색 가이드](docs/features/daangn-realty-search.md)
 - [당근알바 검색 가이드](docs/features/daangn-jobs-search.md)
 - [당근중고차 검색 가이드](docs/features/daangn-cars-search.md)
-- [중고차 가격 조회 가이드](docs/features/used-car-price-search.md)
 - [한국어 맞춤법 검사 가이드](docs/features/korean-spell-check.md)
 - [네이버 블로그 리서치 가이드](docs/features/naver-blog-research.md)
 - [네이버 쇼핑 가격비교 가이드](docs/features/naver-shopping-search.md)
