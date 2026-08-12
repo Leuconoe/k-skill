@@ -69,8 +69,8 @@ function runtimeRulesSection(output) {
 }
 
 test("dolshoi and generic runtime rules differ for vault/browser skills", () => {
-  const generic = runtimeRulesSection(assemble("srt-booking", GENERIC));
-  const dolshoi = runtimeRulesSection(assemble("srt-booking", DOLSHOI));
+  const generic = runtimeRulesSection(assemble("foresttrip-vacancy", GENERIC));
+  const dolshoi = runtimeRulesSection(assemble("foresttrip-vacancy", DOLSHOI));
 
   assert.match(dolshoi, /request_vault_credential/);
   assert.doesNotMatch(generic, /request_vault_credential/);
