@@ -15,7 +15,7 @@ import qa_utils  # type: ignore  # noqa: E402
 
 
 LOCATION_REQUIRED = {
-    "blue-ribbon-nearby", "cheap-gas-nearby", "kakao-bar-nearby",
+    "cheap-gas-nearby", "kakao-bar-nearby",
     "public-restroom-nearby", "parking-lot-search", "fine-dust-location",
     "daangn-cars-search", "daangn-jobs-search", "daangn-realty-search",
     "daangn-used-goods-search", "donation-place-search",
@@ -38,7 +38,7 @@ API_KEY_ENV_BY_SKILL = {
     "kosis-stats": "KOSIS_API_KEY",
 }
 PROXY_DEPENDENT = {
-    "blue-ribbon-nearby", "cheap-gas-nearby", "daangn-cars-search",
+    "cheap-gas-nearby", "daangn-cars-search",
     "daangn-jobs-search", "daangn-realty-search", "daangn-used-goods-search",
     "daishin-report-search", "donation-place-search", "fine-dust-location",
     "gongsijiga-search", "han-river-water-level",

@@ -1884,11 +1884,15 @@ test("unsupported naver map and blue ribbon skills are removed from the reposito
   const readme = read("README.md");
   const install = read(path.join("docs", "install.md"));
   const sources = read(path.join("docs", "sources.md"));
+  const qaClassifier = read(path.join("tools", "k-skill-qa-bot", "bin", "classify-skill.py"));
+  const cleanerInstruction = read(path.join("k-skill-cleaner", "instruction.md"));
   assert.ok(!fs.existsSync(path.join(repoRoot, "blue-ribbon-nearby", "SKILL.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "naver-map-route", "SKILL.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "docs", "features", "blue-ribbon-nearby.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "docs", "features", "naver-map-route.md")));
   assert.ok(!fs.existsSync(path.join(repoRoot, "packages", "blue-ribbon-nearby", "package.json")));
+  assert.doesNotMatch(qaClassifier, /blue-ribbon-nearby|naver-map-route/);
+  assert.doesNotMatch(cleanerInstruction, /blue-ribbon-nearby|naver-map-route/);
 
   for (const doc of [readme, install, sources]) {
     assert.doesNotMatch(doc, /blue-ribbon-nearby|naver-map-route/);
