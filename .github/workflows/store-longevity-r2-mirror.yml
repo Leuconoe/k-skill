@@ -60,7 +60,7 @@ jobs:
           if [ -n "${{ inputs.source_file_id }}" ]; then
             source_id_arg=(--source-file-id "${{ inputs.source_file_id }}")
           fi
-          python3 scripts/store_longevity_mirror.py \
+          python3 -m scripts.store_longevity_mirror \
             --manifest-url "$PUBLIC_BASE_URL/$PREFIX/latest.json" \
             --public-base-url "$PUBLIC_BASE_URL" \
             --prefix "$PREFIX" \
