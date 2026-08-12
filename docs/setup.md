@@ -118,7 +118,6 @@ bash scripts/check-setup.sh
 | 한국 특허 정보 검색 | `KIPRIS_PLUS_API_KEY` |
 | ASK 서울 기상 위험 시간대 조회 | 사용자 시크릿 불필요 (기본 hosted proxy 사용, 운영자만 `ASK_SEOUL_SKILL_API_BASE_URL`·`ASK_SEOUL_KSKILL_API_KEY`) |
 | 팝빌 업무 API | `KSKILL_POPBILL_LINK_ID`, `KSKILL_POPBILL_SECRET_KEY`, `KSKILL_POPBILL_CORP_NUM`, 선택 `KSKILL_POPBILL_USER_ID` |
-| 하이패스 영수증 발급 | 사용자 시크릿 불필요 (플랫폼별 `auto` 세션에서 수동 로그인, [브라우저 런타임](browser-runtime.md) 참고) |
 | 한국 주식 정보 조회 | 사용자 시크릿 불필요 (기본 hosted proxy 사용, 운영자만 `KRX_API_KEY`) |
 | 근처 가장 싼 주유소 찾기 | 사용자 시크릿 불필요 (기본 hosted proxy 사용) |
 | 서울 지하철 도착정보 조회 | 사용자 시크릿 불필요 (기본 hosted proxy 사용, 운영자만 `SEOUL_OPEN_API_KEY`) |
