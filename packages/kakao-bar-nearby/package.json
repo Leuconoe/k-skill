@@ -1,7 +1,7 @@
 {
   "name": "kakao-bar-nearby",
-  "version": "0.2.0",
-  "description": "Kakao Map based nearby bar lookup for Korean location queries with open-now status, menu, seating, and phone hints",
+  "version": "0.3.0",
+  "description": "Official Kakao Local API nearby bar search with Kakao Map detail-link handoff",
   "license": "MIT",
   "main": "src/index.js",
   "files": [

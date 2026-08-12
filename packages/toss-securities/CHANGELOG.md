@@ -1,5 +1,11 @@
 # toss-securities
 
+## 1.0.0
+
+### Major Changes
+
+- 1644058: Remove the unofficial `tossctl` fallback and expose only the official Toss Securities Open API client. Calls now require official OAuth credentials and do not fall back to CLI sessions, scraping, or undocumented HTTP routes.
+
 ## 0.5.0
 
 ### Minor Changes
