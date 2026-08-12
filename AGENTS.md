@@ -79,3 +79,14 @@ These rules are repo-specific and apply to everything under this directory.
 - 로컬 테스트: `node packages/k-skill-proxy/src/server.js` (환경변수는 `~/.config/k-skill/secrets.env` 등에서 직접 export해서 띄운다)
 - 프로덕션 시크릿은 gpu01의 `/data/home/jeffrey/apps/k-skill-proxy/.env`에 보관되고 systemd가 주입한다.
 - **운영 관련 모든 절차는 [`docs/deploy-k-skill-proxy.md`](docs/deploy-k-skill-proxy.md)에 정리되어 있다.** 자동 배포, 상태 확인, 로그, 수동 배포, rollback 절차는 그 문서를 기준으로 한다.
+
+## Large public file mirrors
+
+- `store-longevity-radar`의 R2 저장소는 `k-skill-proxy` API route가 아니라, 특정 egress에서 원본 공공 파일 다운로드가 차단될 때만 사용하는 정적 공개 객체 mirror다.
+- mirror workflow: `.github/workflows/store-longevity-r2-mirror.yml`
+- 운영 문서: `docs/store-longevity-r2-mirror.md`
+- GitHub Actions secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`
+- GitHub Actions variables: `STORE_LONGEVITY_R2_BUCKET`, `STORE_LONGEVITY_R2_PUBLIC_BASE_URL`
+- workflow는 원본 직접 접근을 먼저 시도하고, rendered-page discovery fallback을 사용한다. 두 경로가 막히면 manual dispatch의 strict `source_file_id=FILE_<digits>` override로 bootstrap한다.
+- ZIP CRC, 필수 CSV header, 파일 크기, SHA-256 검증 후 immutable object를 먼저 올리고 `latest.json`을 마지막에 교체한다.
+- R2 Standard 무료 한도와 custom-domain 변경 시 함께 수정해야 할 경로는 `docs/store-longevity-r2-mirror.md`를 기준으로 한다.

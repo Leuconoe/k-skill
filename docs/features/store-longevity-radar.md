@@ -10,7 +10,7 @@
 
 ## 인증/시크릿
 
-없다. 무인증 공개 파일 다운로드이므로 프록시를 거치지 않고 사용자 머신에서 직접 받는다. helper는 stdlib만 쓴다. 최신 zip(수백 MB)은 1일 로컬 캐시(`~/.cache/k-skill/store-longevity-radar/`)한다.
+없다. 무인증 공개 파일을 사용자 머신에서 먼저 직접 받는다. 직접 경로가 timeout/차단되면 GitHub Actions가 원본 ZIP의 CRC·필수 CSV 헤더·SHA-256을 검증한 뒤 R2에 저장한 공개 객체 미러를 fallback으로 사용한다. helper는 stdlib만 쓴다. 최신 zip(수백 MB)은 1일 로컬 캐시(`~/.cache/k-skill/store-longevity-radar/`)한다.
 
 ## 정직한 한계 (사용자 고지 필수)
 
@@ -39,10 +39,12 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 - `--zip`: 기존 zip 재사용 / `--old-csv`: 과거 CSV (`match` 필수, 구분자 자동 감지)
 - `--max-dist`: 동일 상호 허용 좌표 거리(m), 기본 150
 - `--out`, `--format`: 출력 파일/형식
+- `KSKILL_STORE_LONGEVITY_MIRROR_MANIFEST_URL`: 검증 미러 manifest URL override
 
 ## 실패 모드
 
 - 데이터셋 페이지에서 파일 ID 발견 실패 → `unavailable` + 수동 확인 URL
-- 공공데이터포털 접속/다운로드 timeout 또는 HTTP 실패 → `unavailable` + 원인 + 수동 확인 URL
+- 공공데이터포털 접속/다운로드 timeout 또는 HTTP 실패 → 검증 미러 fallback
+- 미러 manifest/ZIP 접근 실패, 크기·SHA-256 불일치, ZIP 손상 → 캐시 미승격 + `unavailable`
 - 다운로드 중단 → `.part` 잔존, 캐시 미승격, 재실행 시 재다운로드
 - 0건: 코드체계 불일치 가능(기본 문구·완구의 2022년 이전 코드는 자동 포함, 다른 업종은 현재/과거 코드를 모두 `--code`로 지정) — `--keyword` 위주로 재시도

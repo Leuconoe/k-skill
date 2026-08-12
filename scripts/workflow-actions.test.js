@@ -4,6 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 
 const repoRoot = path.resolve(__dirname, "..");
 const workflowDir = path.join(repoRoot, ".github", "workflows");
@@ -124,4 +125,18 @@ test("workflow action pins use the selected Node 24 runtime majors when present"
       `${action} should be pinned to ${expectedRef} everywhere it appears (${refs.join(", ")})`,
     );
   }
+});
+
+test("store longevity mirror workflow uses an import-safe module entrypoint", () => {
+  const workflow = readWorkflow("store-longevity-r2-mirror.yml");
+  assert.match(workflow, /\bpython3 -m scripts\.store_longevity_mirror\b/);
+
+  const result = spawnSync(
+    "python3",
+    ["-m", "scripts.store_longevity_mirror", "--help"],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /--manifest-url/);
 });

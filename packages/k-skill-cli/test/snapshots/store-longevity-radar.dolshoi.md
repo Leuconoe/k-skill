@@ -35,7 +35,8 @@ Runtime mode: dolshoi (CloakBrowser available)
 ## Design principles
 
 - 점수·등급 같은 해석 라벨을 만들지 않는다. 스냅샷 존재 사실 + 매칭 방법만 담는다.
-- 무인증 공개 파일 서버이므로 프록시를 거치지 않고 사용자 머신에서 직접 받는다.
+- 무인증 공개 파일 서버를 사용자 머신에서 먼저 직접 호출한다. 직접 경로가 timeout/차단되면 GitHub Actions가 검증해 R2에 저장한 공개 미러를 fallback으로 사용한다.
+- 미러 ZIP은 `latest.json`의 크기·SHA-256과 ZIP CRC/CSV 존재 검증을 모두 통과해야 캐시로 승격한다. 미러는 API 프록시가 아니라 공개 원본의 검증된 객체 복제본이다.
 - 최신 zip은 수백 MB이므로 1일 로컬 캐시(`~/.cache/k-skill/store-longevity-radar/`)한다. 반복 다운로드하지 않는다.
 
 ## When to use
@@ -63,6 +64,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 - `--old-csv`: (`match` 전용) 과거 스냅샷 CSV, 반복 지정. `'|'`/`','` 구분자 자동 감지
 - `--max-dist`: (`match` 전용) 동일 상호 허용 좌표 거리(m), 기본 150
 - `--out`, `--format`: 출력 파일/형식 (csv 기본, json 가능)
+- `KSKILL_STORE_LONGEVITY_MIRROR_MANIFEST_URL`: 검증 미러 manifest override. 기본 `https://pub-c974105a1e4840bcaa264cb2a55d99a1.r2.dev/store-longevity-radar/latest.json`
 
 ## CLI examples
 
@@ -82,7 +84,7 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 
 ## Workflow
 
-1. `current`부터 실행해 대상 업종 전수를 확보한다. zip 자동 다운로드는 수 분 걸릴 수 있음을 사용자에게 알린다.
+1. `current`부터 실행해 대상 업종 전수를 확보한다. zip 자동 다운로드는 수 분 걸릴 수 있음을 사용자에게 알린다. 원본 직접 다운로드를 먼저 시도하고 실패하면 크기·SHA-256이 명시된 검증 미러로 자동 전환한다.
 2. 과거 스냅샷 CSV가 있으면 `match`로 장수 점포를 추출한다. 기본 문구·완구 코드는 helper가 2022년 이전 `D08A01`/`D04A01`/`D04A02`를 자동 포함한다. 다른 업종은 현재 코드와 과거 코드를 `--code`로 함께 지정한다.
 3. 결과 전달 시 위 Honest limitations를 함께 요약한다.
 4. 후속 확인이 필요하면 `nts-business-registration`(폐업 확정), `localdata-business-status`(인허가 업력), `kakao-map`(전화번호·현재 등재)을 안내한다.
@@ -90,7 +92,8 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 ## Failure modes
 
 - 데이터셋 페이지에서 파일 ID 발견 실패 → `unavailable` + 수동 확인 URL 출력 (분기 개편 시 페이지 구조 변경 가능).
-- 공공데이터포털 접속/다운로드 timeout 또는 HTTP 실패 → `unavailable` + 원인 + 수동 확인 URL 출력.
+- 공공데이터포털 접속/다운로드 timeout 또는 HTTP 실패 → 검증 미러 fallback.
+- 미러 manifest/ZIP 접근 실패, 크기·SHA-256 불일치, ZIP 손상 → 캐시 미승격 + 직접/미러 양쪽 원인을 담은 `unavailable`.
 - 다운로드 중단 → `.part` 파일만 남고 캐시로 승격되지 않음. 재실행하면 이어서 새로 받는다.
 - `match`에 과거 CSV 미지정 → argparse 에러. 과거분 확보 방법을 사용자에게 안내한다.
 - 0건 매칭: 업종코드가 스냅샷 코드체계와 다를 수 있다. `--keyword`만으로 재시도한다.
@@ -99,6 +102,7 @@ npx -y @nomadamas/k-skill@0 exec store-longevity-radar scripts/store_longevity_r
 
 - 데이터셋: <https://www.data.go.kr/data/15083033/fileData.do>
 - 다운로드: `https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=<FILE_ID>&fileDetailSn=1` (무인증)
+- 검증 미러 manifest: <https://pub-c974105a1e4840bcaa264cb2a55d99a1.r2.dev/store-longevity-radar/latest.json>
 - 관련 스킬: `nts-business-registration`, `localdata-business-status`, `kakao-map`
 
 ## Done when
