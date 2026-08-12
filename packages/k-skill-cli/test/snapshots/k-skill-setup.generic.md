@@ -120,8 +120,13 @@ chmod 0600 ~/.config/k-skill/secrets.env
 실제 값은 사용자가 이용 중인 가장 안전한 입력 표면으로 받는다. 대화에 평문 값을
 붙여 넣도록 요구하지 않는다.
 
-`KSKILL_PROXY_BASE_URL`을 비워 두면 proxy 기반 스킬은 기본 hosted endpoint를 사용한다.
+`KSKILL_PROXY_BASE_URL`을 비워 두면 `k-skill-proxy` 기반 스킬은 기본 hosted endpoint를 사용한다.
 사용자가 직접 운영하는 proxy가 있을 때만 URL을 설정한다.
+
+```bash
+KSKILL_PROXY_BASE_URL=
+# KSKILL_PROXY_BASE_URL=https://your-proxy.example.com
+```
 
 무료 hosted proxy로 처리되는 기능에는 사용자 upstream API key를 요구하지 않는다.
 로그인 기반 스킬은 해당 스킬의 공식 로그인/browser 절차를 따르며 credential을
