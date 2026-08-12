@@ -69,19 +69,18 @@ jobs:
           for family, _, _, _, address in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM):
               print(socket.AddressFamily(family).name, address[0])
           PY
-          for mode in default ipv4 referer; do
-            args=(--fail --silent --show-error --location --max-time 60 --range 0-1023)
-            if [ "$mode" = ipv4 ]; then
-              args+=(--ipv4)
-            fi
-            if [ "$mode" = referer ]; then
-              args+=(--ipv4 --referer "https://www.data.go.kr/data/15083033/fileData.do")
-            fi
-            echo "::group::$mode"
-            curl "${args[@]}" "$SOURCE_URL" --output "$RUNNER_TEMP/$mode.bin"
-            wc -c "$RUNNER_TEMP/$mode.bin"
-            echo "::endgroup::"
-          done
+          curl \
+            --fail \
+            --show-error \
+            --location \
+            --ipv4 \
+            --connect-timeout 60 \
+            --retry 5 \
+            --retry-all-errors \
+            --referer "https://www.data.go.kr/data/15083033/fileData.do" \
+            "$SOURCE_URL" \
+            --output "$RUNNER_TEMP/source.zip"
+          wc -c "$RUNNER_TEMP/source.zip"
           exit 1
 
       - name: Discover and prepare verified snapshot
