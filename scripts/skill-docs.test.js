@@ -878,13 +878,13 @@ test("repository docs advertise the KTX read-only lookup skill as supported", ()
   const featureDocPath = path.join(repoRoot, "docs", "features", "ktx-booking.md");
 
   assert.ok(fs.existsSync(featureDocPath), "expected docs/features/ktx-booking.md to exist");
-  assert.match(readme, /\| KTX 운행시간표 조회 \|/);
-  assert.match(readme, /\[KTX 운행시간표 조회 가이드\]\(docs\/features\/ktx-booking\.md\)/);
+  assert.match(readme, /\| KTX 라이브 시간표 조회 \|/);
+  assert.match(readme, /\[KTX 라이브 시간표 조회 가이드\]\(docs\/features\/ktx-booking\.md\)/);
   assert.match(readme, /조회 전용/);
   assert.match(install, /--skill ktx-booking/);
 });
 
-test("ktx-booking docs enforce official public read-only lookup", () => {
+test("ktx-booking docs enforce live read-only lookup", () => {
   const skillPath = path.join(repoRoot, "ktx-booking", "SKILL.md");
   const helperPath = path.join(repoRoot, "scripts", "ktx_booking.py");
 
@@ -902,19 +902,19 @@ test("ktx-booking docs enforce official public read-only lookup", () => {
     assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py --\s*\\?\s+search/);
     assert.match(doc, /조회 전용/);
     assert.match(doc, /로그인.*불필요|회원 로그인.*사용하지 않는다/);
-    assert.match(doc, /실시간.*(?:잔여석|좌석).*(?:없|아니)/);
+    assert.match(doc, /일반실.*특실.*(?:가능|예약 가능)/);
     assert.match(doc, /예약.*결제.*취소.*없|예약.*결제.*취소.*실행하지 않는다/);
-    assert.match(doc, /(?:공식|공개).*(?:운행시간표|시간표)|(?:운행시간표|시간표).*(?:공식|공개)/);
-    assert.doesNotMatch(doc, /--train-id|--try-waiting|--include-no-seats/);
+    assert.match(doc, /korail2/);
+    assert.doesNotMatch(doc, /--train-id|--try-waiting|openpyxl|XLSX/);
   }
 
-  assert.match(helper, /www\.korail\.com\/com\/userBoard\.do/);
-  assert.match(helper, /openpyxl/);
+  assert.match(helper, /korail2/);
+  assert.match(helper, /ScheduleView|KORAIL_SEARCH_SCHEDULE/);
   assert.match(helper, /def build_parser/);
   assert.doesNotMatch(helper, /KSKILL_KTX_ID|KSKILL_KTX_PASSWORD|x-dynapath-m-token|def command_reserve/);
 });
 
-test("srt-booking docs enforce official public read-only lookup", () => {
+test("srt-booking docs enforce live read-only lookup", () => {
   const instruction = read(path.join("srt-booking", "instruction.md"));
   const featureDoc = read(path.join("docs", "features", "srt-booking.md"));
   const helper = read(path.join("scripts", "srt_booking.py"));
@@ -923,21 +923,28 @@ test("srt-booking docs enforce official public read-only lookup", () => {
     assert.match(doc, /@nomadamas\/k-skill@0 exec srt-booking scripts\/srt_booking\.py --\s*\\?\s+search/);
     assert.match(doc, /조회 전용/);
     assert.match(doc, /로그인.*불필요|회원 로그인.*사용하지 않는다/);
-    assert.match(doc, /실시간.*(?:잔여석|좌석).*(?:없|아니)/);
+    assert.match(doc, /일반실.*특실.*(?:가능|예약 가능)/);
     assert.match(doc, /예약.*결제.*취소.*없|예약.*결제.*취소.*실행하지 않는다/);
-    assert.match(doc, /(?:공식|공개).*(?:운행시각표|시간표)|(?:운행시각표|시간표).*(?:공식|공개)/);
-    assert.doesNotMatch(doc, /--train-id|--try-waiting|--hold-seat/);
+    assert.match(doc, /SRTrain/);
+    assert.doesNotMatch(doc, /--train-id|--try-waiting|--hold-seat|kordoc|HWP/);
   }
 
-  assert.match(helper, /srail\.or\.kr\/cms\/attach\/download\.do/);
-  assert.match(helper, /npx", "-y", "kordoc"/);
-  assert.doesNotMatch(helper, /KSKILL_SRT_ID|KSKILL_SRT_PASSWORD|SRTrain|def command_reserve/);
+  assert.match(helper, /SRTrain/);
+  assert.match(helper, /search_schedule|selectListAra10007/);
+  assert.doesNotMatch(helper, /KSKILL_SRT_ID|KSKILL_SRT_PASSWORD|def command_reserve/);
 });
 
 test("ktx-booking helper python regression tests pass", () => {
   const result = childProcess.spawnSync(
-    "python3",
-    ["-m", "unittest", "discover", "-s", "scripts", "-p", "test_ktx_booking.py"],
+    "uv",
+    [
+      "run",
+      "--with",
+      "korail2 @ git+https://github.com/dhfhfk/korail2@4b134266fff097ea0fd54e9f760cb128b6c8f878",
+      "--with",
+      "pycryptodome>=3.23,<4",
+      "scripts/test_ktx_booking.py",
+    ],
     {
       cwd: repoRoot,
       encoding: "utf8",
@@ -4265,8 +4272,8 @@ test("k-skill-rhwp package ships CLI bin, WASM-init shim, and minor semver chang
 });
 
 const README_SKILL_NAME_COLUMN_MAPPING = [
-  ["SRT 운행시간표 조회", "srt-booking"],
-  ["KTX 운행시간표 조회", "ktx-booking"],
+  ["SRT 라이브 시간표 조회", "srt-booking"],
+  ["KTX 라이브 시간표 조회", "ktx-booking"],
   ["카카오톡 Mac 아카이브 검색", "kakaotalk-mac"],
   ["서울 지하철 도착정보 조회", "seoul-subway-arrival"],
   ["지하철 분실물 조회", "subway-lost-property"],
