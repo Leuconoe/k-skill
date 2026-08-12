@@ -28,6 +28,9 @@ jobs:
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
       R2_BUCKET: ${{ vars.STORE_LONGEVITY_R2_BUCKET }}
       PUBLIC_BASE_URL: ${{ vars.STORE_LONGEVITY_R2_PUBLIC_BASE_URL }}
       PREFIX: store-longevity-radar
@@ -41,7 +44,7 @@ jobs:
       - name: Validate mirror configuration
         run: |
           set -euo pipefail
-          for name in CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN R2_BUCKET PUBLIC_BASE_URL; do
+          for name in CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_BUCKET PUBLIC_BASE_URL; do
             if [ -z "${!name}" ]; then
               echo "::error::$name is not configured"
               exit 1
@@ -72,12 +75,13 @@ jobs:
       - name: Upload immutable ZIP
         if: steps.prepare.outputs.status == 'prepared'
         run: |
-          npx -y wrangler@4.118.0 r2 object put \
-            "$R2_BUCKET/${{ steps.prepare.outputs.object_key }}" \
-            --file "${{ steps.prepare.outputs.zip_path }}" \
+          aws s3 cp \
+            "${{ steps.prepare.outputs.zip_path }}" \
+            "s3://$R2_BUCKET/${{ steps.prepare.outputs.object_key }}" \
+            --endpoint-url "https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com" \
             --content-type application/zip \
             --cache-control "public,max-age=31536000,immutable" \
-            --remote
+            --only-show-errors
 
       - name: Upload immutable manifest
         if: steps.prepare.outputs.status == 'prepared'
