@@ -96,7 +96,6 @@ npx --yes skills add NomaDamas/k-skill \
   --skill coupang-product-search \
   --skill ohou-today-deal \
   --skill bunjang-search \
-  --skill used-car-price-search \
   --skill korean-spell-check \
   --skill library-book-search \
   --skill keris-academic-search \
@@ -383,7 +382,7 @@ npm run ci
 ### Node 패키지
 
 ```bash
-npm install -g kordoc pdfjs-dist kbo-game kbl-results kleague-results lck-analytics toss-securities k-lotto coupang-product-search used-car-price-search cheap-gas-nearby public-restroom-nearby korean-law-mcp market-kurly-search daiso bunjang-cli court-auction-notice-search gongsijiga-search donation-place-search ev-subsidy-status
+npm install -g kordoc pdfjs-dist kbo-game kbl-results kleague-results lck-analytics toss-securities k-lotto coupang-product-search cheap-gas-nearby public-restroom-nearby korean-law-mcp market-kurly-search daiso bunjang-cli court-auction-notice-search gongsijiga-search donation-place-search ev-subsidy-status
 export NODE_PATH="$(npm root -g)"
 ```
 

@@ -134,7 +134,6 @@ k-skill이 제3자 표장을 **자기 서비스의 출처표시로 사용하지 
 | `srt-booking` | SRT / SR |
 | `ticket-availability` | YES24, 인터파크 |
 | `toss-securities` | 토스증권 / Toss Securities |
-| `used-car-price-search` | SK렌터카 |
 
 ### 조회형 7개 스킬의 종결 판단
 
