@@ -140,3 +140,19 @@ test("store longevity mirror workflow uses an import-safe module entrypoint", ()
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /--manifest-url/);
 });
+
+test("store longevity mirror uses R2 S3 multipart for the oversized ZIP", () => {
+  const workflow = readWorkflow("store-longevity-r2-mirror.yml");
+
+  assert.match(workflow, /AWS_ACCESS_KEY_ID: \$\{\{ secrets\.R2_ACCESS_KEY_ID \}\}/);
+  assert.match(workflow, /AWS_SECRET_ACCESS_KEY: \$\{\{ secrets\.R2_SECRET_ACCESS_KEY \}\}/);
+  assert.match(workflow, /\baws s3 cp\b/);
+  assert.match(
+    workflow,
+    /https:\/\/\$CLOUDFLARE_ACCOUNT_ID\.r2\.cloudflarestorage\.com/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /wrangler@[\w.-]+ r2 object put \\\n\s+"\$R2_BUCKET\/\$\{\{ steps\.prepare\.outputs\.object_key \}\}"/,
+  );
+});
