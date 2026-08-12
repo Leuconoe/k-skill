@@ -935,16 +935,10 @@ test("srt-booking docs enforce live read-only lookup", () => {
 });
 
 test("ktx-booking helper python regression tests pass", () => {
+  const python = path.join(repoRoot, ".cache", "python-test-venv", "bin", "python");
   const result = childProcess.spawnSync(
-    "uv",
-    [
-      "run",
-      "--with",
-      "korail2 @ git+https://github.com/dhfhfk/korail2@4b134266fff097ea0fd54e9f760cb128b6c8f878",
-      "--with",
-      "pycryptodome>=3.23,<4",
-      "scripts/test_ktx_booking.py",
-    ],
+    python,
+    ["scripts/test_ktx_booking.py"],
     {
       cwd: repoRoot,
       encoding: "utf8",
