@@ -2,4 +2,4 @@
 "@nomadamas/k-skill": patch
 ---
 
-Prevent the setup instructions from creating unrequested scheduled summary or AI helper tasks alongside the approved skill update check.
+Rewrite the setup workflow around skill installation, Claude Code plugin support, the unified CLI runtime, credential resolution, verification, and strictly approved update checks.
