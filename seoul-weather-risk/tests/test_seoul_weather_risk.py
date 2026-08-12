@@ -156,6 +156,23 @@ class ApiClientTests(unittest.TestCase):
         })
         self.assertTrue(all(request["authorization"] is None for request in self.api.requests))
 
+    def test_local_direct_settings_are_ignored_and_hosted_proxy_remains_the_only_route(self):
+        with patch.dict(os.environ, {
+            "KSKILL_LOCAL_DIRECT": "1",
+            "ASK_SEOUL_SKILL_API_BASE_URL": self.api.base_url,
+            "MARKETPLACE_API_KEY": "legacy-marketplace-key-must-not-be-used",
+        }, clear=False):
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = seoul_weather_risk.run(["catalog"])
+
+        self.assertEqual(code, 0)
+        self.assertEqual([request["path"] for request in self.api.requests], [
+            "/v1/ask-seoul/weather-risk/bundle",
+        ])
+        self.assertIsNone(self.api.requests[0]["authorization"])
+        self.assertNotIn("legacy-marketplace-key-must-not-be-used", stdout.getvalue())
+
     def test_query_keeps_explicit_datetime_bounds_unchanged(self):
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
@@ -172,77 +189,6 @@ class ApiClientTests(unittest.TestCase):
             "limit": ["100"],
         })
 
-    def test_local_direct_mode_uses_marketplace_bearer_and_skill_paths(self):
-        self.api.responses = {
-            "/skill/v1/bundles/seoul-weather-risk": (200, "application/json", bundle(), {}),
-            f"/skill/v1/products/{PRODUCT_ID}": (200, "application/json", detail(), {}),
-            f"/skill/v1/products/{PRODUCT_ID}/data": (200, "application/json", data(limit=1), {}),
-        }
-        names = ("KSKILL_LOCAL_DIRECT", "ASK_SEOUL_SKILL_API_BASE_URL", "MARKETPLACE_API_KEY")
-        previous = {name: os.environ.get(name) for name in names}
-        self.addCleanup(lambda: [os.environ.pop(name, None) if value is None else os.environ.__setitem__(name, value) for name, value in previous.items()])
-        os.environ["KSKILL_LOCAL_DIRECT"] = "1"
-        os.environ["ASK_SEOUL_SKILL_API_BASE_URL"] = self.api.base_url
-        os.environ["MARKETPLACE_API_KEY"] = "test-marketplace-key"
-
-        stdout = io.StringIO()
-        with contextlib.redirect_stdout(stdout):
-            code = seoul_weather_risk.run([
-                "query", "--product-id", PRODUCT_ID, "--admin-dong", "성수2가3동", "--limit", "1",
-            ])
-
-        self.assertEqual(code, 0)
-        self.assertEqual([request["path"] for request in self.api.requests], [
-            "/skill/v1/bundles/seoul-weather-risk",
-            f"/skill/v1/products/{PRODUCT_ID}",
-            f"/skill/v1/products/{PRODUCT_ID}/data",
-        ])
-        self.assertTrue(all(request["authorization"] == "Bearer test-marketplace-key" for request in self.api.requests))
-        self.assertEqual(self.api.requests[-1]["query"]["place_id"], ["seoul_admd_1120069000"])
-
-    def test_local_direct_mode_loads_current_directory_dotenv(self):
-        self.api.responses = {
-            "/skill/v1/bundles/seoul-weather-risk": (200, "application/json", bundle(), {}),
-        }
-        names = ("KSKILL_LOCAL_DIRECT", "ASK_SEOUL_SKILL_API_BASE_URL", "MARKETPLACE_API_KEY")
-        previous = {name: os.environ.get(name) for name in names}
-        self.addCleanup(lambda: [os.environ.pop(name, None) if value is None else os.environ.__setitem__(name, value) for name, value in previous.items()])
-        for name in names:
-            os.environ.pop(name, None)
-
-        with tempfile.TemporaryDirectory() as directory:
-            pathlib.Path(directory, ".env").write_text(
-                "KSKILL_LOCAL_DIRECT=1\n"
-                f"ASK_SEOUL_SKILL_API_BASE_URL={self.api.base_url}\n"
-                "MARKETPLACE_API_KEY=test-marketplace-key\n",
-                encoding="utf-8",
-            )
-            stdout = io.StringIO()
-            with patch.object(seoul_weather_risk.pathlib.Path, "cwd", return_value=pathlib.Path(directory)):
-                with contextlib.redirect_stdout(stdout):
-                    code = seoul_weather_risk.run(["catalog"])
-
-        self.assertEqual(code, 0)
-        self.assertEqual(json.loads(stdout.getvalue())["bundle_id"], "seoul-weather-risk")
-        self.assertEqual(self.api.requests[0]["path"], "/skill/v1/bundles/seoul-weather-risk")
-        self.assertEqual(self.api.requests[0]["authorization"], "Bearer test-marketplace-key")
-
-    def test_local_direct_preflight_reports_direct_not_proxy_configuration(self):
-        stdout = io.StringIO()
-        with patch.dict(os.environ, {
-            "KSKILL_LOCAL_DIRECT": "1",
-            "ASK_SEOUL_SKILL_API_BASE_URL": self.api.base_url,
-            "MARKETPLACE_API_KEY": "test-marketplace-key",
-        }, clear=False):
-            with contextlib.redirect_stdout(stdout):
-                code = seoul_weather_risk.run(["preflight"])
-
-        self.assertEqual(code, 0)
-        payload = json.loads(stdout.getvalue())
-        self.assertEqual(payload["mode"], "local_direct")
-        self.assertTrue(payload["user_api_key_required"])
-        self.assertFalse(payload["proxy_base_url_configured"])
-        self.assertTrue(payload["local_direct_base_url_configured"])
 
     def test_query_maps_admin_dong_to_place_id_before_proxy_request(self):
         self.api.responses["/v1/ask-seoul/weather-risk/data"] = (
@@ -561,7 +507,8 @@ class CliTests(unittest.TestCase):
         payload = json.loads(stdout.getvalue())
         self.assertEqual(payload["mode"], "hosted_proxy")
         self.assertFalse(payload["live_network"])
-        self.assertFalse(payload["user_api_key_required"])
+        self.assertTrue(payload["proxy_base_url_configured"])
+        self.assertEqual(set(payload), {"status", "mode", "live_network", "proxy_base_url_configured"})
         self.assertNotIn("legacy-user-key-must-not-be-used", stdout.getvalue())
 
     def test_parser_has_no_credential_or_base_url_option(self):

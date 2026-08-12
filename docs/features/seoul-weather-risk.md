@@ -186,17 +186,9 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 
 기본 hosted proxy 경로에서는 사용자 `Authorization` 헤더나 ASK 서울 API Key를 사용하지 않습니다. 사용자는 `KSKILL_PROXY_BASE_URL`을 설정하지 않아도 기본 hosted proxy를 사용합니다.
 
-### self-host 또는 등록 전 로컬 검증
+### self-host proxy 설정
 
-별도 proxy를 사용할 때만 `KSKILL_PROXY_BASE_URL`에 **HTTPS origin**을 설정합니다. 등록 전 ASK 서울 direct API를 검증해야 하는 경우에만 현재 작업 디렉터리의 `.env`에서 local-direct를 명시적으로 켤 수 있습니다.
-
-```text
-KSKILL_LOCAL_DIRECT=1
-ASK_SEOUL_SKILL_API_BASE_URL=https://ask-seoul.kr
-MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
-```
-
-이 값은 사용자의 로컬 검증용이며 저장소에 커밋하지 않습니다. API Key를 채팅, 명령행 인수, URL query string, 문서, 로그에 넣지 마세요. hosted proxy 운영용 ASK 서울 전용 서비스 키는 proxy 서버 환경에서만 관리됩니다.
+별도 proxy를 사용할 때만 `KSKILL_PROXY_BASE_URL`에 **HTTPS origin**을 설정합니다. helper는 현재 작업 디렉터리의 `.env`나 사용자 Marketplace API key를 읽지 않으며, hosted proxy 운영용 ASK 서울 전용 서비스 키는 proxy 서버 환경에서만 관리됩니다.
 
 ## 주의할 점
 

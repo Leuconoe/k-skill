@@ -20,16 +20,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 SKILL_BUNDLE_ID = "seoul-weather-risk"
 PROXY_BASE_URL_ENV = "KSKILL_PROXY_BASE_URL"
 DEFAULT_PROXY_BASE_URL = "https://k-skill-proxy.nomadamas.org"
-LOCAL_DIRECT_ENV = "KSKILL_LOCAL_DIRECT"
-SKILL_API_BASE_URL_ENV = "ASK_SEOUL_SKILL_API_BASE_URL"
-MARKETPLACE_API_KEY_ENV = "MARKETPLACE_API_KEY"
 PROXY_DISABLED_VALUES = frozenset({"off", "false", "0", "disable", "disabled", "none"})
-LOCAL_DIRECT_ENABLED_VALUES = frozenset({"1", "true", "on", "yes"})
-LOCAL_DIRECT_DOTENV_NAMES = frozenset({
-    LOCAL_DIRECT_ENV,
-    SKILL_API_BASE_URL_ENV,
-    MARKETPLACE_API_KEY_ENV,
-})
 PROXY_ROUTE_ROOT = "/v1/ask-seoul/weather-risk"
 LOCATION_MAPPING_PATH = pathlib.Path(__file__).resolve().parents[1] / "references" / "admin-dong-place-map.json"
 LOCATION_MAPPING_VERSION = "kma_admin_dong_grid_20260325"
@@ -65,54 +56,14 @@ class _NoRedirect(HTTPRedirectHandler):
 @dataclass(frozen=True)
 class ApiConfig:
     base_url: str
-    mode: str = "hosted_proxy"
-    bearer_token: str | None = None
 
 
 def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _local_direct_config(values: dict[str, str]) -> ApiConfig:
-    base_url = values.get(SKILL_API_BASE_URL_ENV, "").strip()
-    bearer_token = values.get(MARKETPLACE_API_KEY_ENV, "").strip()
-    if not base_url or base_url == "replace-me":
-        raise SkillError("local_direct_not_configured", "local direct API base URL이 필요합니다.")
-    if not bearer_token or bearer_token == "replace-me":
-        raise SkillError("local_direct_not_configured", "local direct Marketplace API key가 필요합니다.")
-
-    parsed = urlparse(base_url)
-    local_http = parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
-    if (parsed.scheme != "https" and not local_http) or not parsed.netloc or parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
-        raise SkillError("invalid_local_direct_base_url", "local direct API base URL은 HTTPS origin이어야 합니다.")
-    if parsed.username or parsed.password:
-        raise SkillError("invalid_local_direct_base_url", "local direct API base URL에 사용자 정보는 포함할 수 없습니다.")
-    return ApiConfig(base_url=base_url.rstrip("/"), mode="local_direct", bearer_token=bearer_token)
-
-
-def _current_directory_dotenv() -> dict[str, str]:
-    path = pathlib.Path.cwd() / ".env"
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return {}
-
-    values: dict[str, str] = {}
-    for line in lines:
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
-            continue
-        name, value = stripped.split("=", 1)
-        name = name.strip()
-        if name in LOCAL_DIRECT_DOTENV_NAMES:
-            values[name] = value.strip().strip('"').strip("'")
-    return values
-
-
 def _api_config(environ: dict[str, str] | None = None) -> ApiConfig:
-    values = ({**_current_directory_dotenv(), **os.environ} if environ is None else environ)
-    if values.get(LOCAL_DIRECT_ENV, "").strip().casefold() in LOCAL_DIRECT_ENABLED_VALUES:
-        return _local_direct_config(values)
+    values = os.environ if environ is None else environ
     configured = values.get(PROXY_BASE_URL_ENV, "").strip()
     if configured.casefold() in PROXY_DISABLED_VALUES:
         raise SkillError("proxy_disabled", f"{PROXY_BASE_URL_ENV}가 비활성화되어 있습니다.")
@@ -159,8 +110,6 @@ def _request_json(config: ApiConfig, path: str, query: dict[str, str] | None = N
         "Accept": "application/json",
         "User-Agent": "k-skill-seoul-weather-risk/1",
     }
-    if config.bearer_token:
-        headers["Authorization"] = f"Bearer {config.bearer_token}"
     request = Request(url, headers=headers)
     try:
         with build_opener(_NoRedirect).open(request, timeout=15) as response:
@@ -399,22 +348,16 @@ def _validate_product_id(product_id: str) -> None:
 
 
 def _bundle(config: ApiConfig) -> dict[str, Any]:
-    if config.mode == "local_direct":
-        return _validate_bundle(_request_json(config, f"/skill/v1/bundles/{SKILL_BUNDLE_ID}"))
     return _validate_bundle(_request_json(config, f"{PROXY_ROUTE_ROOT}/bundle"))
 
 
 def _detail(config: ApiConfig, product_id: str) -> dict[str, Any]:
     _validate_product_id(product_id)
-    if config.mode == "local_direct":
-        return _validate_product(_request_json(config, f"/skill/v1/products/{product_id}"), product_id)
     return _validate_product(_request_json(config, f"{PROXY_ROUTE_ROOT}/product"), product_id)
 
 
 def _data(config: ApiConfig, product_id: str, query: dict[str, str], limit: int) -> dict[str, Any]:
     _validate_product_id(product_id)
-    if config.mode == "local_direct":
-        return _validate_data(_request_json(config, f"/skill/v1/products/{product_id}/data", query), product_id, limit)
     return _validate_data(_request_json(config, f"{PROXY_ROUTE_ROOT}/data", query), product_id, limit)
 
 
@@ -446,11 +389,9 @@ def run(argv: list[str]) -> int:
         if args.command == "preflight":
             result = {
                 "status": "ok",
-                "mode": config.mode,
+                "mode": "hosted_proxy",
                 "live_network": False,
-                "user_api_key_required": config.mode == "local_direct",
-                "proxy_base_url_configured": config.mode == "hosted_proxy",
-                "local_direct_base_url_configured": config.mode == "local_direct",
+                "proxy_base_url_configured": True,
             }
         elif args.command == "catalog":
             result = _bundle(config)
