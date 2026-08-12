@@ -1,5 +1,14 @@
 # @nomadamas/k-skill
 
+## 0.2.4
+
+### Patch Changes
+
+- cd546c5: Use the official Kakao Local API for nearby bar candidates and return Kakao Map detail-page handoffs for menu, opening-hour, and seating enrichment.
+- 1644058: Remove the unofficial `tossctl` fallback and expose only the official Toss Securities Open API client. Calls now require official OAuth credentials and do not fall back to CLI sessions, scraping, or undocumented HTTP routes.
+- efaeee8: Remove the discontinued Catchtable and Hi-Pass skills from the bundled CLI.
+- ddcae69: seoul-weather-risk 스킬과 ASK 서울 기상 위험 조회 helper를 CLI 번들에 추가한다. 장소별 폭염·한파·호우·대설·강풍 후보 예보 시간대와 판정 근거를 인증된 읽기 전용 HTTPS API로 조회한다.
+
 ## 0.2.3
 
 ### Patch Changes
