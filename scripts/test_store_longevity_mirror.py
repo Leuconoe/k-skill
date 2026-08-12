@@ -1,12 +1,14 @@
 import csv
 import hashlib
 import io
+import subprocess
 import tempfile
 import unittest
 import zipfile
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest import mock
 
 import scripts.store_longevity_mirror as mirror
 import scripts.store_longevity_source as source
@@ -89,6 +91,46 @@ class SourceDiscoveryTest(unittest.TestCase):
 
 
 class MirrorArtifactTest(unittest.TestCase):
+    def test_download_source_snapshot_uses_resilient_curl(self):
+        destination = Path("/tmp/source.zip")
+
+        with mock.patch("scripts.store_longevity_mirror.subprocess.run") as run:
+            mirror.download_source_snapshot(
+                "https://example.test/source.zip",
+                destination,
+            )
+
+        run.assert_called_once_with(
+            [
+                "curl",
+                "--fail",
+                "--show-error",
+                "--location",
+                "--ipv4",
+                "--connect-timeout",
+                "60",
+                "--retry",
+                "5",
+                "--retry-all-errors",
+                "--referer",
+                source.DATASET_PAGE,
+                "--output",
+                str(destination),
+                "https://example.test/source.zip",
+            ],
+            check=True,
+        )
+
+    def test_download_source_snapshot_surfaces_curl_failure(self):
+        with mock.patch(
+            "scripts.store_longevity_mirror.subprocess.run",
+            side_effect=subprocess.CalledProcessError(28, ["curl"]),
+        ), self.assertRaisesRegex(source.MirrorError, "source download failed"):
+            mirror.download_source_snapshot(
+                "https://example.test/source.zip",
+                Path("/tmp/source.zip"),
+            )
+
     def test_validate_zip_and_build_manifest(self):
         with tempfile.TemporaryDirectory() as directory:
             zip_path = Path(directory) / "snapshot.zip"

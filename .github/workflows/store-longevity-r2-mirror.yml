@@ -3,11 +3,6 @@ name: Mirror store longevity snapshot
 on:
   workflow_dispatch:
     inputs:
-      diagnose_source:
-        description: Probe source reachability without publishing
-        required: false
-        type: boolean
-        default: false
       force:
         description: Re-publish the current source file ID
         required: false
@@ -53,38 +48,7 @@ jobs:
             fi
           done
 
-      - name: Diagnose source reachability
-        if: github.event_name == 'workflow_dispatch' && inputs.diagnose_source
-        env:
-          SOURCE_URL: https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=${{ inputs.source_file_id }}&fileDetailSn=1
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os
-          import socket
-          from urllib.parse import urlsplit
-
-          host = urlsplit(os.environ["SOURCE_URL"]).hostname
-          assert host is not None
-          for family, _, _, _, address in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM):
-              print(socket.AddressFamily(family).name, address[0])
-          PY
-          curl \
-            --fail \
-            --show-error \
-            --location \
-            --ipv4 \
-            --connect-timeout 60 \
-            --retry 5 \
-            --retry-all-errors \
-            --referer "https://www.data.go.kr/data/15083033/fileData.do" \
-            "$SOURCE_URL" \
-            --output "$RUNNER_TEMP/source.zip"
-          wc -c "$RUNNER_TEMP/source.zip"
-          exit 1
-
       - name: Discover and prepare verified snapshot
-        if: ${{ !inputs.diagnose_source }}
         id: prepare
         run: |
           set -euo pipefail
