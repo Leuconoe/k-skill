@@ -9,6 +9,8 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 추가 클라이언트 API 레이어는 불필요합니다. 필요한 경우 `k-skill-proxy` 같은 프록시 서버에 HTTP 요청만 넣으면 됩니다.
 
+> **KTX와 SRT는 조회 전용 스킬입니다.** 라이브 시간표와 일반실·특실 이용 가능 여부만 조회하며, 로그인·예약·예약대기·결제·취소는 수행하지 않습니다.
+
 ## 설치
 
 ```bash
