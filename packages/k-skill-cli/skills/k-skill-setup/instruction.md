@@ -177,6 +177,7 @@ setup이 끝나면 사용자에게 주기적인 업데이트 확인 자동화를
 
 - 자동 설치가 아니라 `업데이트 확인` 만 기본으로 제안한다
 - 지속성 있는 시스템 변경(`crontab`, `launchd`, `schtasks`)은 동의 없이 적용하지 않는다
+- 사용자가 승인한 확인 작업만 생성한다. 별도 요약 작업, helper 스크립트, AI/CLI 호출 작업은 함께 만들지 않는다
 - 기본 확인 명령은 `npx --yes skills check`
 - 사용자가 명시적으로 `자동 업데이트` 를 원할 때만 `npx --yes skills update` 기반 스케줄을 별도로 제안한다
 - 주의: `skills` CLI 버전에 따라 `check`에 `-g` 같은 옵션을 붙이면 확인을 넘어 설치본을 덮어쓸 수 있다. 자동화 스크립트에는 옵션 없는 `npx --yes skills check` 만 사용하고, 실제 업데이트 적용은 사용자가 검토 후 직접 실행하도록 안내한다
@@ -209,6 +210,8 @@ npx --yes skills check >> "$HOME/.config/k-skill/logs/skills-check.log" 2>&1
 '@ | Set-Content "$HOME/.config/k-skill/bin/check-skill-updates.cmd"
 schtasks /Create /SC DAILY /TN "k-skill-update-check" /TR "\"$HOME/.config/k-skill/bin/check-skill-updates.cmd\"" /ST 09:00 /F
 ```
+
+사용자가 위 확인 작업 하나만 승인했다면 `k-skill-update-check` 외의 예약 작업이나 추가 스크립트는 만들지 않는다.
 
 설정 후에는 로그 위치를 짧게 알려준다:
 
