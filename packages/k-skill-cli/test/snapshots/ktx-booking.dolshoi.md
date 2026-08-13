@@ -8,6 +8,7 @@ Runtime mode: dolshoi (CloakBrowser available)
 - When the user asks for an action and the official surface supports it lawfully, continue beyond lookup through reversible preparation and execution. Do not declare completion at a result list, deep link, or handoff when the action can still be carried out.
 - Immediately before an irreversible external side effect such as payment, message/email delivery, final submission, cancellation, account mutation, or public posting, call `clarify` with the exact target, amount/payload, and effect. Execute only after approval; do not ask again for already-approved reversible steps.
 - Preserve hard boundaries for law, required physical presence, CAPTCHA, identity proofing, electronic signatures, and unsupported official surfaces. In those cases, complete the furthest lawful supported step and open or prepare the exact next official step for the user.
+- This skill is lookup-oriented. Completion means the requested data is retrieved, summarized with its source (table/endpoint, period, unit), and any requested follow-up action is connected to the official surface that supports it.
 
 ## Bundled asset access
 
@@ -28,6 +29,8 @@ Runtime mode: dolshoi (CloakBrowser available)
 - 예약, 예약대기, 좌석 선점, 결제, 취소, 자동 재조회는 실행하지 않는다.
 - 정확한 호차·좌석번호를 조회하지 않는다.
 - 구매는 공식 코레일 페이지에서 사용자가 직접 진행한다.
+
+실행 환경에는 Python 3.11 이상과 `uv`가 필요하다. `uv`가 없으면 공식 설치 문서를 안내하고 조회를 실행하지 않는다.
 
 KTX 조회에는 코레일의 현재 Dynapath 검사에 대응하는 `korail2` 호환 revision을 사용한다. 이는 조회 성공을 위한 검색 transport일 뿐 코레일의 공식 승인이나 약관상 허가를 의미하지 않는다.
 
