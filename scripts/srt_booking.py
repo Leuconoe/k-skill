@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run --locked --script
 # /// script
 # requires-python = ">=3.11"
 # dependencies = ["SRTrain==2.6.7"]
@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import sys
+from contextlib import redirect_stdout
 from datetime import date as calendar_date
 from datetime import time
 from typing import Any
@@ -18,11 +19,14 @@ from typing import Any
 from SRT import SRT
 from SRT.constants import API_ENDPOINTS, STATION_CODE
 from SRT.errors import SRTError
+from SRT.netfunnel import NetFunnelHelper
 
 BOOKING_URL = "https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000"
+NETFUNNEL_URL = "https://nf.letskorail.com/ts.wseq"
 
 
 def build_client() -> SRT:
+    NetFunnelHelper.NETFUNNEL_URL = NETFUNNEL_URL
     return SRT("", "", auto_login=False)
 
 
@@ -32,6 +36,7 @@ def source_info() -> dict[str, str]:
         "transport": "SRTrain",
         "operator": "주식회사 에스알",
         "endpoint": API_ENDPOINTS["search_schedule"],
+        "queue_endpoint": NETFUNNEL_URL,
         "authentication": "anonymous",
         "mutation": "none; timetable search only",
         "booking_url": BOOKING_URL,
@@ -61,8 +66,8 @@ def normalize_train(train: Any) -> dict[str, Any]:
         "dep_date": str(train.dep_date),
         "dep_time": format_time(str(train.dep_time)),
         "arr_time": format_time(str(train.arr_time)),
-        "general_seat_available": bool(train.general_seat_available),
-        "special_seat_available": bool(train.special_seat_available),
+        "general_seat_available": bool(train.general_seat_available()),
+        "special_seat_available": bool(train.special_seat_available()),
     }
 
 
@@ -81,14 +86,15 @@ def search_live_timetable(
     if start > end:
         raise ValueError("--time must not be later than --time-limit")
     client = build_client()
-    trains = client.search_train(
-        dep=normalize_station(dep),
-        arr=normalize_station(arr),
-        date=date,
-        time=start,
-        time_limit=end,
-        available_only=False,
-    )
+    with redirect_stdout(sys.stderr):
+        trains = client.search_train(
+            dep=normalize_station(dep),
+            arr=normalize_station(arr),
+            date=date,
+            time=start,
+            time_limit=end,
+            available_only=False,
+        )
     return {
         "count": min(len(trains), limit),
         "trains": [normalize_train(train) for train in trains[:limit]],

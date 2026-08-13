@@ -1,9 +1,9 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run --locked --script
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
 #   "korail2 @ git+https://github.com/dhfhfk/korail2@4b134266fff097ea0fd54e9f760cb128b6c8f878",
-#   "pycryptodome>=3.23,<4",
+#   "pycryptodome==3.23.0",
 # ]
 # ///
 """Live, anonymous, read-only KTX timetable lookup through korail2."""
@@ -84,15 +84,18 @@ def search_live_timetable(
     dep = normalize_station(dep)
     arr = normalize_station(arr)
     client = build_client()
-    trains = client.search_train(
-        dep=dep,
-        arr=arr,
-        date=date,
-        time=start,
-        train_type=TrainType.KTX,
-        include_no_seats=True,
-        include_waiting_list=False,
-    )
+    try:
+        trains = client.search_train(
+            dep=dep,
+            arr=arr,
+            date=date,
+            time=start,
+            train_type=TrainType.KTX,
+            include_no_seats=True,
+            include_waiting_list=False,
+        )
+    except NoResultsError:
+        trains = []
     in_window = [train for train in trains if start <= str(train.dep_time) <= end]
     matched = [
         train

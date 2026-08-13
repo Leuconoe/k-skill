@@ -152,6 +152,23 @@ class KtxLiveReadOnlyTests(unittest.TestCase):
 
         self.assertEqual(result["count"], 0)
 
+    def test_upstream_no_results_returns_an_empty_result(self) -> None:
+        client = FakeKorail("", "", False)
+        client.search_train = mock.Mock(side_effect=ktx_booking.NoResultsError())
+
+        with mock.patch.object(ktx_booking, "build_client", return_value=client):
+            result = ktx_booking.search_live_timetable(
+                dep="서울",
+                arr="부산",
+                date="20260819",
+                earliest="2359",
+                latest="2359",
+                limit=5,
+            )
+
+        self.assertEqual(result["count"], 0)
+        self.assertEqual(result["trains"], [])
+
     def test_test_environment_installs_the_runtime_korail2_revision(self) -> None:
         pinned = re.search(r"korail2 @ (git\+\S+)\"", SCRIPT_PATH.read_text())
         assert pinned

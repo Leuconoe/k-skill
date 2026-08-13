@@ -21,7 +21,7 @@ npx --yes skills add NomaDamas/k-skill --all -g
 npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 ```
 
-Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아래 마켓플레이스로도 설치할 수 있습니다. 자세한 방법은 [설치 방법](docs/install.md)을 참고하세요.
+기본 설치에는 Node.js 18 이상과 `npx`만 필요합니다. KTX·SRT 라이브 조회 helper를 실행할 때는 Python 3.11 이상과 `uv`가 추가로 필요합니다. Claude Code 사용자는 아래 마켓플레이스로도 설치할 수 있습니다. 자세한 방법은 [설치 방법](docs/install.md)을 참고하세요.
 
 ## 잠깐만~~~
 

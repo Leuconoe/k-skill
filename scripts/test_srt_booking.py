@@ -1,7 +1,10 @@
 import importlib.util
+import io
+import json
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -21,8 +24,19 @@ class FakeTrain:
     arr_time = "083000"
     dep_station_name = "수서"
     arr_station_name = "부산"
-    general_seat_available = True
-    special_seat_available = False
+    def general_seat_available(self):
+        return True
+
+    def special_seat_available(self):
+        return False
+
+
+class SoldOutFakeTrain(FakeTrain):
+    def general_seat_available(self):
+        return False
+
+    def special_seat_available(self):
+        return False
 
 
 class FakeSRT:
@@ -39,6 +53,12 @@ class FakeSRT:
 
     def cancel(self, *_args, **_kwargs):
         raise AssertionError("cancel must never be called")
+
+
+class NoisyFakeSRT(FakeSRT):
+    def search_train(self, **kwargs):
+        print("대기인원: 10명")
+        return super().search_train(**kwargs)
 
 
 class SrtLiveReadOnlyTests(unittest.TestCase):
@@ -74,11 +94,29 @@ class SrtLiveReadOnlyTests(unittest.TestCase):
         self.assertEqual(result["trains"][0]["dep_time"], "06:00")
         self.assertEqual(result["source"]["transport"], "SRTrain")
 
+    def test_search_preserves_sold_out_seat_availability(self) -> None:
+        client = FakeSRT("", "", False)
+        client.search_train = mock.Mock(return_value=[SoldOutFakeTrain()])
+
+        with mock.patch.object(srt_booking, "build_client", return_value=client):
+            result = srt_booking.search_live_timetable(
+                dep="수서",
+                arr="부산",
+                date="20260819",
+                earliest="0600",
+                latest="1200",
+                limit=5,
+            )
+
+        self.assertFalse(result["trains"][0]["general_seat_available"])
+        self.assertFalse(result["trains"][0]["special_seat_available"])
+
     def test_source_reports_live_schedule_endpoint_only(self) -> None:
         source = srt_booking.source_info()
 
         self.assertEqual(source["mode"], "live")
         self.assertIn("selectListAra10007", source["endpoint"])
+        self.assertEqual(source["queue_endpoint"], "https://nf.letskorail.com/ts.wseq")
         self.assertNotIn("reserve", source["endpoint"].lower())
 
     def test_module_has_no_state_changing_command_functions(self) -> None:
@@ -104,6 +142,29 @@ class SrtLiveReadOnlyTests(unittest.TestCase):
 
         _name, kwargs = client.calls[0]
         self.assertEqual((kwargs["dep"], kwargs["arr"]), ("수서", "부산"))
+
+    def test_cli_stdout_stays_json_when_srtrain_prints_queue_status(self) -> None:
+        output = io.StringIO()
+        client = NoisyFakeSRT("", "", False)
+
+        with mock.patch.object(srt_booking, "build_client", return_value=client):
+            with redirect_stdout(output):
+                exit_code = srt_booking.main(
+                    [
+                        "search",
+                        "--dep",
+                        "수서",
+                        "--arr",
+                        "부산",
+                        "--date",
+                        "20260819",
+                        "--time",
+                        "0600",
+                    ]
+                )
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(json.loads(output.getvalue())["count"], 1)
 
     def test_cli_bad_date_fails_before_client_creation(self) -> None:
         result = subprocess.run(

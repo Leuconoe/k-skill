@@ -892,11 +892,13 @@ test("ktx-booking docs enforce live read-only lookup", () => {
   assert.ok(fs.existsSync(helperPath), "expected scripts/ktx_booking.py to exist");
 
   const instruction = read(path.join("ktx-booking", "instruction.md"));
+  const manifest = JSON.parse(read(path.join("ktx-booking", "skill.json")));
   const stub = read(path.join("ktx-booking", "SKILL.md"));
   const featureDoc = read(path.join("docs", "features", "ktx-booking.md"));
   const helper = read(path.join("scripts", "ktx_booking.py"));
 
   assert.match(stub, /^name: ktx-booking$/m);
+  assert.deepEqual(manifest.profiles, ["lookup"]);
 
   for (const doc of [instruction, featureDoc]) {
     assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py --\s*\\?\s+search/);
@@ -916,9 +918,11 @@ test("ktx-booking docs enforce live read-only lookup", () => {
 
 test("srt-booking docs enforce live read-only lookup", () => {
   const instruction = read(path.join("srt-booking", "instruction.md"));
+  const manifest = JSON.parse(read(path.join("srt-booking", "skill.json")));
   const featureDoc = read(path.join("docs", "features", "srt-booking.md"));
   const helper = read(path.join("scripts", "srt_booking.py"));
 
+  assert.deepEqual(manifest.profiles, ["lookup"]);
   for (const doc of [instruction, featureDoc]) {
     assert.match(doc, /@nomadamas\/k-skill@0 exec srt-booking scripts\/srt_booking\.py --\s*\\?\s+search/);
     assert.match(doc, /조회 전용/);
