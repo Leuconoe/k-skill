@@ -21,7 +21,7 @@ Runtime mode: generic
 
 ## What this skill does
 
-서울 행정동 이름을 정규 `place_id`로 해석해 ASK 서울의 장소별 기상 위험 예상 시간대 단일 제품(`weather_place_risk_window`)을 읽기 전용으로 탐색한다. 기본 helper는 hosted `k-skill-proxy`를 호출하며, 사용자 API Key를 발급받거나 저장하지 않는다. 등록 전 로컬 검증에는 명시적으로 opt-in한 local-direct 경로를 사용할 수 있다. 실패 또는 미준비 상태를 fixture나 추정값으로 대체하지 않는다.
+서울 행정동 이름을 정규 `place_id`로 해석해 ASK 서울의 장소별 기상 위험 예상 시간대 단일 제품(`weather_place_risk_window`)을 읽기 전용으로 탐색한다. 기본 helper는 hosted `k-skill-proxy`만 호출하며, 사용자 API Key나 현재 작업 폴더의 `.env`를 읽지 않는다. 실패 또는 미준비 상태를 fixture나 추정값으로 대체하지 않는다.
 
 ## Product
 
@@ -45,7 +45,34 @@ Runtime mode: generic
 
 ## Workflow
 
-1. 환경 설정만 먼저 확인한다. 이 명령은 네트워크를 호출하지 않는다.
+### Standard user query (fast path)
+
+사용자가 오늘 위험 시간대를 묻는 기본 경로는 `query --fast` 한 번만 실행한다. 이 경로는 bundled 행정동 매핑과 날짜·limit 검증을 유지하면서 hosted data route만 한 번 호출하므로 bundle·product metadata 왕복을 생략한다. `--fast`에서는 `--filter`를 사용하지 않고 `--admin-dong`, `--gu`, 날짜, `--limit`, `--cursor`만 사용한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query --fast \
+  --product-id weather_place_risk_window \
+  --admin-dong 잠실본동 \
+  --from 2026-08-12 \
+  --to 2026-08-12 \
+  --limit 100
+```
+
+동명이명인 `신사동`은 자치구를 확인한 뒤 fast path에도 `--gu`를 함께 전달한다.
+
+```bash
+npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query --fast \
+  --product-id weather_place_risk_window \
+  --admin-dong 신사동 \
+  --gu 강남구 \
+  --limit 100
+```
+
+`--filter`가 필요하거나 게시 계약을 점검해야 할 때는 `--fast`를 빼고 full-contract query를 사용한다. fast query가 `product_not_ready` 또는 계약 오류를 반환하면 fixture나 추정값으로 대체하지 말고 아래 진단 흐름을 수행한다.
+
+### Contract diagnostics (only when needed)
+
+1. 환경 설정만 확인한다. 이 명령은 네트워크를 호출하지 않는다.
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- preflight
@@ -63,40 +90,7 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- describe --product-id weather_place_risk_window
 ```
 
-4. 행정동 이름과 `1..500` 범위의 limit으로 data page를 조회한다.
-
-```bash
-npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
-  --product-id weather_place_risk_window \
-  --admin-dong 잠실본동 \
-  --from 2026-08-01 \
-  --to 2026-08-07 \
-  --limit 100
-```
-
-동명이명인 `신사동`은 자치구를 확인한 뒤 다음처럼 조회한다.
-
-```bash
-npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.py -- query \
-  --product-id weather_place_risk_window \
-  --admin-dong 신사동 \
-  --gu 강남구 \
-  --limit 100
-```
-
-응답의 `registration_ready`, `publication_id`, `blockers`를 먼저 확인한다. data 응답의 `next_cursor`는 같은 제품의 다음 page에만 그대로 재사용한다. publication이 바뀌면 cursor는 `409`로 만료된다.
-
-## Local pre-registration fallback
-
-hosted proxy가 아직 등록·배포되지 않은 상태에서 로컬 검증이 필요할 때만, **현재 작업 디렉터리**의 `.env`에 다음 세 이름을 설정한다.
-
-```text
-KSKILL_LOCAL_DIRECT=1
-ASK_SEOUL_SKILL_API_BASE_URL=https://ask-seoul.kr
-MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
-```
-
-이 opt-in 모드에서는 helper가 `.env`에서 세 이름만 메모리로 읽고 `Authorization: Bearer`로 전달한다. bundle, 단일 `weather_place_risk_window` product, 그 data의 직접 경로 이외에는 호출하지 않는다. 키 값은 명령행 인수·출력·로그·skill 파일에 넣지 않는다. `KSKILL_LOCAL_DIRECT`가 없으면 기존 hosted-proxy 경로를 그대로 사용한다.
+진단 응답의 `registration_ready`, `publication_id`, `blockers`를 확인한다. fast/full data 응답의 `next_cursor`는 같은 제품의 다음 page에만 그대로 재사용하며 publication이 바뀌면 cursor는 `409`로 만료된다.
 
 ## Boundaries
 
@@ -104,9 +98,9 @@ MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
 - 알 수 없는 제품이나 필터를 추측해 보정하지 않는다.
 - 행정동 이름을 fuzzy match하거나 모호한 후보 중 하나로 임의 선택하지 않는다. 생활권·통칭 또는 부분 이름(예: `성수동`)도 행정동으로 추측하지 않는다. helper는 로컬 reference에서 `place_id`를 해석하고 proxy에는 행정동·자치구 문자열을 보내지 않는다.
 - 기본 proxy origin은 `https://k-skill-proxy.nomadamas.org`이다. 별도 self-host proxy를 쓸 때만 `KSKILL_PROXY_BASE_URL`을 HTTPS origin으로 설정한다. 값은 명령행 인수, 문서, 로그에 넣지 않는다.
-- hosted-proxy 모드에서는 사용자 API Key와 `Authorization` 헤더를 사용하지 않는다. ASK Seoul 전용 서비스 키는 proxy 운영 환경에만 두며, Marketplace의 `k-skill-proxy:seoul-weather-risk` principal에 `skill:seoul-weather-risk:read` scope로 등록한다. 이 scope는 bundle·product·data 읽기만 허용하고 다른 Marketplace API를 거부한다. local-direct 모드에서만 현재 작업 폴더 `.env`의 `MARKETPLACE_API_KEY`를 세 direct read 경로에 전달하며, 어떤 모드에서도 키를 출력·로그·skill 파일에 넣지 않는다.
+- hosted-proxy 모드에서는 사용자 API Key와 `Authorization` 헤더를 사용하지 않는다. ASK Seoul 전용 서비스 키는 proxy 운영 환경에만 두며, Marketplace의 `k-skill-proxy:seoul-weather-risk` principal에 `skill:seoul-weather-risk:read` scope로 등록한다. 이 scope는 bundle·product·data 읽기만 허용하고 다른 Marketplace API를 거부한다. 어떤 모드에서도 키를 출력·로그·skill 파일에 넣지 않는다.
 - proxy는 bundle, 단일 product, 그 data 조회만 노출한다. `table name`, SQL, join, sort, aggregate 및 비허용 query field는 upstream으로 전달하지 않는다.
-- `/skill/v1/bundles/seoul-weather-risk`의 제품 집합이 `weather_place_risk_window` 단일 제품과 다르면 응답 계약 오류로 중단한다.
+- `/v1/ask-seoul/weather-risk/bundle`의 제품 집합이 `weather_place_risk_window` 단일 제품과 다르면 응답 계약 오류로 중단한다.
 - live 실패를 fixture나 synthetic 결과로 대체하지 않는다.
 - 이 제품은 예보값 임계치 기반 참고 정보이며 기상청 공식 특보를 대체하지 않는다는 점을 응답에서 명확히 한다.
 
@@ -123,7 +117,6 @@ MARKETPLACE_API_KEY=<기존 로컬 Marketplace 키>
 - `ambiguous_admin_dong`: 동명이거나 별칭 후보가 충돌해 `--gu`가 필요함. `details.candidates`에서 가능한 자치구를 확인한다.
 - `location_mapping_invalid`: bundled 행정동 reference의 버전·스키마·행 수 계약 오류
 - `proxy_disabled`, `invalid_proxy_base_url`: proxy 환경 설정 오류
-- `local_direct_not_configured`, `invalid_local_direct_base_url`: local-direct 환경 설정 오류
 - `unauthorized`/`api_key_missing`(401), `forbidden`/`api_key_forbidden`(403), `unknown_product`(404)
 - `cursor_expired`(409), `rate_limited`(429), `product_not_ready`(503)
 - `upstream_not_configured`(503): proxy 운영 환경에 ASK Seoul 전용 서비스 키 또는 origin이 설정되지 않음

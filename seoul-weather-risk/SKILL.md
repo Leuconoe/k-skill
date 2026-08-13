@@ -1,6 +1,6 @@
 ---
 name: seoul-weather-risk
-description: 서울 행정동 이름을 정식명 우선·허용된 결정적 표기 별칭만으로 정규 place_id로 해석해 ASK 서울의 장소별 기상 위험 예상 시간대(weather_place_risk_window) 단일 제품을 hosted k-skill proxy에서 읽기 전용 조회한다. 기본 경로에는 사용자 API Key와 place_id 입력이 필요 없으며, 등록 전에는 명시적으로 local-direct 검증을 할 수 있다.
+description: 서울 행정동 이름을 정식명 우선·허용된 결정적 표기 별칭만으로 정규 place_id로 해석해 ASK 서울의 장소별 기상 위험 예상 시간대(weather_place_risk_window) 단일 제품을 hosted k-skill proxy에서 읽기 전용 조회한다. 사용자 API Key와 place_id 입력은 필요하지 않다.
 license: MIT
 metadata:
   category: public-data

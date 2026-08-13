@@ -10,6 +10,16 @@ function splitShebang(value) {
   return value.trim().split(/\s+/).filter(Boolean);
 }
 
+function resolveShebangCommand(command, env) {
+  const executable = command.split(/[\\/]/).pop().toLowerCase();
+
+  if (executable === "python" || executable === "python3") {
+    return env.KSKILL_PYTHON || (process.platform === "win32" ? "python" : command);
+  }
+
+  return executable === "node" ? process.execPath : command;
+}
+
 function resolveRunner(scriptPath, env = process.env) {
   const firstLine = fs.readFileSync(scriptPath, "utf8").split(/\r?\n/, 1)[0];
 
@@ -20,20 +30,20 @@ function resolveRunner(scriptPath, env = process.env) {
       if (args.length) {
         const [command, ...prefixArgs] = args;
         return {
-          command: command === "node" ? process.execPath : command,
+          command: resolveShebangCommand(command, env),
           args: [...prefixArgs, scriptPath],
         };
       }
     }
 
     if (parts[0]) {
-      return { command: parts[0], args: [...parts.slice(1), scriptPath] };
+      return { command: resolveShebangCommand(parts[0], env), args: [...parts.slice(1), scriptPath] };
     }
   }
 
   switch (path.extname(scriptPath).toLowerCase()) {
     case ".py":
-      return { command: env.KSKILL_PYTHON || "python3", args: [scriptPath] };
+      return { command: env.KSKILL_PYTHON || (process.platform === "win32" ? "python" : "python3"), args: [scriptPath] };
     case ".js":
     case ".cjs":
     case ".mjs":
