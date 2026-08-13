@@ -1,5 +1,13 @@
 # @nomadamas/k-skill
 
+## 0.2.5
+
+### Patch Changes
+
+- ed21f93: Rewrite the setup workflow around skill installation, Claude Code plugin support, the unified CLI runtime, credential resolution, verification, and strictly approved update checks.
+- e145763: Remove the deprecated `used-car-price-search` skill from bundled CLI assets.
+- 79e57d5: store-longevity-radar가 공공데이터포털 직접 다운로드 실패 시 SHA-256 검증된 R2 미러를 fallback으로 사용하도록 한다.
+
 ## 0.2.4
 
 ### Patch Changes
