@@ -4271,7 +4271,7 @@ test("k-skill-rhwp package ships CLI bin, WASM-init shim, and minor semver chang
 
 const README_SKILL_NAME_COLUMN_MAPPING = [
   ["SRT 라이브 시간표 조회", "srt-booking"],
-  ["KTX 라이브 시간표 조회", "ktx-booking"],
+  ["KTX 공식 시간표 조회", "ktx-booking"],
   ["카카오톡 Mac 아카이브 검색", "kakaotalk-mac"],
   ["서울 지하철 도착정보 조회", "seoul-subway-arrival"],
   ["지하철 분실물 조회", "subway-lost-property"],

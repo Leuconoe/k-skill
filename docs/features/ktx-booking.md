@@ -17,7 +17,7 @@
 - 실시간 일반실·특실 잔여석
 - 실제 운휴·지연
 - 호차·좌석번호
-- 예약·예약대기·결제·취소
+- 예약·예약대기·결제·취소는 실행하지 않는다.
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- \
