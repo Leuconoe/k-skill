@@ -1,38 +1,31 @@
-# KTX 라이브 시간표 조회 가이드
+# KTX 공식 시간표 조회 가이드
 
-`ktx-booking`은 `korail2`의 시간표 검색 경로를 사용해 현재 KTX 운행 시각과 일반실·특실 가능 여부를 조회하는 **라이브 조회 전용** 스킬이다.
+`ktx-booking`은 한국철도공사가 공개하는 최신 KTX 운행시간표 XLSX를 읽어 출발역·도착역·출발시간에 맞는 열차를 찾는 조회 전용 스킬이다.
+
+회원 로그인과 credential은 사용하지 않는다.
 
 ## 제공하는 정보
 
-- 현재 열차번호·열차종류
+- 계획 시간표상의 열차번호·열차종류
 - 요청 역 사이의 출발·도착 시각
-- 일반실·특실 예약 가능 여부
-- 공식 코레일 페이지
+- 적용된 공식 게시물과 XLSX 출처
+- 공식 코레일 예매 페이지
 
-## 제공하지 않는 기능
+## 제공하지 않는 정보
 
-- 회원 로그인과 credential 불필요
-- 예약·예약대기·결제·취소 없음
-- 호차·좌석번호 선택
-- 자동 재조회·매진 감시
+- 실시간 잔여석은 조회하지 않는다.
+- 실시간 일반실·특실 잔여석
+- 실제 운휴·지연
+- 호차·좌석번호
+- 예약·예약대기·결제·취소
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- \
   search --dep 서울 --arr 부산 --date 20260819 --time 0600 --time-limit 1200 --limit 5
 ```
 
-조회 transport:
-
 ```bash
 npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- source
 ```
 
-## 구현 경계
-
-- `Korail("", "", auto_login=False)`로 로그인 없이 조회한다.
-- 호출 endpoint는 `ScheduleView` 시간표 검색으로 제한한다.
-- 순정 `korail2==0.4.0`이 현재 코레일 Dynapath 검사에서 `MACRO ERROR`를 반환하므로, Dynapath search header를 지원하는 고정 revision을 사용한다.
-- 인접역 후보가 포함될 수 있어 요청 출발역·도착역과 정확히 일치하는 결과만 표시한다.
-- 오류나 접근 제한이 발생하면 우회하지 않고 공식 페이지를 안내한다.
-
-상세 위험 고지: [`AUTOMATION-LEGAL-STATEMENT.md`](../../ktx-booking/references/AUTOMATION-LEGAL-STATEMENT.md)
+결과는 코레일의 공식 계획 시간표다. 실제 이용 전에는 공식 예매 페이지에서 운휴·지연과 잔여석을 다시 확인해야 한다.

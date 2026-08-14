@@ -878,13 +878,13 @@ test("repository docs advertise the KTX read-only lookup skill as supported", ()
   const featureDocPath = path.join(repoRoot, "docs", "features", "ktx-booking.md");
 
   assert.ok(fs.existsSync(featureDocPath), "expected docs/features/ktx-booking.md to exist");
-  assert.match(readme, /\| KTX 라이브 시간표 조회 \|/);
-  assert.match(readme, /\[KTX 라이브 시간표 조회 가이드\]\(docs\/features\/ktx-booking\.md\)/);
+  assert.match(readme, /\| KTX 공식 시간표 조회 \|/);
+  assert.match(readme, /\[KTX 공식 시간표 조회 가이드\]\(docs\/features\/ktx-booking\.md\)/);
   assert.match(readme, /조회 전용/);
   assert.match(install, /--skill ktx-booking/);
 });
 
-test("ktx-booking docs enforce live read-only lookup", () => {
+test("ktx-booking docs enforce official public timetable lookup", () => {
   const skillPath = path.join(repoRoot, "ktx-booking", "SKILL.md");
   const helperPath = path.join(repoRoot, "scripts", "ktx_booking.py");
 
@@ -903,17 +903,17 @@ test("ktx-booking docs enforce live read-only lookup", () => {
   for (const doc of [instruction, featureDoc]) {
     assert.match(doc, /@nomadamas\/k-skill@0 exec ktx-booking scripts\/ktx_booking\.py --\s*\\?\s+search/);
     assert.match(doc, /조회 전용/);
-    assert.match(doc, /로그인.*불필요|회원 로그인.*사용하지 않는다/);
-    assert.match(doc, /일반실.*특실.*(?:가능|예약 가능)/);
+    assert.match(doc, /회원 로그인.*사용하지 않는다|로그인 없이 공개/);
+    assert.match(doc, /공식.*(?:XLSX|시간표)/);
+    assert.match(doc, /실시간.*잔여석.*(?:아니|조회하지 않는다)/);
     assert.match(doc, /예약.*결제.*취소.*없|예약.*결제.*취소.*실행하지 않는다/);
-    assert.match(doc, /korail2/);
-    assert.doesNotMatch(doc, /--train-id|--try-waiting|openpyxl|XLSX/);
+    assert.doesNotMatch(doc, /--train-id|--try-waiting/);
   }
 
-  assert.match(helper, /korail2/);
-  assert.match(helper, /ScheduleView|KORAIL_SEARCH_SCHEDULE/);
+  assert.match(helper, /userBoard\.do/);
+  assert.match(helper, /openpyxl/);
   assert.match(helper, /def build_parser/);
-  assert.doesNotMatch(helper, /KSKILL_KTX_ID|KSKILL_KTX_PASSWORD|x-dynapath-m-token|def command_reserve/);
+  assert.doesNotMatch(helper, /KSKILL_KTX_ID|KSKILL_KTX_PASSWORD|ScheduleView|korail2|Dynapath|def command_reserve/);
 });
 
 test("srt-booking docs enforce live read-only lookup", () => {

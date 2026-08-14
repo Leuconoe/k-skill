@@ -1,73 +1,194 @@
 #!/usr/bin/env -S uv run --locked --script
 # /// script
 # requires-python = ">=3.11"
-# dependencies = [
-#   "korail2 @ git+https://github.com/dhfhfk/korail2@4b134266fff097ea0fd54e9f760cb128b6c8f878",
-#   "pycryptodome==3.23.0",
-# ]
+# dependencies = ["openpyxl==3.1.5"]
 # ///
-"""Live, anonymous, read-only KTX timetable lookup through korail2."""
+"""Read official Korail timetable files without login or reservation actions."""
 
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from io import BytesIO
 import json
 import re
 import sys
-from datetime import date as calendar_date
-from datetime import time
-from typing import Any
+from typing import Any, Iterable
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
-from korail2 import Korail, KorailError, NoResultsError, TrainType
-from korail2.korail2 import KORAIL_SEARCH_SCHEDULE
-
-BOOKING_URL = "https://www.korail.com/ticket/train/schedule"
-TIME_VALUE = re.compile(r"^\d{6}$")
+from openpyxl import load_workbook
 
 
-def build_client() -> Korail:
-    return Korail("", "", auto_login=False)
+BOARD_URL = (
+    "https://www.korail.com/com/userBoard.do"
+    "?schBcid=ticketTable&mode=list&page=1&schStr=KTX&bdCode=&Device=BH&Version=999999999"
+)
+FILE_BASE_URL = "https://www.korail.com/file/cubedata/COMMON/"
+BOOKING_URL = "https://www.korail.com/ticket/search"
+USER_AGENT = "k-skill/ktx-readonly (+https://github.com/NomaDamas/k-skill)"
+KTX_TITLE = re.compile(
+    r"(?:KTX|경부선|호남선|전라선|경전선|동해선|강릉선|중앙선|중부내륙선).*(?:시간표|시각표)"
+)
+EFFECTIVE_DATE = re.compile(r"(20\d{2})[.\s년]+(\d{1,2})[.\s월]+(\d{1,2})")
+TIME_VALUE = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+TRAIN_NUMBER = re.compile(r"^\d{1,4}$")
 
 
-def source_info() -> dict[str, str]:
-    return {
-        "mode": "live",
-        "transport": "korail2",
-        "operator": "한국철도공사",
-        "endpoint": KORAIL_SEARCH_SCHEDULE,
-        "authentication": "anonymous",
-        "mutation": "none; ScheduleView search only",
-        "booking_url": BOOKING_URL,
-    }
+@dataclass(frozen=True)
+class TimetableSource:
+    title: str
+    published_at: str
+    download_url: str
+    source_url: str = BOARD_URL
 
 
-def format_time(value: str) -> str:
-    return f"{value[:2]}:{value[2:4]}"
+def fetch_json(url: str, timeout: float = 20.0) -> dict[str, Any]:
+    request = Request(url, headers={"User-Agent": USER_AGENT})
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            return json.load(response)
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Korail official timetable index unavailable: {exc}") from exc
 
 
-def normalize_station(value: str) -> str:
-    """Accept common "...역" input for a canonical Korail station name."""
-    name = value.strip()
-    if len(name) > 2 and name.endswith("역"):
-        return name[:-1]
-    return name
+def download_bytes(url: str, timeout: float = 30.0) -> bytes:
+    request = Request(url, headers={"User-Agent": USER_AGENT, "Referer": BOOKING_URL})
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            return response.read()
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise RuntimeError(f"Korail official timetable file unavailable: {exc}") from exc
 
 
-def normalize_train(train: Any) -> dict[str, Any]:
-    return {
-        "train_no": str(train.train_no),
-        "train_type": str(train.train_type_name),
-        "dep": str(train.dep_name),
-        "arr": str(train.arr_name),
-        "dep_date": str(train.dep_date),
-        "dep_time": format_time(str(train.dep_time)),
-        "arr_time": format_time(str(train.arr_time)),
-        "general_seat_available": bool(train.has_general_seat()),
-        "special_seat_available": bool(train.has_special_seat()),
-    }
+def timetable_candidates(payload: dict[str, Any]) -> list[TimetableSource]:
+    candidates: list[TimetableSource] = []
+    for item in payload.get("boardList", []):
+        title = str(item.get("bdTitle", "")).strip()
+        file_ids = item.get("fileId") or []
+        if not KTX_TITLE.search(title) or not file_ids:
+            continue
+        file_id = str(file_ids[0]).lstrip("/")
+        if not file_id.lower().endswith((".xlsx", ".xlsm")):
+            continue
+        candidates.append(
+            TimetableSource(
+                title=title,
+                published_at=str(item.get("regdt", "")),
+                download_url=FILE_BASE_URL + file_id,
+            )
+        )
+    return candidates
 
 
-def search_live_timetable(
+def choose_latest_timetable(payload: dict[str, Any]) -> TimetableSource:
+    candidates = timetable_candidates(payload)
+    if not candidates:
+        raise RuntimeError("Korail published no readable KTX timetable attachment")
+    return max(candidates, key=lambda source: (source.published_at, source.title))
+
+
+def effective_date(source: TimetableSource) -> str:
+    match = EFFECTIVE_DATE.search(source.title)
+    if match is None:
+        return source.published_at.replace("-", "")
+    year, month, day = match.groups()
+    return f"{year}{int(month):02d}{int(day):02d}"
+
+
+def choose_timetable_for_date(payload: dict[str, Any], date: str) -> TimetableSource:
+    candidates = timetable_candidates(payload)
+    applicable = [source for source in candidates if effective_date(source) <= date]
+    if not applicable:
+        raise RuntimeError(f"Korail published no KTX timetable applicable to {date}")
+    return max(applicable, key=lambda source: (effective_date(source), source.published_at))
+
+
+def load_workbook_bytes(content: bytes):
+    try:
+        return load_workbook(BytesIO(content), read_only=True, data_only=True)
+    except Exception as exc:
+        raise RuntimeError(f"Korail timetable workbook could not be parsed: {exc}") from exc
+
+
+def normalize_station(value: object) -> str:
+    return re.sub(r"\s+", "", str(value or "")).replace("역", "")
+
+
+def normalize_time(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.strftime("%H:%M")
+    if hasattr(value, "strftime"):
+        try:
+            return value.strftime("%H:%M")
+        except (TypeError, ValueError):
+            pass
+    text = str(value).strip()
+    if TIME_VALUE.fullmatch(text):
+        return text
+    if re.fullmatch(r"\d{3,4}", text):
+        return f"{int(text) // 100:02d}:{int(text) % 100:02d}"
+    return None
+
+
+def parse_timetable_rows(
+    rows: Iterable[Iterable[object]],
+    *,
+    dep: str,
+    arr: str,
+    earliest: str,
+    latest: str,
+) -> list[dict[str, str]]:
+    dep_name = normalize_station(dep)
+    arr_name = normalize_station(arr)
+    header: list[str] | None = None
+    dep_index = -1
+    arr_index = -1
+    train_index = -1
+    type_index = -1
+    results: list[dict[str, str]] = []
+
+    for raw_row in rows:
+        row = list(raw_row)
+        normalized = [normalize_station(value) for value in row]
+        if dep_name in normalized and arr_name in normalized:
+            header = normalized
+            dep_index = normalized.index(dep_name)
+            arr_index = normalized.index(arr_name)
+            train_index = normalized.index("열차번호") if "열차번호" in normalized else -1
+            type_index = normalized.index("편성") if "편성" in normalized else -1
+            continue
+        if header is None or min(dep_index, arr_index, train_index) < 0:
+            continue
+        if max(dep_index, arr_index, train_index, type_index) >= len(row):
+            continue
+        train_no = str(row[train_index] or "").strip()
+        if not TRAIN_NUMBER.fullmatch(train_no):
+            continue
+        train_type = str(row[type_index] or "").strip().upper() if type_index >= 0 else "KTX"
+        if "KTX" not in train_type:
+            continue
+        dep_time = normalize_time(row[dep_index])
+        arr_time = normalize_time(row[arr_index])
+        if dep_time is None or arr_time is None or not earliest <= dep_time <= latest:
+            continue
+        results.append(
+            {
+                "train_no": train_no,
+                "train_type": train_type,
+                "dep": dep,
+                "arr": arr,
+                "dep_time": dep_time,
+                "arr_time": arr_time,
+            }
+        )
+    return results
+
+
+def search_public_timetable(
     *,
     dep: str,
     arr: str,
@@ -81,40 +202,28 @@ def search_live_timetable(
     end = validate_time(latest)
     if start > end:
         raise ValueError("--time must not be later than --time-limit")
-    dep = normalize_station(dep)
-    arr = normalize_station(arr)
-    client = build_client()
-    try:
-        trains = client.search_train(
-            dep=dep,
-            arr=arr,
-            date=date,
-            time=start,
-            train_type=TrainType.KTX,
-            include_no_seats=True,
-            include_waiting_list=False,
+    source = choose_timetable_for_date(fetch_json(BOARD_URL), date)
+    workbook = load_workbook_bytes(download_bytes(source.download_url))
+    trains: list[dict[str, str]] = []
+    for sheet_name in workbook.sheetnames:
+        worksheet = workbook[sheet_name]
+        trains.extend(
+            parse_timetable_rows(
+                worksheet.iter_rows(values_only=True),
+                dep=dep,
+                arr=arr,
+                earliest=start,
+                latest=end,
+            )
         )
-    except NoResultsError:
-        trains = []
-    in_window = [train for train in trains if start <= str(train.dep_time) <= end]
-    matched = [
-        train
-        for train in in_window
-        if str(train.dep_name) == dep and str(train.arr_name) == arr
-    ]
-    if in_window and not matched:
-        returned = sorted({f"{train.dep_name}→{train.arr_name}" for train in in_window})
-        raise ValueError(
-            f"요청한 역({dep}→{arr})과 정확히 일치하는 열차가 없습니다. "
-            f"코레일이 반환한 역: {', '.join(returned)}"
-        )
-    results = [normalize_train(train) for train in matched][:limit]
+    unique = {(train["train_no"], train["dep_time"], train["arr_time"]): train for train in trains}
+    ordered = sorted(unique.values(), key=lambda train: (train["dep_time"], train["train_no"]))[:limit]
     return {
-        "count": len(results),
-        "trains": results,
+        "count": len(ordered),
+        "trains": ordered,
         "date": date,
-        "source": source_info(),
-        "schedule_note": "실시간 시간표·좌석 가능 여부 조회이며 예약·좌석 선점은 실행하지 않습니다.",
+        "schedule_note": "공개 운행계획 기준이며 실시간 잔여석·운휴·지연 정보가 아닙니다.",
+        "source": {"operator": "한국철도공사", **asdict(source)},
         "booking_url": BOOKING_URL,
     }
 
@@ -123,7 +232,7 @@ def validate_date(value: str) -> str:
     if not re.fullmatch(r"\d{8}", value):
         raise ValueError("date must use YYYYMMDD")
     try:
-        calendar_date(int(value[:4]), int(value[4:6]), int(value[6:]))
+        datetime.strptime(value, "%Y%m%d")
     except ValueError as exc:
         raise ValueError("date must use a valid YYYYMMDD value") from exc
     return value
@@ -133,23 +242,23 @@ def validate_time(value: str) -> str:
     if not re.fullmatch(r"\d{4}", value):
         raise ValueError("time must use HHMM")
     try:
-        time.fromisoformat(f"{value[:2]}:{value[2:]}")
+        datetime.strptime(value, "%H%M")
     except ValueError as exc:
         raise ValueError("time must use a valid HHMM value") from exc
-    return value + "00"
+    return f"{value[:2]}:{value[2:]}"
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="KTX live timetable lookup through korail2 (read-only)")
+    parser = argparse.ArgumentParser(description="Korail KTX official timetable lookup (read-only)")
     commands = parser.add_subparsers(dest="command", required=True)
-    search = commands.add_parser("search", help="query the current KTX timetable")
+    search = commands.add_parser("search", help="search a published KTX operating timetable")
     search.add_argument("--dep", required=True)
     search.add_argument("--arr", required=True)
     search.add_argument("--date", required=True, help="YYYYMMDD")
     search.add_argument("--time", default="0000", help="earliest departure, HHMM")
     search.add_argument("--time-limit", default="2359", help="latest departure, HHMM")
     search.add_argument("--limit", type=int, default=10)
-    commands.add_parser("source", help="show the read-only live query endpoint")
+    commands.add_parser("source", help="show the current official timetable source")
     return parser
 
 
@@ -158,11 +267,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "source":
-            print(json.dumps(source_info(), ensure_ascii=False, indent=2))
+            print(json.dumps(asdict(choose_latest_timetable(fetch_json(BOARD_URL))), ensure_ascii=False, indent=2))
             return 0
         if args.limit < 1 or args.limit > 50:
             raise ValueError("--limit must be between 1 and 50")
-        result = search_live_timetable(
+        result = search_public_timetable(
             dep=args.dep,
             arr=args.arr,
             date=args.date,
@@ -172,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
-    except (KorailError, NoResultsError, ValueError) as exc:
+    except (RuntimeError, ValueError) as exc:
         parser.error(str(exc))
         return 2
 

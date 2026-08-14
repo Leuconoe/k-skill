@@ -3,8 +3,8 @@
 현재 v1 설계 시 확인한 외부 표면:
 
 - Vercel skills package 구조: https://vercel.com/kb/guide/agent-skills-creating-installing-and-sharing-reusable-agent-context
-- `korail2`: https://github.com/carpedm20/korail2
-- `korail2` Dynapath search 호환 revision: https://github.com/carpedm20/korail2/pull/54
+- 코레일 공식 시간표 게시판: https://www.korail.com/ticket/reserve/train-timeTable
+- 코레일 공식 시간표 목록 JSON: https://www.korail.com/com/userBoard.do?schBcid=ticketTable&mode=list
 - `SRTrain`: https://github.com/ryanking13/SRT
 - 국가데이터처(구 통계청) KOSIS Open API 공식 진입: https://kosis.kr/openapi/ (회원가입·활용신청·개발가이드는 사이트 내부 메뉴 — 직접 deep-link는 SSO/SPA 라우팅으로 빈 화면이 보일 수 있다)
 - KOSIS Open API endpoint host: https://kosis.kr/openapi/ — 일반 helper 호출은 `k-skill-proxy`의 `/v1/kosis/search`, `/v1/kosis/meta`, `/v1/kosis/data`가 이 host의 `/statisticsSearch.do`, `/statisticsData.do`, `/Param/statisticsParameterData.do` 로 중계한다. `bigdata`/`--direct`는 `/statisticsBigData.do` 등을 직접 호출한다 (HTTPS 전용, 2026-03-05 시행)

@@ -1,14 +1,17 @@
 import importlib.util
+import io
 import json
-import re
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
+from openpyxl import Workbook
+
+
 SCRIPT_PATH = Path(__file__).with_name("ktx_booking.py")
-REPO_ROOT = SCRIPT_PATH.parent.parent
 SPEC = importlib.util.spec_from_file_location("ktx_booking", SCRIPT_PATH)
 assert SPEC and SPEC.loader
 ktx_booking = importlib.util.module_from_spec(SPEC)
@@ -16,190 +19,144 @@ sys.modules[SPEC.name] = ktx_booking
 SPEC.loader.exec_module(ktx_booking)
 
 
-class FakeTrain:
-    train_no = "75"
-    train_type_name = "KTX-산천"
-    dep_date = "20260819"
-    dep_time = "060300"
-    arr_time = "084900"
-    dep_name = "서울"
-    arr_name = "부산"
-    def has_general_seat(self):
-        return True
-
-    def has_special_seat(self):
-        return False
-
-
-class AdjacentTrain(FakeTrain):
-    train_no = "703"
-    dep_name = "청량리"
-    arr_name = "부전"
-
-
-class FakeKorail:
-    def __init__(self, korail_id, korail_pw, auto_login):
-        self.init = (korail_id, korail_pw, auto_login)
-        self.calls = []
-
-    def search_train(self, **kwargs):
-        self.calls.append(("search_train", kwargs))
-        return [FakeTrain(), AdjacentTrain()]
-
-    def reserve(self, *_args, **_kwargs):
-        raise AssertionError("reserve must never be called")
-
-    def cancel(self, *_args, **_kwargs):
-        raise AssertionError("cancel must never be called")
+BOARD_PAYLOAD = {
+    "boardList": [
+        {
+            "bdTitle": "KTX 시각표(2026. 9. 1. 기준)",
+            "fileId": ["jfile/202608/03/future.xlsx"],
+            "regdt": "2026-08-03",
+        },
+        {
+            "bdTitle": "KTX 시각표(2026. 5. 15. 기준)",
+            "fileId": ["jfile/202605/01/current.xlsx"],
+            "regdt": "2026-05-01",
+        },
+        {
+            "bdTitle": "KTX 운임표(2026. 9. 1. 기준)",
+            "fileId": ["jfile/202608/03/fares.xls"],
+            "regdt": "2026-08-03",
+        },
+    ]
+}
 
 
-class KtxLiveReadOnlyTests(unittest.TestCase):
-    def test_parser_exposes_only_search_and_source(self) -> None:
-        parser = ktx_booking.build_parser()
-        subcommands = parser._subparsers._group_actions[0].choices
+def workbook_bytes() -> bytes:
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["열차번호", "편성", "서울", "대전", "부산"])
+    sheet.append(["75", "KTX-산천", "06:03", "07:01", "08:49"])
+    sheet.append(["7", "KTX", "06:33", "07:34", "09:22"])
+    sheet.append(["1201", "무궁화호", "07:00", "09:00", "12:00"])
+    output = io.BytesIO()
+    workbook.save(output)
+    return output.getvalue()
 
-        self.assertEqual(set(subcommands), {"search", "source"})
 
-    def test_helper_uses_live_korail2_not_file_transport(self) -> None:
-        source = SCRIPT_PATH.read_text()
-        self.assertIn("korail2", source)
-        self.assertNotIn("openpyxl", source)
-        self.assertNotIn("userBoard.do", source)
-        self.assertNotIn("cubedata", source)
+class KtxOfficialTimetableTests(unittest.TestCase):
+    def test_chooses_timetable_applicable_to_requested_date(self) -> None:
+        source = ktx_booking.choose_timetable_for_date(BOARD_PAYLOAD, "20260819")
 
-    def test_search_uses_anonymous_client_and_only_search_train(self) -> None:
-        client = FakeKorail("", "", False)
-        with mock.patch.object(ktx_booking, "build_client", return_value=client):
-            result = ktx_booking.search_live_timetable(
-                dep="서울",
-                arr="부산",
-                date="20260819",
-                earliest="0600",
-                latest="1200",
-                limit=5,
-            )
+        self.assertEqual(source.title, "KTX 시각표(2026. 5. 15. 기준)")
+        self.assertTrue(source.download_url.endswith("current.xlsx"))
 
-        self.assertEqual(client.init, ("", "", False))
-        self.assertEqual([name for name, _kwargs in client.calls], ["search_train"])
-        self.assertEqual(result["count"], 1)
-        self.assertEqual(result["trains"][0]["train_no"], "75")
-        self.assertEqual(result["trains"][0]["dep_time"], "06:03")
-        self.assertEqual(result["source"]["transport"], "korail2")
+    def test_ignores_fare_tables_and_legacy_xls_files(self) -> None:
+        candidates = ktx_booking.timetable_candidates(BOARD_PAYLOAD)
 
-    def test_source_reports_live_schedule_endpoint_only(self) -> None:
-        source = ktx_booking.source_info()
+        self.assertEqual([item.title for item in candidates], [
+            "KTX 시각표(2026. 9. 1. 기준)",
+            "KTX 시각표(2026. 5. 15. 기준)",
+        ])
 
-        self.assertEqual(source["mode"], "live")
-        self.assertIn("ScheduleView", source["endpoint"])
-        self.assertNotIn("Reservation", source["endpoint"])
-
-    def test_module_has_no_state_changing_command_functions(self) -> None:
-        for name in ("command_reserve", "command_cancel", "command_reservations", "command_payment"):
-            self.assertFalse(hasattr(ktx_booking, name))
-
-    def test_station_input_drops_a_trailing_station_suffix(self) -> None:
-        self.assertEqual(ktx_booking.normalize_station("서울역"), "서울")
-        self.assertEqual(ktx_booking.normalize_station(" 부산 "), "부산")
-        self.assertEqual(ktx_booking.normalize_station("광주송정역"), "광주송정")
-
-    def test_search_normalizes_station_input_before_querying(self) -> None:
-        client = FakeKorail("", "", False)
-        with mock.patch.object(ktx_booking, "build_client", return_value=client):
-            result = ktx_booking.search_live_timetable(
-                dep="서울역",
-                arr="부산역",
-                date="20260819",
-                earliest="0600",
-                latest="1200",
-                limit=5,
-            )
-
-        _name, kwargs = client.calls[0]
-        self.assertEqual((kwargs["dep"], kwargs["arr"]), ("서울", "부산"))
-        self.assertEqual(result["count"], 1)
-
-    def test_station_mismatch_raises_instead_of_returning_empty(self) -> None:
-        class OnlyAdjacentKorail(FakeKorail):
-            def search_train(self, **kwargs):
-                self.calls.append(("search_train", kwargs))
-                return [AdjacentTrain()]
-
-        client = OnlyAdjacentKorail("", "", False)
-        with mock.patch.object(ktx_booking, "build_client", return_value=client):
-            with self.assertRaises(ValueError) as caught:
-                ktx_booking.search_live_timetable(
-                    dep="서울",
-                    arr="부산",
+    def test_search_reads_official_workbook_without_credentials(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with mock.patch.object(ktx_booking, "download_bytes", return_value=workbook_bytes()):
+                result = ktx_booking.search_public_timetable(
+                    dep="서울역",
+                    arr="부산역",
                     date="20260819",
                     earliest="0600",
-                    latest="1200",
+                    latest="0700",
                     limit=5,
                 )
 
-        self.assertIn("청량리→부전", str(caught.exception))
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(result["trains"][0]["train_no"], "75")
+        self.assertEqual(result["trains"][0]["train_type"], "KTX-산천")
+        self.assertNotIn("general_seat_available", result["trains"][0])
+        self.assertIn("실시간 잔여석", result["schedule_note"])
 
-    def test_no_train_in_window_still_returns_an_empty_result(self) -> None:
-        client = FakeKorail("", "", False)
-        with mock.patch.object(ktx_booking, "build_client", return_value=client):
-            result = ktx_booking.search_live_timetable(
-                dep="서울",
-                arr="부산",
-                date="20260819",
-                earliest="2000",
-                latest="2300",
-                limit=5,
-            )
+    def test_search_returns_empty_result_for_missing_route_window(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with mock.patch.object(ktx_booking, "download_bytes", return_value=workbook_bytes()):
+                result = ktx_booking.search_public_timetable(
+                    dep="서울",
+                    arr="부산",
+                    date="20260819",
+                    earliest="2300",
+                    latest="2359",
+                    limit=5,
+                )
 
-        self.assertEqual(result["count"], 0)
-
-    def test_upstream_no_results_returns_an_empty_result(self) -> None:
-        client = FakeKorail("", "", False)
-        client.search_train = mock.Mock(side_effect=ktx_booking.NoResultsError())
-
-        with mock.patch.object(ktx_booking, "build_client", return_value=client):
-            result = ktx_booking.search_live_timetable(
-                dep="서울",
-                arr="부산",
-                date="20260819",
-                earliest="2359",
-                latest="2359",
-                limit=5,
-            )
-
-        self.assertEqual(result["count"], 0)
         self.assertEqual(result["trains"], [])
+        self.assertEqual(result["count"], 0)
 
-    def test_test_environment_installs_the_runtime_korail2_revision(self) -> None:
-        pinned = re.search(r"korail2 @ (git\+\S+)\"", SCRIPT_PATH.read_text())
-        assert pinned
-        prepare = json.loads((REPO_ROOT / "package.json").read_text())["scripts"][
-            "prepare:python-test-env"
-        ]
+    def test_cli_source_prints_official_attachment(self) -> None:
+        output = io.StringIO()
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with redirect_stdout(output):
+                exit_code = ktx_booking.main(["source"])
 
-        self.assertIn(pinned.group(1), prepare)
+        self.assertEqual(exit_code, 0)
+        source = json.loads(output.getvalue())
+        self.assertIn("KTX 시각표", source["title"])
+        self.assertIn("korail.com/file/cubedata", source["download_url"])
 
-    def test_cli_bad_time_fails_before_client_creation(self) -> None:
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPT_PATH),
-                "search",
-                "--dep",
-                "서울",
-                "--arr",
-                "부산",
-                "--date",
-                "20260819",
-                "--time",
-                "2500",
-            ],
-            check=False,
+    def test_bad_time_fails_before_network_access(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json") as fetch:
+            with self.assertRaises(SystemExit):
+                ktx_booking.main([
+                    "search",
+                    "--dep",
+                    "서울",
+                    "--arr",
+                    "부산",
+                    "--date",
+                    "20260819",
+                    "--time",
+                    "2500",
+                ])
+        fetch.assert_not_called()
+
+    def test_helper_contains_no_mobile_api_or_state_changing_commands(self) -> None:
+        source = SCRIPT_PATH.read_text(encoding="utf-8")
+
+        self.assertNotIn("ScheduleView", source)
+        self.assertNotIn("korail2", source)
+        self.assertNotIn("Dynapath", source)
+        self.assertNotRegex(source, r"def (reserve|cancel|pay|login)")
+
+    def test_bundled_helper_matches_source(self) -> None:
+        bundled = (
+            SCRIPT_PATH.parent.parent
+            / "packages"
+            / "k-skill-cli"
+            / "skills"
+            / "ktx-booking"
+            / "scripts"
+            / "ktx_booking.py"
+        )
+        self.assertEqual(SCRIPT_PATH.read_bytes(), bundled.read_bytes())
+
+    def test_cli_rejects_removed_reserve_command(self) -> None:
+        completed = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH), "reserve"],
             capture_output=True,
             text=True,
+            check=False,
         )
 
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("HHMM", result.stderr)
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn("invalid choice", completed.stderr)
 
 
 if __name__ == "__main__":

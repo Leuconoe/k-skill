@@ -1,6 +1,6 @@
 ---
 name: ktx-booking
-description: Read-only live KTX timetable and seat-availability lookup through the korail2 search path. No login, reservation, payment, cancellation, exact seat selection, or automated monitoring.
+description: Read-only KTX operating-timetable lookup from official Korail public XLSX attachments. No login, internal mobile API, anti-bot bypass, live seat availability, reservation, or payment.
 license: MIT
 metadata:
   category: travel

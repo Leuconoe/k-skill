@@ -16,81 +16,64 @@ Runtime mode: generic
 - Resolve an asset path with `npx -y @nomadamas/k-skill@0 path ktx-booking <relative-path>` only when another tool explicitly requires a filesystem path.
 - Read bundled references through `npx -y @nomadamas/k-skill@0 read ktx-booking references/<file>`.
 
-# KTX Live Timetable Lookup
+# KTX Official Timetable Lookup
 
 ## What this skill does
 
-`korail2`의 시간표 검색 경로를 이용해 현재 KTX 운행 후보와 일반실·특실 예약 가능 여부를 조회한다.
+한국철도공사가 로그인 없이 공개하는 최신 KTX 운행시간표 XLSX를 내려받아 출발역·도착역·출발시간 조건에 맞는 열차를 찾는다.
 
-이 스킬은 **라이브 조회 전용**이다.
+이 스킬은 **공식 계획 시간표 조회 전용**이다.
 
-- 회원 로그인과 credential을 사용하지 않는다.
-- `ScheduleView` 검색 요청만 실행한다.
+- 회원 로그인, credential, Korail 앱 내부 API를 사용하지 않는다.
+- Dynapath 또는 anti-bot token을 생성·재현·우회하지 않는다.
+- 실시간 잔여석, 실제 운휴·지연, 호차·좌석번호는 조회하지 않는다.
 - 예약, 예약대기, 좌석 선점, 결제, 취소, 자동 재조회는 실행하지 않는다.
-- 정확한 호차·좌석번호를 조회하지 않는다.
-- 구매는 공식 코레일 페이지에서 사용자가 직접 진행한다.
+- 구매와 실시간 운행 확인은 공식 코레일 페이지에서 사용자가 직접 진행한다.
 
-실행 환경에는 Python 3.11 이상과 `uv`가 필요하다. `uv`가 없으면 공식 설치 문서를 안내하고 조회를 실행하지 않는다.
-
-KTX 조회에는 코레일의 현재 Dynapath 검사에 대응하는 `korail2` 호환 revision을 사용한다. 이는 조회 성공을 위한 검색 transport일 뿐 코레일의 공식 승인이나 약관상 허가를 의미하지 않는다.
+실행 환경에는 Python 3.11 이상과 `uv`가 필요하다. `uv`가 helper에 고정된 `openpyxl` 환경을 자동 설치한다.
 
 ## Commands
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- \
-  search \
-  --dep 서울 \
-  --arr 부산 \
-  --date 20260819 \
-  --time 0600 \
-  --time-limit 1200 \
-  --limit 5
+  search --dep 서울 --arr 부산 --date 20260819 --time 0600 --time-limit 1200 --limit 5
 ```
-
-현재 라이브 조회 endpoint와 안전 경계:
 
 ```bash
 npx -y @nomadamas/k-skill@0 exec ktx-booking scripts/ktx_booking.py -- source
 ```
 
-출력:
+## Inputs
 
-- 열차번호·열차종류
-- 요청한 출발역·도착역
-- 현재 출발·도착 시각
-- 일반실·특실 예약 가능 여부
-- 사용한 라이브 search endpoint
-- 공식 코레일 페이지
+- `--dep`: 출발역명. `서울`과 `서울역` 모두 허용한다.
+- `--arr`: 도착역명.
+- `--date`: `YYYYMMDD`.
+- `--time`: 가장 이른 출발시각 `HHMM`, 기본 `0000`.
+- `--time-limit`: 가장 늦은 출발시각 `HHMM`, 기본 `2359`.
+- `--limit`: 최대 결과 수, 1~50.
 
-## Workflow
+## Output
 
-1. 출발역, 도착역, 날짜, 시간대를 확인한다.
-2. `search`를 한 번 실행한다. `서울역`처럼 `역`이 붙은 입력은 helper가 표준 역명으로 정규화한다.
-3. 요청 역과 정확히 일치하는 후보만 제시한다.
-4. 좌석 구매가 필요하면 `booking_url`을 제공하고 종료한다.
-5. 사용자가 다시 요청하지 않는 한 polling·매진 감시를 시작하지 않는다.
+- `count`
+- `trains[]`: `train_no`, `train_type`, `dep`, `arr`, `dep_time`, `arr_time`
+- `date`
+- `schedule_note`
+- `source`: 공식 게시물 제목·게시일·XLSX URL·게시판 URL
+- `booking_url`
 
-## Hard boundaries
-
-- `KSKILL_KTX_ID`, `KSKILL_KTX_PASSWORD` 또는 회원 로그인을 요구하지 않는다.
-- helper에 `reserve`, `reservations`, `cancel`, `payment`, waiting-list 명령을 추가하지 않는다.
-- 예약 endpoint, 결제 endpoint 또는 계정 endpoint를 호출하지 않는다.
-- CAPTCHA·접근 거부·계정 제한이 발생하면 즉시 중단한다.
-- Dynapath 호환 header를 예약·로그인·결제 자동화에 확장하지 않는다.
-- 사용자 요청 한 번을 반복 수집이나 장기 실행으로 확장하지 않는다.
+항상 이 결과는 **공개 운행계획 시간표**이며 실시간 잔여석·운휴·지연 정보가 아니라는 점을 명시한다.
 
 ## Failure modes
 
-- `MACRO ERROR` 또는 코레일의 접근 제한
-- upstream `korail2` 호환 revision 설치 실패
-- 날짜·시간 또는 역명 오류
-- 요청 역과 코레일이 반환한 역이 불일치(오류로 중단하며 반환된 역명을 함께 보고한다)
-- 조건에 맞는 열차 없음(`count: 0`으로 정상 종료한다)
+- 공식 시간표 게시판 또는 XLSX 다운로드 실패
+- 요청일에 적용되는 KTX 시간표 없음
+- XLSX 형식 변경으로 header를 찾지 못함
+- 요청 구간·시간대 결과 없음: 오류가 아니라 `count: 0`
+- 잘못된 날짜·시간·limit: 실행 전 오류
 
-이 경우 차단을 우회하지 않고 [코레일 공식 조회 페이지](https://www.korail.com/ticket/train/schedule)를 안내한다.
+## Hard boundaries
 
-## Legal notice
-
-```bash
-npx -y @nomadamas/k-skill@0 read ktx-booking references/AUTOMATION-LEGAL-STATEMENT.md
-```
+- 로그인·credential 요청 금지
+- `ScheduleView`, `korail2`, Dynapath 등 앱 내부 경로 사용 금지
+- 예약·결제·취소·좌석 선점 금지
+- CAPTCHA·인증·anti-bot 통제 우회 금지

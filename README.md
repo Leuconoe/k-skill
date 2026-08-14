@@ -9,7 +9,7 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 추가 클라이언트 API 레이어는 불필요합니다. 필요한 경우 `k-skill-proxy` 같은 프록시 서버에 HTTP 요청만 넣으면 됩니다.
 
-> **KTX와 SRT는 조회 전용 스킬입니다.** 라이브 시간표와 일반실·특실 이용 가능 여부만 조회하며, 로그인·예약·예약대기·결제·취소는 수행하지 않습니다.
+> **KTX와 SRT는 조회 전용 스킬입니다.** KTX는 코레일 공식 계획 시간표를, SRT는 라이브 시간표와 일반실·특실 이용 가능 여부를 조회하며 로그인·예약·예약대기·결제·취소는 수행하지 않습니다.
 
 ## 설치
 
@@ -21,7 +21,7 @@ npx --yes skills add NomaDamas/k-skill --all -g
 npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 ```
 
-기본 설치에는 Node.js 18 이상과 `npx`만 필요합니다. KTX·SRT 라이브 조회 helper를 실행할 때는 Python 3.11 이상과 `uv`가 추가로 필요합니다. Claude Code 사용자는 아래 마켓플레이스로도 설치할 수 있습니다. 자세한 방법은 [설치 방법](docs/install.md)을 참고하세요.
+기본 설치에는 Node.js 18 이상과 `npx`만 필요합니다. KTX 공식 시간표와 SRT 라이브 조회 helper를 실행할 때는 Python 3.11 이상과 `uv`가 추가로 필요합니다. Claude Code 사용자는 아래 마켓플레이스로도 설치할 수 있습니다. 자세한 방법은 [설치 방법](docs/install.md)을 참고하세요.
 
 ## 잠깐만~~~
 
@@ -37,7 +37,7 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 | 할 수 있는 일 | 스킬 이름 | 설명 | 사용자 로그인 | 문서 |
 | --- | --- | --- | --- | --- |
 | SRT 라이브 시간표 조회 | `srt-booking` | SRTrain 검색 경로 기반 시간표·일반실/특실 가능 여부 조회 전용 | 불필요 | [SRT 라이브 시간표 조회 가이드](docs/features/srt-booking.md) |
-| KTX 라이브 시간표 조회 | `ktx-booking` | korail2 검색 경로 기반 시간표·일반실/특실 가능 여부 조회 전용 | 불필요 | [KTX 라이브 시간표 조회 가이드](docs/features/ktx-booking.md) |
+| KTX 공식 시간표 조회 | `ktx-booking` | 코레일 공개 XLSX 기반 계획 시간표 조회 전용 | 불필요 | [KTX 공식 시간표 조회 가이드](docs/features/ktx-booking.md) |
 | 고속버스 예매 | `express-bus-booking` | KOBUS 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [고속버스 예매 가이드](docs/features/express-bus-booking.md) |
 | 시외버스 예매 | `intercity-bus-booking` | 티머니 배차·좌석·요금·임시 선점 조회와 예매 지원 | 필요 | [시외버스 예매 가이드](docs/features/intercity-bus-booking.md) |
 | 자연휴양림 빈 객실 조회 | `foresttrip-vacancy` | 공식 숲나들e 빈 객실 조회와 예약 지원 | 필요 | [자연휴양림 빈 객실 조회 가이드](docs/features/foresttrip-vacancy.md) |
@@ -189,7 +189,7 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 ## 포함된 기능
 
 - [SRT 라이브 시간표 조회](docs/features/srt-booking.md)
-- [KTX 라이브 시간표 조회](docs/features/ktx-booking.md)
+- [KTX 공식 시간표 조회](docs/features/ktx-booking.md)
 - [고속버스 예매](docs/features/express-bus-booking.md)
 - [시외버스 예매](docs/features/intercity-bus-booking.md)
 - [자연휴양림 빈 객실 조회](docs/features/foresttrip-vacancy.md)
