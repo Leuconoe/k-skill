@@ -69,7 +69,6 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 | 창업진흥원 K-Startup 조회 | `kstartup-search` | 창업진흥원 K-Startup 통합공고 사업·지원사업 공고·창업 콘텐츠·통계보고서 조회 (공공데이터포털 15125364, 프록시 경유) | 불필요 | [창업진흥원 K-Startup 조회 가이드](docs/features/kstartup-search.md) |
 | 지방선거 후보자 조회 | `local-election-candidate-search` | 중앙선거관리위원회 선거통계시스템 공개 통합검색으로 지방선거 후보자 이력·선거종류·정당·지역·득표 정보를 이름 기준으로 조회 | 불필요 | [지방선거 후보자 조회 가이드](docs/features/local-election-candidate-search.md) |
 | 공무국외출장 보고서 조회 | `gov-overseas-trip-report` | 선관위·권익위·정보공개포털·대구/대전/경기/경북 의회 등 공개 표면에서 국외출장/훈련 보고서·현황을 조회하고, 표 밖 기관은 discover로 능동 탐색(로그인 벽 제외, 판정 아님) | 불필요 | [공무국외출장 보고서 조회 가이드](docs/features/gov-overseas-trip-report.md) |
-| 러브버그.com 조회·제보 | `lovebug-report` | 러브버그.com 공개 지도 JSON으로 수도권 시·구별 출몰 지수·동네별 제보 현황을 조회하고, 사용자가 제공한 현재 좌표로 익명 러브버그 제보 제출 | 불필요 | [러브버그.com 조회·제보 가이드](docs/features/lovebug-report.md) |
 | 한국 사업자 장부 자동화 | `korean-jangbu-for` | `kimlawtech/korean-jangbu-for` 기반 카드·은행·영수증·세금계산서 입력 → 표준 거래내역·계정과목·세무사 전달 CSV·경영 리포트 생성 thin wrapper | 선택사항(CODEF BYOK 자동 수집 시 필요) | [한국 사업자 장부 자동화 가이드](docs/features/korean-jangbu-for.md) |
 | 팝빌 업무 API | `popbill` | 팝빌 전자세금계산서·전자명세서·현금영수증·문자·카카오톡·팩스·휴폐업/기업정보·계좌조회·홈택스 수집을 로컬 BYOK 방식으로 호출 | 필요 | [팝빌 all-service API helper](docs/features/popbill.md) |
 | 한국 개인정보처리방침·이용약관 자동 생성 | `korean-privacy-terms` | Next.js 프로젝트에 개인정보보호법·약관규제법·전자상거래법 기반 개인정보처리방침/이용약관/쿠키 배너/동의 모달을 생성하는 `kimlawtech/korean-privacy-terms` (Apache-2.0) thin wrapper | 불필요 | [한국 개인정보처리방침·이용약관 자동 생성 가이드](docs/features/korean-privacy-terms.md) |
@@ -216,7 +215,6 @@ Node.js 18 이상과 `npx`만 있으면 됩니다. Claude Code 사용자는 아�
 - [장수 점포 레이더 가이드](docs/features/store-longevity-radar.md)
 - [창업진흥원 K-Startup 조회 가이드](docs/features/kstartup-search.md)
 - [지방선거 후보자 조회 가이드](docs/features/local-election-candidate-search.md)
-- [러브버그.com 조회·제보 가이드](docs/features/lovebug-report.md)
 - [한국 사업자 장부 자동화 가이드](docs/features/korean-jangbu-for.md)
 - [팝빌 all-service API helper](docs/features/popbill.md)
 - [한국 부동산 실거래가 조회 가이드](docs/features/real-estate-search.md)

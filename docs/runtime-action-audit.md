@@ -102,7 +102,6 @@
 | `local-election-candidate-search` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `localdata-business-status` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `lotto-results` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
-| `lovebug-report` | `submission` | 공식 폼·첨부 준비 → `clarify` 후 제출/결제/취소 |
 | `market-kurly-search` | `commerce` | 공식 상품 선택 → 장바구니/checkout 준비 → `clarify` 후 주문·결제 |
 | `mfds-drug-safety` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `mfds-food-safety` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
