@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import importlib.util
 import pathlib
+import types
 import unittest
 from unittest import mock
 
@@ -80,6 +81,67 @@ class CliAssemblyTest(unittest.TestCase):
 
 
 class TimeoutTest(unittest.TestCase):
+    def test_run_mcp_reports_timeout(self):
+        async def never_finishes(*args, **kwargs):
+            await asyncio.sleep(60)
+
+        with mock.patch.object(myrealtrip_mcp, "_run_mcp_once", side_effect=never_finishes):
+            with self.assertRaisesRegex(myrealtrip_mcp.MyRealTripMcpError, "초과"):
+                asyncio.run(
+                    myrealtrip_mcp.run_mcp(
+                        "https://example.invalid/mcp",
+                        "tools",
+                        timeout_seconds=0.001,
+                    )
+                )
+
+
+class McpSdkCompatTest(unittest.TestCase):
+    def test_tool_input_schema_accepts_v1_and_v2_attribute_names(self):
+        class V2:
+            input_schema = {"type": "object"}
+
+        class V1:
+            inputSchema = {"type": "object", "properties": {"q": {}}}
+
+        class Empty:
+            pass
+
+        self.assertEqual(myrealtrip_mcp.tool_input_schema(V2()), {"type": "object"})
+        self.assertEqual(myrealtrip_mcp.tool_input_schema(V1()), {"type": "object", "properties": {"q": {}}})
+        self.assertEqual(myrealtrip_mcp.tool_input_schema(Empty()), {})
+
+    def test_load_mcp_client_prefers_sdk_v2_name(self):
+        fake_session = object()
+        fake_v2 = object()
+        fake_mcp = types.SimpleNamespace(ClientSession=fake_session)
+        fake_http = types.SimpleNamespace(streamable_http_client=fake_v2, streamablehttp_client=object())
+
+        with mock.patch.object(myrealtrip_mcp.importlib, "import_module", side_effect=lambda name: fake_mcp if name == "mcp" else fake_http):
+            session, client = myrealtrip_mcp.load_mcp_client()
+
+        self.assertIs(session, fake_session)
+        self.assertIs(client, fake_v2)
+
+    def test_load_mcp_client_falls_back_to_sdk_v1_name(self):
+        fake_session = object()
+        fake_v1 = object()
+        fake_mcp = types.SimpleNamespace(ClientSession=fake_session)
+        fake_http = types.SimpleNamespace(streamablehttp_client=fake_v1)
+
+        with mock.patch.object(myrealtrip_mcp.importlib, "import_module", side_effect=lambda name: fake_mcp if name == "mcp" else fake_http):
+            session, client = myrealtrip_mcp.load_mcp_client()
+
+        self.assertIs(session, fake_session)
+        self.assertIs(client, fake_v1)
+
+    def test_load_mcp_client_includes_import_error_detail(self):
+        with mock.patch.object(myrealtrip_mcp.importlib, "import_module", side_effect=ImportError("No module named mcp")):
+            with self.assertRaisesRegex(myrealtrip_mcp.MyRealTripMcpError, "No module named mcp"):
+                myrealtrip_mcp.load_mcp_client()
+
+
+if __name__ == "__main__":
     def test_run_mcp_reports_timeout(self):
         async def never_finishes(*args, **kwargs):
             await asyncio.sleep(60)

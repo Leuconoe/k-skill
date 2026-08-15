@@ -351,6 +351,16 @@ function createMemoryCache({
   };
 }
 
+function clientRateLimitKey(request, config) {
+  if (config.trustProxyHops > 0) {
+    const cfConnectingIp = request.headers["cf-connecting-ip"];
+    if (typeof cfConnectingIp === "string" && cfConnectingIp.trim()) {
+      return cfConnectingIp.trim();
+    }
+  }
+  return request.ip || "unknown";
+}
+
 function buildRateLimiter(config, { now = Date.now } = {}) {
   const state = new Map();
 
@@ -378,7 +388,7 @@ function buildRateLimiter(config, { now = Date.now } = {}) {
       return true;
     }
 
-    const key = request.ip || "unknown";
+    const key = clientRateLimitKey(request, config);
     const currentTime = now();
     const current = state.get(key);
 

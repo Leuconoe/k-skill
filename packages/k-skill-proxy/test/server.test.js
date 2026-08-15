@@ -2152,6 +2152,67 @@ test("rate limit separates clients behind two trusted proxy hops", async (t) => 
   assert.equal(firstClientAgain.json().error, "rate_limited");
 });
 
+test("rate limit separates Cloudflare Tunnel clients with one trusted hop", async (t) => {
+  const app = buildServer({
+    env: {
+      KSKILL_PROXY_RATE_LIMIT_MAX: "1",
+      KSKILL_PROXY_TRUST_PROXY_HOPS: "1"
+    }
+  });
+
+  t.after(async () => {
+    await app.close();
+  });
+
+  const request = (clientIp) => app.inject({
+    method: "GET",
+    url: "/v1/korean-stock/search?q=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90&bas_dd=20260404",
+    headers: {
+      "x-forwarded-for": clientIp
+    }
+  });
+
+  const firstClient = await request("198.51.100.10");
+  const secondClient = await request("198.51.100.11");
+  const firstClientAgain = await request("198.51.100.10");
+
+  assert.equal(firstClient.statusCode, 503);
+  assert.equal(secondClient.statusCode, 503);
+  assert.equal(firstClientAgain.statusCode, 429);
+  assert.equal(firstClientAgain.json().error, "rate_limited");
+});
+
+test("rate limit prefers CF-Connecting-IP when proxy hops are trusted", async (t) => {
+  const app = buildServer({
+    env: {
+      KSKILL_PROXY_RATE_LIMIT_MAX: "1",
+      KSKILL_PROXY_TRUST_PROXY_HOPS: "1"
+    }
+  });
+
+  t.after(async () => {
+    await app.close();
+  });
+
+  const request = (clientIp) => app.inject({
+    method: "GET",
+    url: "/v1/korean-stock/search?q=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90&bas_dd=20260404",
+    headers: {
+      "x-forwarded-for": "203.0.113.9",
+      "cf-connecting-ip": clientIp
+    }
+  });
+
+  const firstClient = await request("198.51.100.21");
+  const secondClient = await request("198.51.100.22");
+  const firstClientAgain = await request("198.51.100.21");
+
+  assert.equal(firstClient.statusCode, 503);
+  assert.equal(secondClient.statusCode, 503);
+  assert.equal(firstClientAgain.statusCode, 429);
+  assert.equal(firstClientAgain.json().error, "rate_limited");
+});
+
 test("korean stock search surfaces degraded upstream metadata when another market fails", async (t) => {
   const originalFetch = global.fetch;
   const fetchCalls = [];
@@ -2240,7 +2301,7 @@ test("korean stock search surfaces degraded upstream metadata when another marke
       message: "KRX API HTTP 오류 (status: 500): Internal Server Error"
     }
   ]);
-  assert.equal(fetchCalls.length, 3);
+  assert.equal(fetchCalls.length, 4);
   assert.ok(fetchCalls.every((entry) => entry.url.startsWith("https://data-dbg.krx.co.kr/")));
 });
 
@@ -2268,7 +2329,7 @@ test("korean stock search does not cache degraded responses and retries a recove
     if (text.includes("ksq_isu_base_info")) {
       kosdaqAttempts += 1;
 
-      if (kosdaqAttempts === 1) {
+      if (kosdaqAttempts <= 2) {
         return new Response("boom", {
           status: 500,
           statusText: "Internal Server Error"
@@ -2343,8 +2404,8 @@ test("korean stock search does not cache degraded responses and retries a recove
   assert.equal(second.json().items.length, 1);
   assert.equal(second.json().items[0].market, "KOSDAQ");
   assert.equal(second.json().items[0].code, "196170");
-  assert.equal(kosdaqAttempts, 2);
-  assert.equal(fetchCalls.length, 4);
+  assert.equal(kosdaqAttempts, 3);
+  assert.equal(fetchCalls.length, 5);
 });
 
 test("korean stock search reuses per-market base snapshots across different queries for the same date", async (t) => {
@@ -4241,6 +4302,39 @@ test("real estate transaction endpoint fetches and returns parsed data", async (
   assert.equal(body.query.asset_type, "apartment");
   assert.equal(body.query.deal_type, "trade");
   assert.equal(body.proxy.cache.hit, false);
+});
+
+test("real estate transaction endpoint retries a single upstream 502 then succeeds", async (t) => {
+  const originalFetch = global.fetch;
+  let fetchCalls = 0;
+  global.fetch = async () => {
+    fetchCalls += 1;
+    if (fetchCalls === 1) {
+      return new Response("bad gateway", { status: 502, statusText: "Bad Gateway" });
+    }
+    return new Response(SAMPLE_APT_TRADE_XML, {
+      status: 200,
+      headers: { "content-type": "text/xml;charset=UTF-8" }
+    });
+  };
+
+  const app = buildServer({
+    env: { DATA_GO_KR_API_KEY: "test-key" }
+  });
+
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const response = await app.inject({
+    method: "GET",
+    url: "/v1/real-estate/apartment/trade?lawd_cd=11680&deal_ymd=202403"
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(fetchCalls, 2);
+  assert.equal(response.json().items[0].name, "래미안");
 });
 
 test("real estate transaction endpoint caches successful responses", async (t) => {

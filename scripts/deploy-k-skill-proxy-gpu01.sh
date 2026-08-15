@@ -68,6 +68,11 @@ install -m 0644 "$REPO_DIR/package-lock.json" "$APP_DIR/package-lock.json"
 
 npm --prefix "$APP_DIR" ci --omit=dev --workspace k-skill-proxy \
   --include-workspace-root=false --no-audit --no-fund
+
+if ! grep -q '^KSKILL_PROXY_TRUST_PROXY_HOPS=' "$APP_DIR/.env" 2>/dev/null; then
+  log "WARNING: KSKILL_PROXY_TRUST_PROXY_HOPS is unset; Cloudflare Tunnel clients will share one rate-limit bucket. Set KSKILL_PROXY_TRUST_PROXY_HOPS=1 in $APP_DIR/.env"
+fi
+
 systemctl --user restart "$SERVICE_NAME"
 
 for _ in 1 2 3 4 5; do

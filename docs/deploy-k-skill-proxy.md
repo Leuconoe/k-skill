@@ -63,6 +63,23 @@ systemctl --user status k-skill-proxy-tunnel.service
 
 The `.env` file stays on `gpu01` and must not be copied into the repository.
 
+## Required runtime env (gpu01)
+
+Cloudflare Tunnel forwards to `127.0.0.1:8080`. Fastify must trust that one hop
+or every external client shares a single rate-limit bucket (`request.ip` becomes
+`127.0.0.1`). Keep these keys in `/data/home/jeffrey/apps/k-skill-proxy/.env`:
+
+```dotenv
+KSKILL_PROXY_TRUST_PROXY_HOPS=1
+KSKILL_PROXY_RATE_LIMIT_WINDOW_MS=60000
+KSKILL_PROXY_RATE_LIMIT_MAX=60
+```
+
+`KSKILL_PROXY_TRUST_PROXY_HOPS=1` is required in production. Leave it unset
+(default `0`) only for a locally bound process that is not behind a reverse
+proxy. When hops are trusted, the rate limiter prefers `CF-Connecting-IP` over
+`X-Forwarded-For` so clients cannot spoof extra XFF entries.
+
 ## ASK Seoul weather-risk route handoff
 
 Before deploying the `seoul-weather-risk` proxy route, ASK Seoul must issue a **dedicated, revocable service key**. Do not use a maintainer's or contributor's personal Marketplace key. The Marketplace registers this key as the following fixed service principal and scope:

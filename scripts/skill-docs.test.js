@@ -193,9 +193,7 @@ function cliManagedSkills() {
     .sort();
 }
 
-test("every top-level skill embeds the canonical portable runtime contract or a CLI stub", () => {
-  const canonical = findSection(read("docs/adding-a-skill.md"), "## Runtime contract (required)").trim();
-  const cliManaged = new Set(cliManagedSkills());
+test("every top-level skill is a generated CLI stub", () => {
   const skillDirs = fs
     .readdirSync(repoRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -207,22 +205,16 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
 
   for (const skillName of skillDirs) {
     const skill = readRaw(path.join(skillName, "SKILL.md"));
-
-    if (cliManaged.has(skillName)) {
-      assert.match(skill, /k-skill:cli-stub/, `${skillName} must be a generated CLI stub`);
-      assert.match(
-        skill,
-        new RegExp(`npx -y @nomadamas/k-skill@0 instruct ${escapeRegex(skillName)}`),
-        `${skillName} stub must invoke the pinned-major CLI`,
-      );
-      continue;
-    }
-
-    assert.ok(skill.includes(canonical), `${skillName} must embed the canonical portable runtime contract`);
-    assert.equal(
-      (skill.match(/^## Runtime contract \(required\)$/gm) ?? []).length,
-      1,
-      `${skillName} must contain exactly one portable runtime contract`,
+    assert.match(skill, /k-skill:cli-stub/, `${skillName} must be a generated CLI stub`);
+    assert.match(
+      skill,
+      new RegExp(`npx -y @nomadamas/k-skill@0 instruct ${escapeRegex(skillName)}`),
+      `${skillName} stub must invoke the pinned-major CLI`,
+    );
+    assert.doesNotMatch(
+      skill,
+      /^## Runtime contract \(required\)$/m,
+      `${skillName} must not embed the retired portable runtime contract; CLI templates own that`,
     );
   }
 });
@@ -831,6 +823,9 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   assert.match(deployDoc, /flock/);
   assert.match(deployDoc, /rollback/i);
   assert.match(deployDoc, /deployed-sha/);
+  assert.match(deployDoc, /KSKILL_PROXY_TRUST_PROXY_HOPS=1/);
+  assert.match(packageReadme, /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+  assert.match(deployScript, /KSKILL_PROXY_TRUST_PROXY_HOPS/);
 });
 
 test("kakaotalk-mac skill documents katok archive search usage", () => {
