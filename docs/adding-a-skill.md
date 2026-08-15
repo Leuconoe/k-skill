@@ -177,6 +177,7 @@ npx -y @nomadamas/k-skill@0 read my-new-skill references/guide.md
 ```
 
 `npm run sync:cli-skills`가 helper와 reference를 통합 CLI 패키지에 동봉한다.
+루트 `scripts/`에서 `bundle[]`로 끌어오지 않는다. helper는 스킬 디렉터리의 `scripts/`에 둔다.
 
 ---
 
