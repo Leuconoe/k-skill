@@ -178,8 +178,52 @@ function assertKakaoBarNearbySadangSmokeSnapshot(smoke, label) {
 
 test("root npm test script includes the skill docs regression suite", () => {
   const packageJson = JSON.parse(read("package.json"));
+  const { listNodeTestFiles, toPosix } = require("./ci-paths");
 
-  assert.match(packageJson.scripts.test, /node --test scripts\/skill-docs\.test\.js/);
+  assert.equal(packageJson.scripts.test, "node scripts/run-tests.js");
+  assert.ok(
+    listNodeTestFiles().some((file) => toPosix(file) === "scripts/skill-docs.test.js"),
+    "run-tests.js should glob scripts/skill-docs.test.js",
+  );
+});
+
+test("root CI glob runners pick up helper tests without a package.json hand list", () => {
+  const packageJson = readJson("package.json");
+  const {
+    listJsSyntaxCheckFiles,
+    listPythonCompileFiles,
+    listPythonTestJobs,
+    listRootPythonTestModules,
+    toPosix,
+  } = require("./ci-paths");
+
+  assert.equal(packageJson.scripts.lint, "node scripts/run-lint.js");
+  assert.equal(packageJson.scripts.test, "node scripts/run-tests.js");
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.equal(readJson(path.join("packages", "k-skill-proxy", "package.json")).scripts.lint, "node scripts/check-js.js");
+
+  const jsFiles = listJsSyntaxCheckFiles().map(toPosix);
+  assert.ok(jsFiles.includes("scripts/ci-paths.js"));
+  assert.ok(jsFiles.includes("lck-analytics/scripts/sync-oracle.js"));
+
+  const pyFiles = listPythonCompileFiles().map(toPosix);
+  assert.ok(pyFiles.includes("scripts/seoul_density.py"));
+  assert.ok(pyFiles.includes("gov-overseas-trip-report/scripts/gov_overseas_trip_report.py"));
+  assert.ok(pyFiles.includes("popbill/scripts/popbill_cli.py"));
+  assert.ok(!pyFiles.some((file) => file.startsWith("packages/k-skill-cli/skills/")));
+
+  const rootModules = listRootPythonTestModules();
+  assert.ok(rootModules.includes("scripts.test_seoul_density"));
+  assert.ok(rootModules.includes("scripts.test_myrealtrip_mcp"));
+  assert.ok(!rootModules.includes("scripts.test_store_longevity_mirror"));
+
+  const jobLabels = listPythonTestJobs().map((job) => job.label).join("\n");
+  assert.match(jobLabels, /gov-overseas-trip-report\/tests/);
+  assert.match(jobLabels, /popbill\/tests\/run_tests\.py/);
+  assert.match(jobLabels, /jobkorea-talent-search\/scripts/);
+  assert.doesNotMatch(jobLabels, /myrealtrip-search\/scripts/);
+  assert.doesNotMatch(jobLabels, /k-skill-cli\/skills/);
+  assert.doesNotMatch(jobLabels, /test_store_longevity_mirror/);
 });
 
 // Skills that have migrated to the @nomadamas/k-skill CLI adapter keep their
@@ -384,6 +428,7 @@ test("repository publishes Korean contribution guidance for external contributor
   assert.match(contributing, /유료 API/);
   assert.match(contributing, /`k-skill-proxy`를 타지 않도록 설계/);
   assert.match(contributing, /릴리스나 패키징 관련 변경은 `npm run ci`/);
+  assert.match(contributing, /scripts\/run-\*\.js/);
   assert.match(contributing, /`~\/\.claude\/skills\/<skill-name>`/);
   assert.match(contributing, /`~\/\.agents\/skills\/<skill-name>`/);
   assert.match(contributing, /gpu01/);
@@ -1707,20 +1752,13 @@ test("ohou-today-deal docs lock the public Next data read-only workflow", () => 
 
 test("root pack:dry-run script covers all publishable workspaces", () => {
   const packageJson = readJson("package.json");
-  const packScript = packageJson.scripts["pack:dry-run"];
-  const publishableWorkspaces = fs
-    .readdirSync(path.join(repoRoot, "packages"), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join("packages", entry.name, "package.json"))
-    .filter((packagePath) => fs.existsSync(path.join(repoRoot, packagePath)))
-    .map((packagePath) => readJson(packagePath))
-    .filter((workspacePackage) => workspacePackage.private !== true)
-    .map((workspacePackage) => workspacePackage.name);
+  const { listPublishableWorkspaces } = require("./ci-paths");
+  const publishableWorkspaces = listPublishableWorkspaces();
 
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
   assert.ok(publishableWorkspaces.includes("donation-place-search"));
-  for (const workspaceName of publishableWorkspaces) {
-    assert.match(packScript, new RegExp(`workspace ${escapeRegex(workspaceName)}(?:\\s|$)`));
-  }
+  assert.ok(publishableWorkspaces.includes("@nomadamas/k-skill"));
+  assert.ok(!publishableWorkspaces.includes("k-skill-proxy"));
 });
 
 test("README main capability table advertises the donation-place-search skill", () => {
@@ -2127,8 +2165,10 @@ test("toss-securities package metadata excludes the retired fallback", () => {
 
 test("pack:dry-run includes the toss-securities workspace", () => {
   const packageJson = JSON.parse(read("package.json"));
+  const { listPublishableWorkspaces } = require("./ci-paths");
 
-  assert.match(packageJson.scripts["pack:dry-run"], /workspace toss-securities/);
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.ok(listPublishableWorkspaces().includes("toss-securities"));
 });
 
 test("toss-securities pack dry-run ships only the official client surface", () => {
@@ -2753,7 +2793,8 @@ test("repository docs advertise the housing-official-price skill and public dire
   assert.equal(packageJson.license, "MIT");
   assert.ok(packageJson.files.includes("src"), "package should ship runtime src");
   assert.ok(packageJson.files.includes("README.md"), "package should ship README");
-  assert.match(rootPackageJson.scripts["pack:dry-run"], /--workspace housing-official-price/);
+  assert.equal(rootPackageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.ok(require("./ci-paths").listPublishableWorkspaces().includes("housing-official-price"));
 
   for (const doc of [skill, featureDoc, packageReadme]) {
     assert.match(doc, /realtyprice\.kr/);
@@ -4361,9 +4402,10 @@ test("README skill table includes inline-code skill names for every documented r
 test("removed blue ribbon package is not part of npm workspaces or pack dry run", () => {
   const packageJson = readJson("package.json");
   const packageLock = readJson("package-lock.json");
-  const packScript = packageJson.scripts["pack:dry-run"];
+  const { listPublishableWorkspaces } = require("./ci-paths");
 
-  assert.doesNotMatch(packScript, /workspace blue-ribbon-nearby(?:\s|$)/);
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.ok(!listPublishableWorkspaces().includes("blue-ribbon-nearby"));
   assert.ok(!fs.existsSync(path.join(repoRoot, "packages", "blue-ribbon-nearby", "package.json")));
   assert.ok(!Object.hasOwn(packageLock.packages, "packages/blue-ribbon-nearby"));
   assert.ok(!Object.hasOwn(packageLock.packages, "node_modules/blue-ribbon-nearby"));
