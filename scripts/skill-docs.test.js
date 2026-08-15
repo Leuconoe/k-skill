@@ -227,6 +227,28 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
   }
 });
 
+test("every CLI-managed skill has a feature guide advertised from README", () => {
+  const readme = read("README.md");
+  const aliases = {
+    "k-skill-setup": "docs/setup.md",
+  };
+
+  for (const skillName of cliManagedSkills()) {
+    const alias = aliases[skillName];
+    const relative = alias || path.posix.join("docs", "features", `${skillName}.md`);
+    assert.ok(
+      fs.existsSync(path.join(repoRoot, ...relative.split("/"))),
+      alias
+        ? `${skillName} may omit docs/features only when ${alias} exists`
+        : `expected docs/features/${skillName}.md`,
+    );
+    assert.ok(
+      readme.includes(`](${relative})`),
+      `README should link ${relative} for ${skillName}`,
+    );
+  }
+});
+
 test("CLI-managed skills keep source, stub safety floor, and bundled copies aligned", () => {
   const cliManaged = cliManagedSkills();
 
