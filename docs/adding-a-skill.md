@@ -280,7 +280,7 @@ npm run ci
 - [ ] 프록시 경유라면 `k-skill-proxy/src/server.js`에 route 추가하고 gpu01 production `.env` 및 자동 배포 smoke 구성이 맞는지 확인
 - [ ] 크롤링/검색 스킬이라면 공개 접근 경로, fallback 순서, 차단/로그인/빈 결과 실패 모드 문서화
 - [ ] 시크릿이 있다면 `KSKILL_` 접두사 규칙 준수 및 `docs/setup.md` 업데이트
-- [ ] `docs/features/my-new-skill.md` 작성 (선택, 상세 가이드)
+- [ ] `docs/features/my-new-skill.md` 작성. `k-skill-setup`만 예외로 [공통 설정 가이드](setup.md)를 가리킨다.
 - [ ] 브라우저가 필요한 스킬이라면 돌쇠 CloakBrowser 우선, `k-skill-browser-runtime` semver fallback, typed stop rule, 직접 HTTP 우선, `workspace:` 미사용 확인 ([브라우저 런타임 문서](browser-runtime.md))
 - [ ] 액션 가능한 스킬이라면 돌쇠에서 조회 뒤 실제 액션 경로와 `clarify` 비가역 승인 경계를 문서화
 
