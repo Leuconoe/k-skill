@@ -226,9 +226,9 @@ npx -y @nomadamas/k-skill@0 exec seoul-weather-risk scripts/seoul_weather_risk.p
 
 ## 사용 전 체크리스트
 
-- [ ] `preflight`에서 실행 모드를 확인했다.
-- [ ] `catalog`에서 `registration_ready=true`와 빈 `blockers`를 확인했다.
-- [ ] `describe`에서 제품 컬럼과 `forecast_at` 시간축을 확인했다.
+- [ ] 일반 사용자 조회는 `query --fast` 한 번만 실행했다.
+- [ ] fast path가 실패했거나 게시 계약·준비 상태를 명시적으로 점검할 때만 `preflight`, `catalog`, `describe` 진단을 순서대로 실행했다.
+- [ ] 진단이 필요한 경우 `catalog`에서 `registration_ready=true`와 빈 `blockers`를 확인하고, `describe`에서 제품 컬럼과 `forecast_at` 시간축을 확인했다.
 - [ ] 행정동이 모호하면 `--gu`를 지정했다.
 - [ ] 조회 결과의 `publication_id`, `row_count`, `forecast_at`, `risk_labels`를 확인했다.
 - [ ] 공식 특보가 아닌 예보 기반 참고 정보라는 점을 사용자에게 알렸다.

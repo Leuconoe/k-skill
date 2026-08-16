@@ -16,9 +16,10 @@ from datetime import date as calendar_date
 from datetime import time
 from typing import Any
 
+from requests import RequestException
 from SRT import SRT
 from SRT.constants import API_ENDPOINTS, STATION_CODE
-from SRT.errors import SRTError
+from SRT.errors import SRTError, SRTNetFunnelError
 from SRT.netfunnel import NetFunnelHelper
 
 BOOKING_URL = "https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000"
@@ -158,6 +159,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
+    except (SRTNetFunnelError, RequestException):
+        parser.error(f"SRT timetable lookup unavailable; use the official page: {BOOKING_URL}")
+        return 2
     except (SRTError, ValueError) as exc:
         parser.error(str(exc))
         return 2
