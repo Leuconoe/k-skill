@@ -203,7 +203,7 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
     .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
     .sort();
 
-  assert.equal(skillDirs.length, 121);
+  assert.equal(skillDirs.length, 120);
 
   for (const skillName of skillDirs) {
     const skill = readRaw(path.join(skillName, "SKILL.md"));
@@ -327,7 +327,6 @@ test("actionable skills publish a Dolshoi action path", () => {
     "ktx-booking",
     "lh-notice-search",
     "library-book-search",
-    "lovebug-report",
     "market-kurly-search",
     "myrealtrip-search",
     "naver-ad-performance",
