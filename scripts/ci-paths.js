@@ -25,13 +25,7 @@ function walkFiles(startDir, predicate) {
   const results = [];
 
   function walk(dir) {
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
@@ -106,9 +100,6 @@ function listRootPythonTestModules() {
 function listPythonTestJobs() {
   const jobs = [];
   const rootScripts = path.join(repoRoot, "scripts");
-  const rootTestNames = new Set(
-    fs.readdirSync(rootScripts).filter((name) => /^test_.*\.py$/.test(name)),
-  );
   const rootModules = listRootPythonTestModules();
   if (rootModules.length > 0) {
     jobs.push({
@@ -141,8 +132,7 @@ function listPythonTestJobs() {
     const skillScriptTests = hasTestPy(scriptsDir)
       ? fs.readdirSync(scriptsDir).filter((name) => /^test_.*\.py$/.test(name))
       : [];
-    const uniqueSkillScriptTests = skillScriptTests.filter((name) => !rootTestNames.has(name));
-    if (uniqueSkillScriptTests.length > 0) {
+    if (skillScriptTests.length > 0) {
       jobs.push({
         label: `${rel}/scripts`,
         pythonPath: [repoRoot, scriptsDir],
@@ -178,4 +168,5 @@ module.exports = {
   listSkillDirs,
   repoRoot,
   toPosix,
+  walkFiles,
 };

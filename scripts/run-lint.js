@@ -3,14 +3,21 @@
 
 const path = require("node:path");
 const { listJsSyntaxCheckFiles, listPythonCompileFiles, repoRoot } = require("./ci-paths");
-const { bashCommand, npmCommand, resolvePython, run, runBatched } = require("./ci-run");
+const {
+  bashCommand,
+  npmCommand,
+  resolvePython,
+  run,
+  runBatched,
+  runNodeSyntaxChecks,
+} = require("./ci-run");
 
 const jsFiles = listJsSyntaxCheckFiles();
 if (jsFiles.length === 0) {
   console.error("run-lint: no JavaScript files found");
   process.exit(1);
 }
-run(process.execPath, ["--check", ...jsFiles]);
+runNodeSyntaxChecks(jsFiles);
 
 const pyFiles = listPythonCompileFiles();
 if (pyFiles.length === 0) {

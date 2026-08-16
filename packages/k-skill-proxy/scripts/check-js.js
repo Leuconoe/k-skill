@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 "use strict";
 
-const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
+const { runNodeSyntaxChecks } = require("../../../scripts/ci-run");
 
 const root = path.join(__dirname, "..");
 
@@ -32,13 +32,4 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const result = spawnSync(process.execPath, ["--check", ...files], {
-  cwd: root,
-  stdio: "inherit",
-  windowsHide: true,
-});
-if (result.error) {
-  console.error(result.error);
-  process.exit(1);
-}
-process.exit(result.status ?? 1);
+runNodeSyntaxChecks(files, { cwd: root });

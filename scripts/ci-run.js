@@ -80,11 +80,18 @@ function runBatched(command, prefixArgs, files, options = {}) {
   }
 }
 
+function runNodeSyntaxChecks(files, options = {}) {
+  for (const file of files) {
+    run(process.execPath, ["--check", file], options);
+  }
+}
+
 module.exports = {
   bashCommand,
   npmCommand,
   resolvePython,
   run,
   runBatched,
+  runNodeSyntaxChecks,
   venvPython,
 };

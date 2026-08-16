@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const { resolvePython, venvPython } = require("./ci-run");
 
 const repoRoot = path.join(__dirname, "..");
 
@@ -221,9 +222,46 @@ test("root CI glob runners pick up helper tests without a package.json hand list
   assert.match(jobLabels, /gov-overseas-trip-report\/tests/);
   assert.match(jobLabels, /popbill\/tests\/run_tests\.py/);
   assert.match(jobLabels, /jobkorea-talent-search\/scripts/);
-  assert.doesNotMatch(jobLabels, /myrealtrip-search\/scripts/);
+  assert.match(jobLabels, /myrealtrip-search\/scripts/);
   assert.doesNotMatch(jobLabels, /k-skill-cli\/skills/);
   assert.doesNotMatch(jobLabels, /test_store_longevity_mirror/);
+  assert.equal(
+    packageJson.scripts["test:store-longevity-mirror"],
+    "node scripts/run-store-longevity-mirror-test.js",
+  );
+});
+
+test("CI path discovery surfaces directory read failures", () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "k-skill-ci-paths-"));
+  const filePath = path.join(fixtureRoot, "not-a-directory");
+  fs.writeFileSync(filePath, "fixture");
+  const { walkFiles } = require("./ci-paths");
+
+  assert.throws(
+    () => walkFiles(filePath, () => true),
+    (error) => error?.code === "ENOTDIR",
+  );
+});
+
+test("Node syntax checks reject an invalid file after a valid file", () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "k-skill-node-check-"));
+  const validPath = path.join(fixtureRoot, "valid.js");
+  const invalidPath = path.join(fixtureRoot, "invalid.js");
+  fs.writeFileSync(validPath, "\"use strict\";\n");
+  fs.writeFileSync(invalidPath, "const broken = ;\n");
+
+  const modulePath = JSON.stringify(path.join(repoRoot, "scripts", "ci-run.js"));
+  const result = childProcess.spawnSync(
+    process.execPath,
+    [
+      "-e",
+      `require(${modulePath}).runNodeSyntaxChecks(${JSON.stringify([validPath, invalidPath])})`,
+    ],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /SyntaxError/);
 });
 
 // Skills that have migrated to the @nomadamas/k-skill CLI adapter keep their
@@ -984,7 +1022,7 @@ test("srt-booking docs enforce live read-only lookup", () => {
 });
 
 test("ktx-booking helper python regression tests pass", () => {
-  const python = path.join(repoRoot, ".cache", "python-test-venv", "bin", "python");
+  const python = venvPython();
   const result = childProcess.spawnSync(
     python,
     ["scripts/test_ktx_booking.py"],
@@ -2091,7 +2129,7 @@ test("fine-dust-location skill documents the official two-api flow and fallback 
 
 test("fine-dust helper python regression tests pass", () => {
   const result = childProcess.spawnSync(
-    "python3",
+    resolvePython(),
     ["-m", "unittest", "discover", "-s", "scripts", "-p", "test_fine_dust.py"],
     { cwd: repoRoot, encoding: "utf8" },
   );
@@ -2332,7 +2370,7 @@ test("joseon-sillok-search install payload includes the documented helper comman
 
     assert.ok(fs.existsSync(bundledHelperPath), "expected joseon-sillok-search/scripts/sillok_search.py to exist");
 
-    const helpText = childProcess.execFileSync("python3", ["scripts/sillok_search.py", "--help"], {
+    const helpText = childProcess.execFileSync(resolvePython(), ["scripts/sillok_search.py", "--help"], {
       cwd: installedSkillPath,
       encoding: "utf8",
     });
@@ -2458,7 +2496,7 @@ test("korean-patent-search install payload includes the documented helper comman
 
     assert.ok(fs.existsSync(bundledHelperPath), "expected korean-patent-search/scripts/patent_search.py to exist");
 
-    const helpText = childProcess.execFileSync("python3", ["scripts/patent_search.py", "--help"], {
+    const helpText = childProcess.execFileSync(resolvePython(), ["scripts/patent_search.py", "--help"], {
       cwd: installedSkillPath,
       encoding: "utf8",
     });
@@ -2623,7 +2661,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
       "utf8",
     );
 
-    const helpText = childProcess.execFileSync("python3", [helperPath, "--help"], {
+    const helpText = childProcess.execFileSync(resolvePython(), [helperPath, "--help"], {
       cwd: repoRoot,
       encoding: "utf8",
     });
@@ -2632,7 +2670,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
     assert.match(helpText, /\beligibility\b/);
     assert.match(helpText, /\breport\b/);
 
-    const plannerHelpText = childProcess.execFileSync("python3", [plannerPath, "--help"], {
+    const plannerHelpText = childProcess.execFileSync(resolvePython(), [plannerPath, "--help"], {
       cwd: repoRoot,
       encoding: "utf8",
     });
@@ -2641,7 +2679,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const filtered = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [
           helperPath,
           "filter",
@@ -2673,7 +2711,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
     assert.equal(filtered.items[0]._match.deadline.days_until_end, 2);
 
     const report = childProcess.execFileSync(
-      "python3",
+      resolvePython(),
       [
         helperPath,
         "report",
@@ -2693,7 +2731,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const plannerPayload = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [
           plannerPath,
           "--school-name",
@@ -2712,7 +2750,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const nationwidePayload = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [plannerPath, "--nationwide", "--year", "2026"],
         { cwd: repoRoot, encoding: "utf8" },
       ),
@@ -2722,7 +2760,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const eligibility = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [
           helperPath,
           "eligibility",

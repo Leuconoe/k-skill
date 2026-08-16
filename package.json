@@ -14,7 +14,7 @@
     "lint": "node scripts/run-lint.js",
     "typecheck": "tsc --noEmit",
     "prepare:python-test-env": "node scripts/prepare-python-test-env.js",
-    "test:store-longevity-mirror": "python3 -m py_compile scripts/store_longevity_source.py scripts/store_longevity_mirror.py scripts/test_store_longevity_mirror.py store-longevity-radar/scripts/store_longevity_download.py packages/k-skill-cli/skills/store-longevity-radar/scripts/store_longevity_download.py && PYTHONPATH=. python3 -m unittest scripts.test_store_longevity_mirror",
+    "test:store-longevity-mirror": "node scripts/run-store-longevity-mirror-test.js",
     "test": "node scripts/run-tests.js",
     "pack:dry-run": "node scripts/pack-dry-run.js",
     "ci": "npm run lint && npm run typecheck && npm run test && npm run test:store-longevity-mirror && npm run pack:dry-run",
