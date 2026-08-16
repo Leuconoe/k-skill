@@ -5,6 +5,7 @@ import subprocess
 import sys
 import unittest
 from contextlib import redirect_stdout
+from datetime import time
 from pathlib import Path
 from unittest import mock
 
@@ -47,6 +48,74 @@ def workbook_bytes() -> bytes:
     sheet.append(["75", "KTX-산천", "06:03", "07:01", "08:49"])
     sheet.append(["7", "KTX", "06:33", "07:34", "09:22"])
     sheet.append(["1201", "무궁화호", "07:00", "09:00", "12:00"])
+    output = io.BytesIO()
+    workbook.save(output)
+    return output.getvalue()
+
+
+def realistic_workbook_bytes() -> bytes:
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append([
+        "열차번호",
+        "편성",
+        "서울",
+        "대전",
+        "부산",
+        "비고",
+        None,
+        "열차번호",
+        "편성",
+        "부산",
+        "대전",
+        "서울",
+        "비고",
+    ])
+    sheet.append([
+        "1",
+        "KTX",
+        "05:13",
+        "06:05",
+        "07:50",
+        "매일",
+        None,
+        "2",
+        "KTX",
+        "08:00",
+        "09:00",
+        "10:30",
+        "매일",
+    ])
+    sheet.append([
+        "117",
+        "KTX",
+        "22:58",
+        "23:40",
+        time(0, 0),
+        "매일",
+        None,
+        "118",
+        "KTX",
+        "18:00",
+        "19:00",
+        "20:30",
+        "매일",
+    ])
+    sheet.append([
+        "281",
+        "KTX",
+        "06:00",
+        "07:00",
+        "08:30",
+        "금토일",
+        None,
+        "282",
+        "KTX",
+        "12:00",
+        "13:00",
+        "14:30",
+        "월화수목",
+    ])
     output = io.BytesIO()
     workbook.save(output)
     return output.getvalue()
@@ -100,6 +169,64 @@ class KtxOfficialTimetableTests(unittest.TestCase):
         self.assertEqual(result["trains"], [])
         self.assertEqual(result["count"], 0)
 
+    def test_reverse_direction_uses_only_matching_table_section(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with mock.patch.object(ktx_booking, "download_bytes", return_value=realistic_workbook_bytes()):
+                result = ktx_booking.search_public_timetable(
+                    dep="부산",
+                    arr="서울",
+                    date="20260819",
+                    earliest="0000",
+                    latest="2359",
+                    limit=20,
+                )
+
+        self.assertEqual([train["train_no"] for train in result["trains"]], ["2", "282", "118"])
+        self.assertTrue(all(train["dep_time"] < train["arr_time"] for train in result["trains"]))
+
+    def test_no_stop_time_cell_is_not_reported_as_midnight_service(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with mock.patch.object(ktx_booking, "download_bytes", return_value=realistic_workbook_bytes()):
+                result = ktx_booking.search_public_timetable(
+                    dep="부산",
+                    arr="서울",
+                    date="20260819",
+                    earliest="0000",
+                    latest="2359",
+                    limit=20,
+                )
+
+        self.assertNotIn("117", [train["train_no"] for train in result["trains"]])
+
+    def test_requested_date_filters_weekday_specific_service(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with mock.patch.object(ktx_booking, "download_bytes", return_value=realistic_workbook_bytes()):
+                result = ktx_booking.search_public_timetable(
+                    dep="서울",
+                    arr="부산",
+                    date="20260819",
+                    earliest="0000",
+                    latest="2359",
+                    limit=20,
+                )
+
+        train_numbers = [train["train_no"] for train in result["trains"]]
+        self.assertNotIn("281", train_numbers)
+        self.assertIn("1", train_numbers)
+
+    def test_unknown_station_is_reported_as_invalid_input(self) -> None:
+        with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
+            with mock.patch.object(ktx_booking, "download_bytes", return_value=realistic_workbook_bytes()):
+                with self.assertRaisesRegex(RuntimeError, "station"):
+                    ktx_booking.search_public_timetable(
+                        dep="없는역",
+                        arr="부산",
+                        date="20260819",
+                        earliest="0000",
+                        latest="2359",
+                        limit=20,
+                    )
+
     def test_cli_source_prints_official_attachment(self) -> None:
         output = io.StringIO()
         with mock.patch.object(ktx_booking, "fetch_json", return_value=BOARD_PAYLOAD):
@@ -146,6 +273,9 @@ class KtxOfficialTimetableTests(unittest.TestCase):
             / "ktx_booking.py"
         )
         self.assertEqual(SCRIPT_PATH.read_bytes(), bundled.read_bytes())
+        parser_source = SCRIPT_PATH.with_name("ktx_timetable.py")
+        parser_bundled = bundled.with_name("ktx_timetable.py")
+        self.assertEqual(parser_source.read_bytes(), parser_bundled.read_bytes())
 
     def test_cli_rejects_removed_reserve_command(self) -> None:
         completed = subprocess.run(

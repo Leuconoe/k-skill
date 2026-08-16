@@ -8,18 +8,19 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
-from datetime import datetime
-from io import BytesIO
 import json
 import re
 import sys
-from typing import Any, Iterable
+from dataclasses import asdict, dataclass
+from datetime import date as calendar_date
+from datetime import time
+from io import BytesIO
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from ktx_timetable import parse_timetable_rows
 from openpyxl import load_workbook
-
 
 BOARD_URL = (
     "https://www.korail.com/com/userBoard.do"
@@ -32,8 +33,6 @@ KTX_TITLE = re.compile(
     r"(?:KTX|경부선|호남선|전라선|경전선|동해선|강릉선|중앙선|중부내륙선).*(?:시간표|시각표)"
 )
 EFFECTIVE_DATE = re.compile(r"(20\d{2})[.\s년]+(\d{1,2})[.\s월]+(\d{1,2})")
-TIME_VALUE = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
-TRAIN_NUMBER = re.compile(r"^\d{1,4}$")
 
 
 @dataclass(frozen=True)
@@ -112,82 +111,6 @@ def load_workbook_bytes(content: bytes):
         raise RuntimeError(f"Korail timetable workbook could not be parsed: {exc}") from exc
 
 
-def normalize_station(value: object) -> str:
-    return re.sub(r"\s+", "", str(value or "")).replace("역", "")
-
-
-def normalize_time(value: object) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, datetime):
-        return value.strftime("%H:%M")
-    if hasattr(value, "strftime"):
-        try:
-            return value.strftime("%H:%M")
-        except (TypeError, ValueError):
-            pass
-    text = str(value).strip()
-    if TIME_VALUE.fullmatch(text):
-        return text
-    if re.fullmatch(r"\d{3,4}", text):
-        return f"{int(text) // 100:02d}:{int(text) % 100:02d}"
-    return None
-
-
-def parse_timetable_rows(
-    rows: Iterable[Iterable[object]],
-    *,
-    dep: str,
-    arr: str,
-    earliest: str,
-    latest: str,
-) -> list[dict[str, str]]:
-    dep_name = normalize_station(dep)
-    arr_name = normalize_station(arr)
-    header: list[str] | None = None
-    dep_index = -1
-    arr_index = -1
-    train_index = -1
-    type_index = -1
-    results: list[dict[str, str]] = []
-
-    for raw_row in rows:
-        row = list(raw_row)
-        normalized = [normalize_station(value) for value in row]
-        if dep_name in normalized and arr_name in normalized:
-            header = normalized
-            dep_index = normalized.index(dep_name)
-            arr_index = normalized.index(arr_name)
-            train_index = normalized.index("열차번호") if "열차번호" in normalized else -1
-            type_index = normalized.index("편성") if "편성" in normalized else -1
-            continue
-        if header is None or min(dep_index, arr_index, train_index) < 0:
-            continue
-        if max(dep_index, arr_index, train_index, type_index) >= len(row):
-            continue
-        train_no = str(row[train_index] or "").strip()
-        if not TRAIN_NUMBER.fullmatch(train_no):
-            continue
-        train_type = str(row[type_index] or "").strip().upper() if type_index >= 0 else "KTX"
-        if "KTX" not in train_type:
-            continue
-        dep_time = normalize_time(row[dep_index])
-        arr_time = normalize_time(row[arr_index])
-        if dep_time is None or arr_time is None or not earliest <= dep_time <= latest:
-            continue
-        results.append(
-            {
-                "train_no": train_no,
-                "train_type": train_type,
-                "dep": dep,
-                "arr": arr,
-                "dep_time": dep_time,
-                "arr_time": arr_time,
-            }
-        )
-    return results
-
-
 def search_public_timetable(
     *,
     dep: str,
@@ -204,18 +127,23 @@ def search_public_timetable(
         raise ValueError("--time must not be later than --time-limit")
     source = choose_timetable_for_date(fetch_json(BOARD_URL), date)
     workbook = load_workbook_bytes(download_bytes(source.download_url))
+    requested_date = calendar_date(int(date[:4]), int(date[4:6]), int(date[6:8]))
     trains: list[dict[str, str]] = []
+    route_found = False
     for sheet_name in workbook.sheetnames:
         worksheet = workbook[sheet_name]
-        trains.extend(
-            parse_timetable_rows(
-                worksheet.iter_rows(values_only=True),
-                dep=dep,
-                arr=arr,
-                earliest=start,
-                latest=end,
-            )
+        sheet_trains, sheet_route_found = parse_timetable_rows(
+            worksheet.iter_rows(values_only=True),
+            dep=dep,
+            arr=arr,
+            requested_date=requested_date,
+            earliest=start,
+            latest=end,
         )
+        trains.extend(sheet_trains)
+        route_found = route_found or sheet_route_found
+    if not route_found:
+        raise RuntimeError(f"Korail timetable station pair not found: {dep} -> {arr}")
     unique = {(train["train_no"], train["dep_time"], train["arr_time"]): train for train in trains}
     ordered = sorted(unique.values(), key=lambda train: (train["dep_time"], train["train_no"]))[:limit]
     return {
@@ -232,7 +160,7 @@ def validate_date(value: str) -> str:
     if not re.fullmatch(r"\d{8}", value):
         raise ValueError("date must use YYYYMMDD")
     try:
-        datetime.strptime(value, "%Y%m%d")
+        calendar_date(int(value[:4]), int(value[4:6]), int(value[6:8]))
     except ValueError as exc:
         raise ValueError("date must use a valid YYYYMMDD value") from exc
     return value
@@ -242,7 +170,7 @@ def validate_time(value: str) -> str:
     if not re.fullmatch(r"\d{4}", value):
         raise ValueError("time must use HHMM")
     try:
-        datetime.strptime(value, "%H%M")
+        time.fromisoformat(f"{value[:2]}:{value[2:]}")
     except ValueError as exc:
         raise ValueError("time must use a valid HHMM value") from exc
     return f"{value[:2]}:{value[2:]}"

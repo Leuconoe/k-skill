@@ -11,6 +11,10 @@
       "to": "scripts/ktx_booking.py"
     },
     {
+      "from": "scripts/ktx_timetable.py",
+      "to": "scripts/ktx_timetable.py"
+    },
+    {
       "from": "scripts/ktx_booking.py.lock",
       "to": "scripts/ktx_booking.py.lock"
     }
