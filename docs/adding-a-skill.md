@@ -257,7 +257,7 @@ npm run ci
 3. 그 외 환경은 이미 주입된 환경변수 → 에이전트 vault → 개인 dotenv 순서
 4. 아무것도 없으면 호스트가 제공하는 가장 안전한 입력 방식으로 받고 개인 vault/dotenv에 저장
 
-시크릿 변수 이름 규칙: `KSKILL_<서비스명>_<항목>` (예: `KSKILL_SRT_ID`)
+시크릿 변수 이름 규칙: `KSKILL_<서비스명>_<항목>` (예: `KSKILL_FORESTTRIP_ID`)
 
 절대 하지 말 것:
 - 시크릿을 저장소에 커밋

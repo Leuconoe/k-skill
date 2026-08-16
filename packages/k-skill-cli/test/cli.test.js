@@ -37,6 +37,13 @@ test("renderTemplate emits only always + matching mode sections", () => {
   assert.equal(renderTemplate(raw, "generic"), "- both\n- generic only");
 });
 
+test("renderTemplate treats CRLF mode markers like LF mode markers", () => {
+  const raw = "<!-- mode:always -->\r\n- both\r\n<!-- mode:dolshoi -->\r\n- dolshoi only\r\n<!-- mode:generic -->\r\n- generic only\r\n";
+
+  assert.equal(renderTemplate(raw, "dolshoi"), "- both\n- dolshoi only");
+  assert.equal(renderTemplate(raw, "generic"), "- both\n- generic only");
+});
+
 test("every bundled skill declares only known profiles and assembles in both modes", () => {
   const skills = listSkills();
 
@@ -69,8 +76,8 @@ function runtimeRulesSection(output) {
 }
 
 test("dolshoi and generic runtime rules differ for vault/browser skills", () => {
-  const generic = runtimeRulesSection(assemble("srt-booking", GENERIC));
-  const dolshoi = runtimeRulesSection(assemble("srt-booking", DOLSHOI));
+  const generic = runtimeRulesSection(assemble("foresttrip-vacancy", GENERIC));
+  const dolshoi = runtimeRulesSection(assemble("foresttrip-vacancy", DOLSHOI));
 
   assert.match(dolshoi, /request_vault_credential/);
   assert.doesNotMatch(generic, /request_vault_credential/);
@@ -90,11 +97,15 @@ test("legal skill advances official auth but never bypasses controls", () => {
 });
 
 test("bundledFiles lists helper files for directory-package skills", () => {
-  const files = bundledFiles("kosis-stats");
+  const files = bundledFiles("kosis-stats").map((file) => file.split(path.sep).join("/"));
 
   assert.ok(files.some((f) => f.endsWith("scripts/run_kosis_stats.py")));
   assert.ok(files.some((f) => f.endsWith("references/kosis-openapi-guide.md")));
-  assert.ok(bundledFiles("srt-booking").some((f) => f.endsWith("scripts/srt_booking.py")));
+  assert.ok(
+    bundledFiles("srt-booking")
+      .map((file) => file.split(path.sep).join("/"))
+      .some((f) => f.endsWith("scripts/srt_booking.py")),
+  );
 });
 
 test("all bundled assets are exposed through exec/read/path instructions", () => {
@@ -172,6 +183,16 @@ test("runner selection honors shebangs and executes bundled Node helpers", () =>
   assert.equal(JSON.parse(result.stdout).counts.characters, 3);
 });
 
+test("runner selection lets KSKILL_PYTHON override Python shebangs", () => {
+  const pythonScript = resolveBundledAsset("seoul-weather-risk", "scripts/seoul_weather_risk.py");
+  const defaultRunner = resolveRunner(pythonScript);
+  const runner = resolveRunner(pythonScript, { KSKILL_PYTHON: "python-custom" });
+
+  assert.equal(defaultRunner.command, process.platform === "win32" ? "python" : "python3");
+  assert.equal(runner.command, "python-custom");
+  assert.deepEqual(runner.args, [pythonScript]);
+});
+
 test("assembled instructions match committed snapshots", () => {
   const snapshotDir = path.join(__dirname, "snapshots");
   const update = process.env.UPDATE_SNAPSHOTS === "1";
@@ -190,7 +211,7 @@ test("assembled instructions match committed snapshots", () => {
       assert.ok(fs.existsSync(snapshotPath), `missing snapshot ${skillName}.${runtime.mode}.md — run UPDATE_SNAPSHOTS=1 npm test`);
       assert.equal(
         output,
-        fs.readFileSync(snapshotPath, "utf8"),
+        fs.readFileSync(snapshotPath, "utf8").replace(/\r\n?/g, "\n"),
         `${skillName} ${runtime.mode} assembly drifted from its snapshot — review the diff, then run UPDATE_SNAPSHOTS=1 npm test`,
       );
     }

@@ -1,20 +1,18 @@
 {
   "name": "srt-booking",
-  "description": "Search, reserve, inspect, and cancel SRT tickets in Korea with the SRTrain library. Use when the user asks for SRT seat availability, booking, canceling, or sold-out retry plans. 돌쇠에서는 공식 표면을 통한 후속 액션까지 진행한다.",
+  "description": "Read-only live SRT timetable and seat-availability lookup through the SRTrain search path. No login, reservation, payment, cancellation, exact seat selection, or automated monitoring.",
   "profiles": [
-    "vault",
-    "browser",
-    "action:booking"
+    "lookup"
   ],
-  "frontmatter": "name: srt-booking\ndescription: Search, reserve, inspect, and cancel SRT tickets in Korea with the SRTrain library. Use when the user asks for SRT seat availability, booking, canceling, or sold-out retry plans. 돌쇠에서는 공식 표면을 통한 후속 액션까지 진행한다.\nlicense: MIT\nmetadata:\n  category: travel\n  locale: ko-KR\n  phase: v1",
+  "frontmatter": "name: srt-booking\ndescription: Read-only live SRT timetable and seat-availability lookup through the SRTrain search path. No login, reservation, payment, cancellation, exact seat selection, or automated monitoring.\nlicense: MIT\nmetadata:\n  category: travel\n  locale: ko-KR\n  phase: v1",
   "bundle": [
     {
       "from": "scripts/srt_booking.py",
       "to": "scripts/srt_booking.py"
     },
     {
-      "from": "scripts/srt_seats.py",
-      "to": "scripts/srt_seats.py"
+      "from": "scripts/srt_booking.py.lock",
+      "to": "scripts/srt_booking.py.lock"
     }
   ]
 }

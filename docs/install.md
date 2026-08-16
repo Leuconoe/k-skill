@@ -5,9 +5,10 @@
 권장 순서는 아래와 같다.
 
 1. Node.js 18 이상과 `npx`가 사용 가능한지 확인한다.
-2. `k-skill` 전체 스킬을 먼저 설치한다.
-3. 설치가 끝나면 `k-skill-setup` 스킬을 사용해 공통 설정을 마친다.
-4. 그 다음 필요한 기능 스킬을 호출한다.
+2. KTX·SRT 스킬을 사용할 경우 Python 3.11 이상과 `uv`가 사용 가능한지 확인한다.
+3. `k-skill` 전체 스킬을 먼저 설치한다.
+4. 설치가 끝나면 `k-skill-setup` 스킬을 사용해 공통 설정을 마친다.
+5. 그 다음 필요한 기능 스킬을 호출한다.
 
 인증이 필요한 기능만 따로 설치 흐름을 분기하지 않는다. 일단 전체 스킬을 설치해 두고, 실제 시크릿/환경 준비는 `k-skill-setup` 에 맡기는 것을 기본으로 한다.
 
@@ -416,8 +417,10 @@ export TOSSINVEST_ACCOUNT=...          # 선택, 계좌·자산·주문조회 �
 ### Python 패키지
 
 ```bash
-python3 -m pip install SRTrain korail2 pycryptodome
+uv --version
 ```
+
+KTX·SRT 스킬은 Python 3.11 이상과 [`uv`](https://docs.astral.sh/uv/getting-started/installation/)가 필요합니다. `uv`가 KTX 공식 XLSX parser의 `openpyxl`과 SRT 익명 search client인 `SRTrain`을 자동 설치하며 철도 회원 ID·비밀번호는 필요하지 않습니다.
 
 조선왕조실록 검색 helper는 설치된 `joseon-sillok-search` skill 안의 `scripts/sillok_search.py` 를 그대로 쓰면 되고, 별도 외부 패키지 없이 표준 라이브러리 `python3` 만 있으면 된다.
 

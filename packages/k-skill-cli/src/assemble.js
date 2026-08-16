@@ -197,7 +197,7 @@ function rewriteBundledAssetInstructions(raw, skillName) {
 // and `<!-- mode:generic -->` markers. Only the sections matching the detected
 // mode (plus always-sections) are emitted.
 function renderTemplate(raw, mode) {
-  const lines = raw.split("\n");
+  const lines = raw.replace(/\r\n?/g, "\n").split("\n");
   const output = [];
   let current = "always";
 
