@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const { resolvePython, venvPython } = require("./ci-run");
 
 const repoRoot = path.join(__dirname, "..");
 
@@ -178,8 +179,89 @@ function assertKakaoBarNearbySadangSmokeSnapshot(smoke, label) {
 
 test("root npm test script includes the skill docs regression suite", () => {
   const packageJson = JSON.parse(read("package.json"));
+  const { listNodeTestFiles, toPosix } = require("./ci-paths");
 
-  assert.match(packageJson.scripts.test, /node --test scripts\/skill-docs\.test\.js/);
+  assert.equal(packageJson.scripts.test, "node scripts/run-tests.js");
+  assert.ok(
+    listNodeTestFiles().some((file) => toPosix(file) === "scripts/skill-docs.test.js"),
+    "run-tests.js should glob scripts/skill-docs.test.js",
+  );
+});
+
+test("root CI glob runners pick up helper tests without a package.json hand list", () => {
+  const packageJson = readJson("package.json");
+  const {
+    listJsSyntaxCheckFiles,
+    listPythonCompileFiles,
+    listPythonTestJobs,
+    listRootPythonTestModules,
+    toPosix,
+  } = require("./ci-paths");
+
+  assert.equal(packageJson.scripts.lint, "node scripts/run-lint.js");
+  assert.equal(packageJson.scripts.test, "node scripts/run-tests.js");
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.equal(readJson(path.join("packages", "k-skill-proxy", "package.json")).scripts.lint, "node scripts/check-js.js");
+
+  const jsFiles = listJsSyntaxCheckFiles().map(toPosix);
+  assert.ok(jsFiles.includes("scripts/ci-paths.js"));
+  assert.ok(jsFiles.includes("lck-analytics/scripts/sync-oracle.js"));
+
+  const pyFiles = listPythonCompileFiles().map(toPosix);
+  assert.ok(pyFiles.includes("scripts/seoul_density.py"));
+  assert.ok(pyFiles.includes("gov-overseas-trip-report/scripts/gov_overseas_trip_report.py"));
+  assert.ok(pyFiles.includes("popbill/scripts/popbill_cli.py"));
+  assert.ok(!pyFiles.some((file) => file.startsWith("packages/k-skill-cli/skills/")));
+
+  const rootModules = listRootPythonTestModules();
+  assert.ok(rootModules.includes("scripts.test_seoul_density"));
+  assert.ok(rootModules.includes("scripts.test_myrealtrip_mcp"));
+  assert.ok(!rootModules.includes("scripts.test_store_longevity_mirror"));
+
+  const jobLabels = listPythonTestJobs().map((job) => job.label).join("\n");
+  assert.match(jobLabels, /gov-overseas-trip-report\/tests/);
+  assert.match(jobLabels, /popbill\/tests\/run_tests\.py/);
+  assert.match(jobLabels, /jobkorea-talent-search\/scripts/);
+  assert.match(jobLabels, /myrealtrip-search\/scripts/);
+  assert.doesNotMatch(jobLabels, /k-skill-cli\/skills/);
+  assert.doesNotMatch(jobLabels, /test_store_longevity_mirror/);
+  assert.equal(
+    packageJson.scripts["test:store-longevity-mirror"],
+    "node scripts/run-store-longevity-mirror-test.js",
+  );
+});
+
+test("CI path discovery surfaces directory read failures", () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "k-skill-ci-paths-"));
+  const filePath = path.join(fixtureRoot, "not-a-directory");
+  fs.writeFileSync(filePath, "fixture");
+  const { walkFiles } = require("./ci-paths");
+
+  assert.throws(
+    () => walkFiles(filePath, () => true),
+    (error) => error?.code === "ENOTDIR",
+  );
+});
+
+test("Node syntax checks reject an invalid file after a valid file", () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "k-skill-node-check-"));
+  const validPath = path.join(fixtureRoot, "valid.js");
+  const invalidPath = path.join(fixtureRoot, "invalid.js");
+  fs.writeFileSync(validPath, "\"use strict\";\n");
+  fs.writeFileSync(invalidPath, "const broken = ;\n");
+
+  const modulePath = JSON.stringify(path.join(repoRoot, "scripts", "ci-run.js"));
+  const result = childProcess.spawnSync(
+    process.execPath,
+    [
+      "-e",
+      `require(${modulePath}).runNodeSyntaxChecks(${JSON.stringify([validPath, invalidPath])})`,
+    ],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /SyntaxError/);
 });
 
 // Skills that have migrated to the @nomadamas/k-skill CLI adapter keep their
@@ -457,6 +539,7 @@ test("repository publishes Korean contribution guidance for external contributor
   assert.match(contributing, /유료 API/);
   assert.match(contributing, /`k-skill-proxy`를 타지 않도록 설계/);
   assert.match(contributing, /릴리스나 패키징 관련 변경은 `npm run ci`/);
+  assert.match(contributing, /scripts\/run-\*\.js/);
   assert.match(contributing, /`~\/\.claude\/skills\/<skill-name>`/);
   assert.match(contributing, /`~\/\.agents\/skills\/<skill-name>`/);
   assert.match(contributing, /gpu01/);
@@ -1012,7 +1095,7 @@ test("srt-booking docs enforce live read-only lookup", () => {
 });
 
 test("ktx-booking helper python regression tests pass", () => {
-  const python = path.join(repoRoot, ".cache", "python-test-venv", "bin", "python");
+  const python = venvPython();
   const result = childProcess.spawnSync(
     python,
     ["scripts/test_ktx_booking.py"],
@@ -1780,20 +1863,13 @@ test("ohou-today-deal docs lock the public Next data read-only workflow", () => 
 
 test("root pack:dry-run script covers all publishable workspaces", () => {
   const packageJson = readJson("package.json");
-  const packScript = packageJson.scripts["pack:dry-run"];
-  const publishableWorkspaces = fs
-    .readdirSync(path.join(repoRoot, "packages"), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join("packages", entry.name, "package.json"))
-    .filter((packagePath) => fs.existsSync(path.join(repoRoot, packagePath)))
-    .map((packagePath) => readJson(packagePath))
-    .filter((workspacePackage) => workspacePackage.private !== true)
-    .map((workspacePackage) => workspacePackage.name);
+  const { listPublishableWorkspaces } = require("./ci-paths");
+  const publishableWorkspaces = listPublishableWorkspaces();
 
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
   assert.ok(publishableWorkspaces.includes("donation-place-search"));
-  for (const workspaceName of publishableWorkspaces) {
-    assert.match(packScript, new RegExp(`workspace ${escapeRegex(workspaceName)}(?:\\s|$)`));
-  }
+  assert.ok(publishableWorkspaces.includes("@nomadamas/k-skill"));
+  assert.ok(!publishableWorkspaces.includes("k-skill-proxy"));
 });
 
 test("README main capability table advertises the donation-place-search skill", () => {
@@ -2126,7 +2202,7 @@ test("fine-dust-location skill documents the official two-api flow and fallback 
 
 test("fine-dust helper python regression tests pass", () => {
   const result = childProcess.spawnSync(
-    "python3",
+    resolvePython(),
     ["-m", "unittest", "discover", "-s", "scripts", "-p", "test_fine_dust.py"],
     { cwd: repoRoot, encoding: "utf8" },
   );
@@ -2200,8 +2276,10 @@ test("toss-securities package metadata excludes the retired fallback", () => {
 
 test("pack:dry-run includes the toss-securities workspace", () => {
   const packageJson = JSON.parse(read("package.json"));
+  const { listPublishableWorkspaces } = require("./ci-paths");
 
-  assert.match(packageJson.scripts["pack:dry-run"], /workspace toss-securities/);
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.ok(listPublishableWorkspaces().includes("toss-securities"));
 });
 
 test("toss-securities pack dry-run ships only the official client surface", () => {
@@ -2365,7 +2443,7 @@ test("joseon-sillok-search install payload includes the documented helper comman
 
     assert.ok(fs.existsSync(bundledHelperPath), "expected joseon-sillok-search/scripts/sillok_search.py to exist");
 
-    const helpText = childProcess.execFileSync("python3", ["scripts/sillok_search.py", "--help"], {
+    const helpText = childProcess.execFileSync(resolvePython(), ["scripts/sillok_search.py", "--help"], {
       cwd: installedSkillPath,
       encoding: "utf8",
     });
@@ -2491,7 +2569,7 @@ test("korean-patent-search install payload includes the documented helper comman
 
     assert.ok(fs.existsSync(bundledHelperPath), "expected korean-patent-search/scripts/patent_search.py to exist");
 
-    const helpText = childProcess.execFileSync("python3", ["scripts/patent_search.py", "--help"], {
+    const helpText = childProcess.execFileSync(resolvePython(), ["scripts/patent_search.py", "--help"], {
       cwd: installedSkillPath,
       encoding: "utf8",
     });
@@ -2656,7 +2734,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
       "utf8",
     );
 
-    const helpText = childProcess.execFileSync("python3", [helperPath, "--help"], {
+    const helpText = childProcess.execFileSync(resolvePython(), [helperPath, "--help"], {
       cwd: repoRoot,
       encoding: "utf8",
     });
@@ -2665,7 +2743,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
     assert.match(helpText, /\beligibility\b/);
     assert.match(helpText, /\breport\b/);
 
-    const plannerHelpText = childProcess.execFileSync("python3", [plannerPath, "--help"], {
+    const plannerHelpText = childProcess.execFileSync(resolvePython(), [plannerPath, "--help"], {
       cwd: repoRoot,
       encoding: "utf8",
     });
@@ -2674,7 +2752,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const filtered = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [
           helperPath,
           "filter",
@@ -2706,7 +2784,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
     assert.equal(filtered.items[0]._match.deadline.days_until_end, 2);
 
     const report = childProcess.execFileSync(
-      "python3",
+      resolvePython(),
       [
         helperPath,
         "report",
@@ -2726,7 +2804,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const plannerPayload = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [
           plannerPath,
           "--school-name",
@@ -2745,7 +2823,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const nationwidePayload = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [plannerPath, "--nationwide", "--year", "2026"],
         { cwd: repoRoot, encoding: "utf8" },
       ),
@@ -2755,7 +2833,7 @@ test("korean-scholarship-search helper filters normalized records, renders repor
 
     const eligibility = JSON.parse(
       childProcess.execFileSync(
-        "python3",
+        resolvePython(),
         [
           helperPath,
           "eligibility",
@@ -2826,7 +2904,8 @@ test("repository docs advertise the housing-official-price skill and public dire
   assert.equal(packageJson.license, "MIT");
   assert.ok(packageJson.files.includes("src"), "package should ship runtime src");
   assert.ok(packageJson.files.includes("README.md"), "package should ship README");
-  assert.match(rootPackageJson.scripts["pack:dry-run"], /--workspace housing-official-price/);
+  assert.equal(rootPackageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.ok(require("./ci-paths").listPublishableWorkspaces().includes("housing-official-price"));
 
   for (const doc of [skill, featureDoc, packageReadme]) {
     assert.match(doc, /realtyprice\.kr/);
@@ -4434,9 +4513,10 @@ test("README skill table includes inline-code skill names for every documented r
 test("removed blue ribbon package is not part of npm workspaces or pack dry run", () => {
   const packageJson = readJson("package.json");
   const packageLock = readJson("package-lock.json");
-  const packScript = packageJson.scripts["pack:dry-run"];
+  const { listPublishableWorkspaces } = require("./ci-paths");
 
-  assert.doesNotMatch(packScript, /workspace blue-ribbon-nearby(?:\s|$)/);
+  assert.equal(packageJson.scripts["pack:dry-run"], "node scripts/pack-dry-run.js");
+  assert.ok(!listPublishableWorkspaces().includes("blue-ribbon-nearby"));
   assert.ok(!fs.existsSync(path.join(repoRoot, "packages", "blue-ribbon-nearby", "package.json")));
   assert.ok(!Object.hasOwn(packageLock.packages, "packages/blue-ribbon-nearby"));
   assert.ok(!Object.hasOwn(packageLock.packages, "node_modules/blue-ribbon-nearby"));

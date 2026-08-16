@@ -274,7 +274,7 @@ npm run ci
 - [ ] `my-new-skill/SKILL.md` 작성 완료
 - [ ] 정확한 `## Runtime contract (required)` 블록을 원문 그대로 포함
 - [ ] frontmatter `name`이 디렉토리 이름과 일치
-- [ ] `npm run ci` 통과 (`./scripts/validate-skills.sh` 포함)
+- [ ] `npm run ci` 통과 (`./scripts/validate-skills.sh` 포함). Python/Node helper 테스트는 `scripts/test_*.py`, `<skill>/tests/`, `<skill>/scripts/test_*.py`에 두면 루트 `npm test`가 glob으로 수집한다. `package.json` 테스트 목록을 손으로 고치지 않는다.
 - [ ] npm 패키지라면 `packages/`에 구현체와 테스트 추가
 - [ ] npm 패키지라면 `.changeset/*.md` 파일 추가 (반드시 **기능 PR에서**, Version Packages PR에서 추가하지 말 것)
 - [ ] 프록시 경유라면 `k-skill-proxy/src/server.js`에 route 추가하고 gpu01 production `.env` 및 자동 배포 smoke 구성이 맞는지 확인
