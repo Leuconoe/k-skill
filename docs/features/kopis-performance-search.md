@@ -9,7 +9,7 @@
 
 조회는 기본 hosted proxy의 `/v1/kopis/...`로 처리한다. `KOPIS_API_KEY` / `KSKILL_KOPIS_API_KEY`는 프록시 서버에만 둔다. canonical host는 `kopis.or.kr`이다. `www.kopis.or.kr` redirect는 일부 요청을 차단할 수 있다.
 
-예매·좌석 선점·결제 자동화는 이 스킬의 HTTP 조회 범위 밖이다. 돌쇠에서 공식 예매처로 이어갈 때는 결제 직전에 `clarify`로 승인받는다.
+예매·좌석 선점·로그인·결제 자동화는 이 스킬의 범위 밖이다. 조회 결과에 포함된 공식 예매처 정보가 있으면 사용자가 직접 확인할 수 있도록 안내한다.
 
 ## 지원 endpoint
 

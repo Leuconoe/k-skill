@@ -38,8 +38,8 @@ curl -fsS --get "$BASE/v1/korean-holiday/calendar" \
 ## 실패 모드
 
 - `400`: 연도/월/operation/page 값 오류
-- `503`: 프록시에 `DATA_GO_KR_API_KEY` 없음 또는 `15012690` 미승인
-- `502 upstream_forbidden`: data.go.kr가 키를 거부
+- `503`: 프록시에 `DATA_GO_KR_API_KEY`가 설정되지 않음
+- `502 upstream_forbidden`: data.go.kr가 키를 거부하거나 `15012690` 활용신청이 승인되지 않음
 - 빈 결과: 해당 연월/operation에 특일 없음. operation을 바꿔 재조회
 
 ## 출처

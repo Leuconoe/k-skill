@@ -39,8 +39,8 @@ curl -fsS --get "$BASE/v1/kr-whois/as" \
 ## 실패 모드
 
 - `400`: 도메인/IP/AS 형식 오류
-- `503`: 프록시에 `DATA_GO_KR_API_KEY` 없음 또는 `15094277` 미승인
-- `502 upstream_forbidden`: data.go.kr가 키를 거부
+- `503`: 프록시에 `DATA_GO_KR_API_KEY`가 설정되지 않음
+- `502 upstream_forbidden`: data.go.kr가 키를 거부하거나 `15094277` 활용신청이 승인되지 않음
 - upstream `result_code`가 `10000`이 아님: `result_msg`와 할당 여부 확인
 
 ## 출처

@@ -49,6 +49,6 @@ curl -fsS --get "$BASE/v1/assembly/votes" \
 
 ## 출처
 
-- 열린국회정보 Open API: https://open.assembly.go.kr/portal/openapi
+- 열린국회정보 Open API: https://open.assembly.go.kr/portal/openapi/openApiNaListPage.do
 - 키 발급(운영자): https://open.assembly.go.kr/portal/openapi/openApiActKeyIssPage.do
 - 프록시 엔드포인트 목록: [k-skill 프록시 서버 가이드](k-skill-proxy.md)
