@@ -227,6 +227,28 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
   }
 });
 
+test("every CLI-managed skill has a feature guide advertised from README", () => {
+  const readme = read("README.md");
+  const aliases = {
+    "k-skill-setup": "docs/setup.md",
+  };
+
+  for (const skillName of cliManagedSkills()) {
+    const alias = aliases[skillName];
+    const relative = alias || path.posix.join("docs", "features", `${skillName}.md`);
+    assert.ok(
+      fs.existsSync(path.join(repoRoot, ...relative.split("/"))),
+      alias
+        ? `${skillName} may omit docs/features only when ${alias} exists`
+        : `expected docs/features/${skillName}.md`,
+    );
+    assert.ok(
+      readme.includes(`](${relative})`),
+      `README should link ${relative} for ${skillName}`,
+    );
+  }
+});
+
 test("CLI-managed skills keep source, stub safety floor, and bundled copies aligned", () => {
   const cliManaged = cliManagedSkills();
 
@@ -348,6 +370,40 @@ test("runtime action audit covers every top-level skill exactly once", () => {
     const matches = audit.match(new RegExp(`^\\| \\\`${escapeRegex(skillName)}\\\` \\|`, "gm")) ?? [];
 
     assert.equal(matches.length, 1, `${skillName} must appear exactly once in the runtime action audit`);
+  }
+});
+
+test("runtime action audit modes and totals match skill manifests", () => {
+  const audit = read("docs/runtime-action-audit.md");
+  const rows = new Map(
+    [...audit.matchAll(/^\| `([^`]+)` \| `([^`]+)` \|/gm)].map((match) => [match[1], match[2]]),
+  );
+  const modes = [
+    "commerce",
+    "booking",
+    "submission",
+    "recruiting",
+    "account",
+    "legal",
+    "operations",
+    "local",
+    "lookup",
+  ];
+  const counts = Object.fromEntries(modes.map((mode) => [mode, 0]));
+
+  for (const [skillName, auditMode] of rows) {
+    const manifest = readJson(path.join(skillName, "skill.json"));
+    const manifestModes = manifest.profiles
+      .map((profile) => profile.replace(/^action:/, ""))
+      .filter((profile) => modes.includes(profile));
+
+    assert.deepEqual(manifestModes, [auditMode], `${skillName} audit mode must match its manifest`);
+    counts[auditMode] += 1;
+  }
+
+  assert.match(audit, new RegExp(`top-level \`SKILL\\.md\` ${rows.size}개`));
+  for (const mode of modes) {
+    assert.match(audit, new RegExp(`\\*\\*${mode}\\*\\* \\(${counts[mode]}\\):`));
   }
 });
 
