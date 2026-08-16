@@ -227,6 +227,24 @@ test("every top-level skill embeds the canonical portable runtime contract or a 
   }
 });
 
+test("CLI-managed skills keep helpers in the skill directory instead of root bundle[]", () => {
+  for (const skillName of cliManagedSkills()) {
+    const manifest = JSON.parse(read(path.join(skillName, "skill.json")));
+    assert.equal(
+      manifest.bundle,
+      undefined,
+      `${skillName}/skill.json must not use legacy root bundle[]; put helpers in ${skillName}/scripts/`,
+    );
+  }
+
+  assert.ok(fs.existsSync(path.join(repoRoot, "ktx-booking", "scripts", "ktx_booking.py")));
+  assert.ok(fs.existsSync(path.join(repoRoot, "ktx-booking", "scripts", "ktx_booking.py.lock")));
+  assert.ok(fs.existsSync(path.join(repoRoot, "srt-booking", "scripts", "srt_booking.py")));
+  assert.ok(fs.existsSync(path.join(repoRoot, "srt-booking", "scripts", "srt_booking.py.lock")));
+  assert.ok(fs.existsSync(path.join(repoRoot, "fine-dust-location", "scripts", "fine_dust.py")));
+  assert.ok(fs.existsSync(path.join(repoRoot, "k-skill-setup", "scripts", "check-setup.sh")));
+});
+
 test("every CLI-managed skill has a feature guide advertised from README", () => {
   const readme = read("README.md");
   const aliases = {
@@ -941,16 +959,16 @@ test("repository docs advertise the KTX read-only lookup skill as supported", ()
 
 test("ktx-booking docs enforce official public timetable lookup", () => {
   const skillPath = path.join(repoRoot, "ktx-booking", "SKILL.md");
-  const helperPath = path.join(repoRoot, "scripts", "ktx_booking.py");
+  const helperPath = path.join(repoRoot, "ktx-booking", "scripts", "ktx_booking.py");
 
   assert.ok(fs.existsSync(skillPath), "expected ktx-booking/SKILL.md to exist");
-  assert.ok(fs.existsSync(helperPath), "expected scripts/ktx_booking.py to exist");
+  assert.ok(fs.existsSync(helperPath), "expected ktx-booking/scripts/ktx_booking.py to exist");
 
   const instruction = read(path.join("ktx-booking", "instruction.md"));
   const manifest = JSON.parse(read(path.join("ktx-booking", "skill.json")));
   const stub = read(path.join("ktx-booking", "SKILL.md"));
   const featureDoc = read(path.join("docs", "features", "ktx-booking.md"));
-  const helper = read(path.join("scripts", "ktx_booking.py"));
+  const helper = read(path.join("ktx-booking", "scripts", "ktx_booking.py"));
 
   assert.match(stub, /^name: ktx-booking$/m);
   assert.deepEqual(manifest.profiles, ["lookup"]);
@@ -975,7 +993,7 @@ test("srt-booking docs enforce live read-only lookup", () => {
   const instruction = read(path.join("srt-booking", "instruction.md"));
   const manifest = JSON.parse(read(path.join("srt-booking", "skill.json")));
   const featureDoc = read(path.join("docs", "features", "srt-booking.md"));
-  const helper = read(path.join("scripts", "srt_booking.py"));
+  const helper = read(path.join("srt-booking", "scripts", "srt_booking.py"));
 
   assert.deepEqual(manifest.profiles, ["lookup"]);
   for (const doc of [instruction, featureDoc]) {
