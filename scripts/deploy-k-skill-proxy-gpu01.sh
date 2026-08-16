@@ -6,6 +6,7 @@ REPO_DIR="${KSKILL_PROXY_REPO_DIR:-/data/home/jeffrey/apps/k-skill-proxy-repo}"
 APP_DIR="${KSKILL_PROXY_APP_DIR:-/data/home/jeffrey/apps/k-skill-proxy}"
 SERVICE_NAME="${KSKILL_PROXY_SERVICE_NAME:-k-skill-proxy.service}"
 DEPLOY_REF="${KSKILL_PROXY_DEPLOY_REF:-origin/main}"
+ENV_FILE="${KSKILL_PROXY_ENV_FILE:-$APP_DIR/.env}"
 
 log() {
   printf '[%s] %s\n' "$(date -Is)" "$*"
@@ -19,6 +20,24 @@ health_check() {
     const data = JSON.parse(process.argv[1]);
     if (data.ok !== true) process.exit(1);
   ' "$output"
+}
+
+ensure_env_default() {
+  local env_file="$1"
+  local key="$2"
+  local value="$3"
+
+  if [[ ! -f "$env_file" ]]; then
+    log "Runtime environment file does not exist: $env_file"
+    return 1
+  fi
+
+  if grep -Eq "^[[:space:]]*${key}=" "$env_file"; then
+    return
+  fi
+
+  printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
+  log "Added required runtime default: $key=$value"
 }
 
 if [[ ! -d "$REPO_DIR/.git" ]]; then
@@ -68,6 +87,7 @@ install -m 0644 "$REPO_DIR/package-lock.json" "$APP_DIR/package-lock.json"
 
 npm --prefix "$APP_DIR" ci --omit=dev --workspace k-skill-proxy \
   --include-workspace-root=false --no-audit --no-fund
+ensure_env_default "$ENV_FILE" "KSKILL_PROXY_TRUST_PROXY_HOPS" "1"
 systemctl --user restart "$SERVICE_NAME"
 
 for _ in 1 2 3 4 5; do

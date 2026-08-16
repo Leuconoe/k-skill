@@ -809,6 +809,8 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   const proxyPackage = JSON.parse(read(path.join("packages", "k-skill-proxy", "package.json")));
 
   assert.match(deployScript, /DEPLOY_REF="\$\{KSKILL_PROXY_DEPLOY_REF:-origin\/main\}"/);
+  assert.match(deployScript, /KSKILL_PROXY_ENV_FILE/);
+  assert.match(deployScript, /ensure_env_default "\$ENV_FILE" "KSKILL_PROXY_TRUST_PROXY_HOPS" "1"/);
   assert.match(deployScript, /npm --prefix "\$REPO_DIR" run test --workspace k-skill-proxy/);
   assert.match(deployScript, /tar -C "\$APP_DIR" -czf "\$backup"/);
   assert.match(deployScript, /systemctl --user restart "\$SERVICE_NAME"/);
@@ -831,6 +833,8 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   assert.match(deployDoc, /flock/);
   assert.match(deployDoc, /rollback/i);
   assert.match(deployDoc, /deployed-sha/);
+  assert.match(deployDoc, /KSKILL_PROXY_TRUST_PROXY_HOPS=1/);
+  assert.match(deployDoc, /Cloudflare Tunnel/);
 });
 
 test("kakaotalk-mac skill documents katok archive search usage", () => {
