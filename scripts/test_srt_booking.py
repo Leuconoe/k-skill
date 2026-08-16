@@ -8,6 +8,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
+from requests import ConnectionError as RequestsConnectionError
+from SRT.errors import SRTNetFunnelError
+
 SCRIPT_PATH = Path(__file__).with_name("srt_booking.py")
 SPEC = importlib.util.spec_from_file_location("srt_booking", SCRIPT_PATH)
 assert SPEC and SPEC.loader
@@ -59,6 +62,15 @@ class NoisyFakeSRT(FakeSRT):
     def search_train(self, **kwargs):
         print("대기인원: 10명")
         return super().search_train(**kwargs)
+
+
+class FailingFakeSRT(FakeSRT):
+    def __init__(self, error):
+        super().__init__("", "", False)
+        self.error = error
+
+    def search_train(self, **kwargs):
+        raise self.error
 
 
 class SrtLiveReadOnlyTests(unittest.TestCase):
@@ -186,6 +198,34 @@ class SrtLiveReadOnlyTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 2)
         self.assertIn("YYYYMMDD", result.stderr)
+
+    def test_cli_reports_upstream_failures_without_traceback(self) -> None:
+        failures = [
+            SRTNetFunnelError("queue down"),
+            RequestsConnectionError("network down"),
+        ]
+
+        for failure in failures:
+            with self.subTest(failure=type(failure).__name__):
+                stderr = io.StringIO()
+                client = FailingFakeSRT(failure)
+
+                with mock.patch.object(srt_booking, "build_client", return_value=client):
+                    with mock.patch("sys.stderr", stderr):
+                        with self.assertRaises(SystemExit) as raised:
+                            srt_booking.main([
+                                "search",
+                                "--dep",
+                                "수서",
+                                "--arr",
+                                "부산",
+                                "--date",
+                                "20260819",
+                            ])
+
+                self.assertEqual(raised.exception.code, 2)
+                self.assertIn("SRT timetable lookup unavailable", stderr.getvalue())
+                self.assertNotIn("Traceback", stderr.getvalue())
 
 
 if __name__ == "__main__":
