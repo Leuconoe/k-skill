@@ -1,5 +1,11 @@
 # k-skill-proxy
 
+## 0.10.2
+
+### Patch Changes
+
+- fc01be1: Fix proxy rate-limit buckets behind Cloudflare Tunnel, retry idempotent GET upstream failures, and accept mcp SDK 2.x in myrealtrip-search.
+
 ## 0.10.1
 
 ### Patch Changes
