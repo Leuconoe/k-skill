@@ -330,6 +330,30 @@ test("fetchTransactions returns error for upstream failure", async () => {
   assert.equal(result.error, "upstream_error");
 });
 
+test("fetchTransactions retries a single 502 then parses XML", async () => {
+  let calls = 0;
+  const mockFetch = async () => {
+    calls += 1;
+    if (calls === 1) {
+      return { ok: false, status: 502, text: async () => "Bad Gateway" };
+    }
+    return { ok: true, text: async () => SAMPLE_APT_TRADE_XML };
+  };
+
+  const result = await fetchTransactions({
+    assetType: "apartment",
+    dealType: "trade",
+    lawdCd: "11680",
+    dealYmd: "202403",
+    serviceKey: "test-key",
+    fetchImpl: mockFetch,
+  });
+
+  assert.equal(calls, 2);
+  assert.equal(result.error, undefined);
+  assert.equal(result.items[0].name, "래미안");
+});
+
 test("fetchTransactions returns error for API error code", async () => {
   const mockFetch = async () => ({
     ok: true,
