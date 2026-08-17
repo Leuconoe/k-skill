@@ -77,6 +77,8 @@ Python MCP SDK가 필요하다. 없으면 설치한다.
 python3 -m pip install mcp
 ```
 
+래퍼는 MCP Python SDK 1.x(`streamablehttp_client`)와 2.x(`streamable_http_client`) 모두에서 동작한다. `pip install mcp`는 최신 2.x를 설치한다.
+
 기본 엔드포인트는 공식 문서의 URL이다. 필요할 때만 환경변수로 바꾼다.
 
 ```bash
@@ -241,7 +243,7 @@ npx -y @nomadamas/k-skill@0 exec myrealtrip-search scripts/myrealtrip_mcp.py -- 
 
 ## 실패 상황과 대응
 
-- `Python package 'mcp' is required`: `python3 -m pip install mcp` 후 재시도한다.
+- `Python 패키지 'mcp'가 필요합니다` 또는 ImportError 내용이 함께 나온 경우: `python3 -m pip install mcp` 후 재시도한다. 패키지는 설치됐는데 심볼을 못 찾는다면 SDK 1.x/2.x 호환 래퍼가 최신 k-skill인지 확인한다.
 - MCP 엔드포인트 연결 실패: `MYREALTRIP_MCP_ENDPOINT` 오타, 네트워크, upstream 장애를 확인한다.
 - 빈 결과: 날짜/지역/인원/공항코드를 바꿔 재검색한다.
 - 항공 검색 실패: 국내/국제 도구 선택이 맞는지 확인한다. 해외 목적지는 반드시 `searchInternationalFlights`다.

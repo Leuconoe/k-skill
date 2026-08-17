@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib
 import json
 import os
 import sys
@@ -107,18 +108,37 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-async def _run_mcp_once(endpoint: str, command: str, tool: str | None, arguments: dict[str, Any] | None) -> Any:
+def tool_input_schema(tool: Any) -> dict[str, Any]:
+    schema = getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None) or {}
+    return schema if isinstance(schema, dict) else {}
+
+
+def load_mcp_client() -> tuple[Any, Any]:
     try:
-        from mcp import ClientSession
-        from mcp.client.streamable_http import streamablehttp_client
-    except Exception as exc:  # pragma: no cover - environment dependent
+        mcp = importlib.import_module("mcp")
+        http = importlib.import_module("mcp.client.streamable_http")
+    except ImportError as exc:
         raise MyRealTripMcpError(
-            "Python 패키지 'mcp'가 필요합니다. 다음 명령으로 설치하세요: python3 -m pip install mcp"
+            "Python 패키지 'mcp'가 필요합니다. 다음 명령으로 설치하세요: python3 -m pip install mcp "
+            f"({type(exc).__name__}: {exc})"
         ) from exc
 
+    client_session = getattr(mcp, "ClientSession", None)
+    streamable = getattr(http, "streamable_http_client", None) or getattr(http, "streamablehttp_client", None)
+    if client_session is None or streamable is None:
+        raise MyRealTripMcpError(
+            "설치된 'mcp' 패키지에서 Streamable HTTP 클라이언트를 찾을 수 없습니다. "
+            "다음 명령으로 재설치하세요: python3 -m pip install mcp"
+        )
+    return client_session, streamable
+
+
+async def _run_mcp_once(endpoint: str, command: str, tool: str | None, arguments: dict[str, Any] | None) -> Any:
+    client_session, streamable_http_client = load_mcp_client()
+
     try:
-        async with streamablehttp_client(endpoint) as (read_stream, write_stream, _):
-            async with ClientSession(read_stream, write_stream) as session:
+        async with streamable_http_client(endpoint) as (read_stream, write_stream, _):
+            async with client_session(read_stream, write_stream) as session:
                 await session.initialize()
                 if command == "tools":
                     result = await session.list_tools()
@@ -126,12 +146,14 @@ async def _run_mcp_once(endpoint: str, command: str, tool: str | None, arguments
                         {
                             "name": item.name,
                             "description": item.description,
-                            "inputSchema": item.inputSchema,
+                            "inputSchema": tool_input_schema(item),
                         }
                         for item in result.tools
                     ]
                 if command == "call" and tool:
                     return await session.call_tool(tool, arguments or {})
+    except MyRealTripMcpError:
+        raise
     except Exception as exc:
         raise MyRealTripMcpError(f"마이리얼트립 MCP 엔드포인트 호출 실패 {endpoint}: {exc}") from exc
 

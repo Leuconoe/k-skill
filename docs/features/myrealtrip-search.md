@@ -15,6 +15,8 @@ Python MCP SDK가 필요하다.
 python3 -m pip install mcp
 ```
 
+래퍼는 MCP Python SDK 1.x와 2.x(`streamablehttp_client` / `streamable_http_client`) 모두에서 동작한다.
+
 Hermes Agent에 MCP 서버로 직접 붙이고 싶다면 다음처럼 등록한다.
 
 ```yaml

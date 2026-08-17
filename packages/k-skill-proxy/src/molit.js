@@ -1,6 +1,8 @@
 // MOLIT (Ministry of Land, Infrastructure and Transport) real estate API wrapper.
 // Proxies data.go.kr XML endpoints for Korean real estate transaction data.
 
+const { fetchWithRetry } = require("./fetch-with-retry");
+
 const MOLIT_BASE_URL = "http://apis.data.go.kr/1613000";
 
 const ENDPOINT_MAP = new Map([
@@ -211,7 +213,10 @@ async function fetchTransactions({ assetType, dealType, lawdCd, dealYmd, numOfRo
   const doFetch = fetchImpl || globalThis.fetch;
   let response;
   try {
-    response = await doFetch(url.toString(), { signal: AbortSignal.timeout(20000) });
+    response = await fetchWithRetry(url.toString(), {
+      fetchImpl: doFetch,
+      signal: AbortSignal.timeout(20000)
+    });
   } catch (err) {
     return { error: "upstream_timeout", message: `Upstream request failed: ${err.message}` };
   }

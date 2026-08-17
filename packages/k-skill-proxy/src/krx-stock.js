@@ -1,3 +1,5 @@
+const { fetchWithRetry } = require("./fetch-with-retry");
+
 const KRX_MARKETS = ["KOSPI", "KOSDAQ", "KONEX"];
 
 const KRX_BASE_INFO_URLS = {
@@ -129,7 +131,8 @@ async function krxRequest(url, apiKey, fetchImpl = global.fetch) {
     throw error;
   }
 
-  const response = await fetchImpl(url, {
+  const response = await fetchWithRetry(url, {
+    fetchImpl,
     headers: {
       "content-type": "application/json",
       AUTH_KEY: apiKey
