@@ -93,7 +93,6 @@
     "./local-election-candidate-search",
     "./localdata-business-status",
     "./lotto-results",
-    "./lovebug-report",
     "./market-kurly-search",
     "./mfds-drug-safety",
     "./mfds-food-safety",
@@ -127,7 +126,7 @@
     "./store-longevity-radar",
     "./subway-lost-property",
     "./ticket-availability",
-    "./toss-securities",
+    "./toss-investment",
     "./yebigun-training",
     "./zipcode-search"
   ]

@@ -1,48 +1,79 @@
+#!/usr/bin/env node
+"use strict";
+
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const root = path.join(__dirname, "..");
-const venv = path.join(root, ".cache", "python-test-venv");
+const repoRoot = path.resolve(__dirname, "..");
+const venvDir = path.join(repoRoot, ".cache", "python-test-venv");
 
 function resolveSystemPython() {
-  for (const command of ["python3", "python"]) {
-    const result = spawnSync(command, ["--version"], { encoding: "utf8" });
-    if (result.status === 0) {
-      return command;
+  const candidates = process.platform === "win32" ? ["python", "python3"] : ["python3", "python"];
+  for (const cmd of candidates) {
+    const result = spawnSync(cmd, ["--version"], {
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    if (!result.error && result.status === 0) {
+      return cmd;
     }
   }
-  throw new Error("python3 or python is required to prepare the test virtualenv.");
+  throw new Error("python3/python not found");
 }
 
-function resolveVenvPython() {
-  const windowsPython = path.join(venv, "Scripts", "python.exe");
-  const unixPython = path.join(venv, "bin", "python");
-  if (fs.existsSync(windowsPython)) {
-    return windowsPython;
-  }
-  if (fs.existsSync(unixPython)) {
-    return unixPython;
-  }
-  throw new Error("python test virtualenv exists but no interpreter was found.");
+function venvPython(dir) {
+  const unix = path.join(dir, "bin", "python");
+  const win = path.join(dir, "Scripts", "python.exe");
+  if (fs.existsSync(unix)) return unix;
+  if (fs.existsSync(win)) return win;
+  return null;
 }
 
-fs.mkdirSync(path.dirname(venv), { recursive: true });
-if (!fs.existsSync(path.join(venv, "pyvenv.cfg"))) {
-  const created = spawnSync(resolveSystemPython(), ["-m", "venv", venv], {
-    cwd: root,
-    stdio: "inherit"
+function run(command, args) {
+  const needsWinShell =
+    process.platform === "win32" &&
+    (command === "npm" || /\.(cmd|bat)$/i.test(command));
+  const result = spawnSync(command, args, {
+    cwd: repoRoot,
+    stdio: "inherit",
+    windowsHide: true,
+    shell: needsWinShell,
   });
-  if (created.status !== 0) {
-    process.exit(created.status ?? 1);
+  if (result.error) {
+    throw result.error;
+  }
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
   }
 }
 
-const pip = spawnSync(
-  resolveVenvPython(),
-  ["-m", "pip", "install", "--quiet", "beautifulsoup4", "openpyxl==3.1.5", "SRTrain==2.6.7"],
-  { cwd: root, stdio: "inherit" }
-);
-if (pip.status !== 0) {
-  process.exit(pip.status ?? 1);
+function venvHasPip(dir) {
+  const venv = venvPython(dir);
+  if (!venv) {
+    return false;
+  }
+  const result = spawnSync(venv, ["-m", "pip", "--version"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  return !result.error && result.status === 0;
 }
+
+const python = resolveSystemPython();
+fs.mkdirSync(path.dirname(venvDir), { recursive: true });
+if (!venvHasPip(venvDir)) {
+  fs.rmSync(venvDir, { recursive: true, force: true });
+  run(python, ["-m", "venv", venvDir]);
+}
+
+const venv = venvPython(venvDir);
+if (!venv) {
+  throw new Error(`failed to create python test venv at ${venvDir}`);
+}
+
+if (!venvHasPip(venvDir)) {
+  run(venv, ["-m", "ensurepip", "--upgrade"]);
+}
+
+run(venv, ["-m", "pip", "install", "--quiet", "beautifulsoup4", "openpyxl==3.1.5", "SRTrain==2.6.7"]);

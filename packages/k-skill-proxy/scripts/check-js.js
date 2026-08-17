@@ -1,23 +1,35 @@
+#!/usr/bin/env node
+"use strict";
+
 const fs = require("node:fs");
 const path = require("node:path");
-const { spawnSync } = require("node:child_process");
+const { runNodeSyntaxChecks } = require("../../../scripts/ci-run");
 
 const root = path.join(__dirname, "..");
 
-function walk(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const fullPath = path.join(dir, entry.name);
+function walkJs(dir, files = []) {
+  if (!fs.existsSync(dir)) {
+    return files;
+  }
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      return walk(fullPath);
+      if (entry.name === "node_modules") continue;
+      walkJs(full, files);
+    } else if (entry.isFile() && entry.name.endsWith(".js")) {
+      files.push(full);
     }
-    return entry.name.endsWith(".js") ? [fullPath] : [];
-  });
+  }
+  return files;
 }
 
-const files = ["src", "test", "scripts"].flatMap((dir) => walk(path.join(root, dir)));
-for (const file of files) {
-  const result = spawnSync(process.execPath, ["--check", file], { stdio: "inherit" });
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
-  }
+const files = ["src", "test", "scripts"]
+  .flatMap((dir) => walkJs(path.join(root, dir)))
+  .sort();
+
+if (files.length === 0) {
+  console.error("check-js: no JavaScript files found");
+  process.exit(1);
 }
+
+runNodeSyntaxChecks(files, { cwd: root });
