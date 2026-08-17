@@ -1,5 +1,16 @@
 # @nomadamas/k-skill
 
+## 0.4.0
+
+### Minor Changes
+
+- 4b82040: `toss-securities` 스킬과 npm 패키지 이름을 `toss-investment`로 바꾼다. 조회 범위와 공식 Open API 경로는 그대로다.
+
+### Patch Changes
+
+- fc01be1: Fix proxy rate-limit buckets behind Cloudflare Tunnel, retry idempotent GET upstream failures, and accept mcp SDK 2.x in myrealtrip-search.
+- 1710b51: Remove the `lovebug-report` skill from bundled CLI assets.
+
 ## 0.3.0
 
 ### Minor Changes
