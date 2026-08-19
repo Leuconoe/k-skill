@@ -29,7 +29,7 @@ matches, and otherwise:
 3. creates a timestamped backup of the current app;
 4. syncs the proxy and its local workspace dependency;
 5. installs production dependencies and restarts the systemd user service;
-6. checks local and public `/health`;
+6. checks local and public `/health` and `/privacy`;
 7. records `deployed-sha` only after all checks pass.
 
 Any failure after the backup performs an automatic rollback by restoring the
@@ -49,6 +49,8 @@ mosh gpu01
 /data/home/jeffrey/apps/k-skill-proxy/deploy-k-skill-proxy-gpu01.sh
 curl -fsS http://127.0.0.1:8080/health
 curl -fsS https://k-skill-proxy.nomadamas.org/health
+curl -fsS http://127.0.0.1:8080/privacy
+curl -fsS https://k-skill-proxy.nomadamas.org/privacy
 cat /data/home/jeffrey/apps/k-skill-proxy/deployed-sha
 ```
 
