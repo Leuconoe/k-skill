@@ -1,5 +1,11 @@
 # @nomadamas/k-skill
 
+## 0.4.2
+
+### Patch Changes
+
+- 10756d3: biz-health-check, court-payment-order-assistant, national-pension-workplace에 법적 안전 운영 기준을 명시한다.
+
 ## 0.4.1
 
 ### Patch Changes
