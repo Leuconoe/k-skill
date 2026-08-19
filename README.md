@@ -9,6 +9,9 @@ Claude Code, Codex, OpenCode, OpenClaw/ClawHub 등 각종 코딩 에이전트 �
 
 추가 클라이언트 API 레이어는 불필요합니다. 필요한 경우 `k-skill-proxy` 같은 프록시 서버에 HTTP 요청만 넣으면 됩니다.
 
+공개 API 프록시를 사용하는 스킬의 개인정보 처리 기준은
+[k-skill-proxy 개인정보 처리방침](https://k-skill-proxy.nomadamas.org/privacy)에서 확인할 수 있습니다.
+
 > **KTX와 SRT는 조회 전용 스킬입니다.** KTX는 코레일 공식 계획 시간표를, SRT는 라이브 시간표와 일반실·특실 이용 가능 여부를 조회하며 로그인·예약·예약대기·결제·취소는 수행하지 않습니다.
 
 ## 설치
@@ -70,7 +73,6 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 | 인허가 영업상태 조회 | `localdata-business-status` | 상호+시군구로 동네 사업장(208업종)의 영업/휴업/폐업·업력·주소 조회(LOCALDATA 무인증) | 불필요 | [인허가 영업상태 조회 가이드](docs/features/localdata-business-status.md) |
 | 장수 점포 레이더 | `store-longevity-radar` | 상가(상권)정보 공개파일(무인증)로 업종·상호 키워드 점포 전수를 뽑고, 과거 스냅샷과 상호+좌표 매칭해 장수 점포 추출 | 불필요 | [장수 점포 레이더 가이드](docs/features/store-longevity-radar.md) |
 | 창업진흥원 K-Startup 조회 | `kstartup-search` | 창업진흥원 K-Startup 통합공고 사업·지원사업 공고·창업 콘텐츠·통계보고서 조회 (공공데이터포털 15125364, 프록시 경유) | 불필요 | [창업진흥원 K-Startup 조회 가이드](docs/features/kstartup-search.md) |
-| 지방선거 후보자 조회 | `local-election-candidate-search` | 중앙선거관리위원회 선거통계시스템 공개 통합검색으로 지방선거 후보자 이력·선거종류·정당·지역·득표 정보를 이름 기준으로 조회 | 불필요 | [지방선거 후보자 조회 가이드](docs/features/local-election-candidate-search.md) |
 | 국회 의안·표결 조회 | `assembly-bill-vote-search` | 열린국회정보 Open API로 의안 검색·상세와 국회의원 본회의 표결 조회 (프록시 경유, 조회 전용) | 불필요 | [국회 의안·표결 조회 가이드](docs/features/assembly-bill-vote-search.md) |
 | 공무국외출장 보고서 조회 | `gov-overseas-trip-report` | 선관위·권익위·정보공개포털·대구/대전/경기/경북 의회 등 공개 표면에서 국외출장/훈련 보고서·현황을 조회하고, 표 밖 기관은 discover로 능동 탐색(로그인 벽 제외, 판정 아님) | 불필요 | [공무국외출장 보고서 조회 가이드](docs/features/gov-overseas-trip-report.md) |
 | 한국 사업자 장부 자동화 | `korean-jangbu-for` | `kimlawtech/korean-jangbu-for` 기반 카드·은행·영수증·세금계산서 입력 → 표준 거래내역·계정과목·세무사 전달 CSV·경영 리포트 생성 thin wrapper | 선택사항(CODEF BYOK 자동 수집 시 필요) | [한국 사업자 장부 자동화 가이드](docs/features/korean-jangbu-for.md) |
@@ -153,7 +155,6 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 | 한국 중세 국어풍 변환 | `korean-middle-korean` | 한국어 입력문을 중세국어풍 조사·어미·Hanja 힌트·성조점이 섞인 창작용 문체로 결정론적 변환 | 불필요 | [한국 중세 국어풍 변환 가이드](docs/features/korean-middle-korean.md) |
 | 사주 운세 풀이 | `saju-fortune` | 생년월일시·성별·양력/음력 정보를 인터뷰로 확인한 뒤 사주팔자, 오행 분포, 연애운·재물운·직업운·건강운·궁합을 대화형으로 풀이 | 불필요 | [사주 운세 풀이 가이드](docs/features/saju-fortune.md) |
 | 작명소 | `naming-house` | 생년월일시·성씨·후보 이름을 바탕으로 사주 오행, 성명학 획수, 발음 흐름 기준의 이름 추천/점수를 제공 | 불필요 | [작명소 가이드](docs/features/naming-house.md) |
-| 예비군 훈련정보 조회 | `yebigun-training` | 예비군 홈페이지(yebigun1.mil.kr) 로그인 세션으로 이번 훈련 일정/장소 조회 및 작년 대비 비교, 식별 정보 없는 조회 화면(view) 읽기, 신청형 화면은 열기만(open-menu) | 필요 | [예비군 훈련정보 조회 가이드](docs/features/yebigun-training.md) |
 | K-스킬 공통 설정 | `k-skill-setup` | 전체 k-skill 설치 후 credential 확보, 런타임 환경변수 확인, 선택적 업데이트 확인과 GitHub star 동의 흐름을 안내 | 불필요 | [공통 설정 가이드](docs/setup.md) |
 | K-스킬 클리너 | `k-skill-cleaner` | 인터뷰와 코딩 에이전트별 트리거 횟수 통계를 합쳐 불필요한 K-스킬 삭제 후보를 추천 | 불필요 | [K-스킬 클리너 가이드](docs/features/k-skill-cleaner.md) |
 
@@ -222,7 +223,6 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 - [인허가 영업상태 조회 가이드](docs/features/localdata-business-status.md)
 - [장수 점포 레이더 가이드](docs/features/store-longevity-radar.md)
 - [창업진흥원 K-Startup 조회 가이드](docs/features/kstartup-search.md)
-- [지방선거 후보자 조회 가이드](docs/features/local-election-candidate-search.md)
 - [국회 의안·표결 조회 가이드](docs/features/assembly-bill-vote-search.md)
 - [한국 사업자 장부 자동화 가이드](docs/features/korean-jangbu-for.md)
 - [팝빌 all-service API helper](docs/features/popbill.md)
@@ -302,7 +302,6 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 - [한국 중세 국어풍 변환 가이드](docs/features/korean-middle-korean.md)
 - [사주 운세 풀이 가이드](docs/features/saju-fortune.md)
 - [작명소 가이드](docs/features/naming-house.md)
-- [예비군 훈련정보 조회 가이드](docs/features/yebigun-training.md)
 - [K-스킬 공통 설정 가이드](docs/setup.md)
 - [K-스킬 클리너 가이드](docs/features/k-skill-cleaner.md)
 - [릴리스/배포 가이드](docs/releasing.md)

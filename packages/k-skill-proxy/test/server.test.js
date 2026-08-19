@@ -168,6 +168,25 @@ test("route usage stats count endpoint calls by route pattern and skip /health",
   assert.equal(app.routeUsageStats.get("__unmatched__"), 2, "unmatched paths must use one bounded aggregation key");
 });
 
+test("privacy policy is publicly readable and linked from every response", async (t) => {
+  const app = buildServer({ env: {} });
+  t.after(async () => {
+    await app.close();
+  });
+
+  const privacy = await app.inject({ method: "GET", url: "/privacy" });
+  assert.equal(privacy.statusCode, 200);
+  assert.match(privacy.headers["content-type"], /^text\/html/);
+  assert.equal(privacy.headers.link, "</privacy>; rel=\"privacy-policy\"");
+  assert.match(privacy.body, /<html lang="ko">/);
+  assert.match(privacy.body, /name="k-skill-privacy-policy-version" content="2026-08-18"/);
+  assert.equal(privacy.headers["x-content-type-options"], "nosniff");
+
+  const health = await app.inject({ method: "GET", url: "/health" });
+  assert.equal(health.headers.link, "</privacy>; rel=\"privacy-policy\"");
+  assert.equal(health.json().privacy_policy, "/privacy");
+});
+
 test("Korean holiday normalizer validates operation and solar year/month", () => {
   assert.deepEqual(normalizeKoreanHolidayQuery({ type: "rest", year: "2026", month: "7", limit: "20" }), {
     operation: "rest",

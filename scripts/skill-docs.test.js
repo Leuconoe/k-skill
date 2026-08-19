@@ -283,7 +283,7 @@ test("every top-level skill is a generated CLI stub", () => {
     .filter((name) => fs.existsSync(path.join(repoRoot, name, "SKILL.md")))
     .sort();
 
-  assert.equal(skillDirs.length, 120);
+  assert.equal(skillDirs.length, 118);
 
   for (const skillName of skillDirs) {
     const skill = readRaw(path.join(skillName, "SKILL.md"));
@@ -489,7 +489,6 @@ test("actionable skills publish a Dolshoi action path", () => {
     "subway-lost-property",
     "ticket-availability",
     "toss-investment",
-    "yebigun-training",
   ];
 
   for (const skillName of actionableSkills) {
@@ -1962,13 +1961,13 @@ test("naming-house docs and package preserve the 작명소 contract", () => {
   assert.match(install, /--skill naming-house/);
   assert.match(install, /npm install -g naming-house/);
   assert.equal(packageJson.name, "naming-house");
-  assert.equal(packageJson.dependencies.namefyi, "^0.1.2");
+  assert.equal(packageJson.dependencies.hanja, "^1.1.5");
   assert.equal(packageJson.dependencies["korean-stroke"], "^1.1.5");
-  assert.match(sources, /namefyi/);
+  assert.match(sources, /hanja/);
   assert.match(sources, /korean-stroke/);
 
   for (const doc of [skill, featureDoc, packageReadme]) {
-    assert.match(doc, /namefyi/);
+    assert.match(doc, /hanja/);
     assert.match(doc, /korean-stroke/);
     assert.match(doc, /saju-fortune/);
     assert.match(doc, /음력|lunar/);

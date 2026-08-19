@@ -2,9 +2,12 @@
 
 `k-skill`용 Fastify 기반 프록시 서버입니다. AirKorea 미세먼지 조회, 기상청 단기예보, 서울 지하철 실시간 도착정보, 한강홍수통제소 수위 정보를 감싸고, 이후 무료/공공 API adapter를 추가하는 베이스로 씁니다.
 
+개인정보 처리 기준은 공개 서비스의 [`/privacy`](https://k-skill-proxy.nomadamas.org/privacy)에서 확인할 수 있습니다. 모든 응답은 `Link: </privacy>; rel="privacy-policy"` 헤더로 같은 경로를 안내합니다.
+
 ## 현재 제공 엔드포인트
 
 - `GET /health`
+- `GET /privacy` — k-skill-proxy 개인정보 처리방침
 - `GET /v1/fine-dust/report`
 - `GET /v1/korea-weather/forecast`
 - `GET /v1/ask-seoul/weather-risk/bundle` — ASK 서울 기상 위험 단일 bundle (`ASK_SEOUL_SKILL_API_BASE_URL`, `ASK_SEOUL_KSKILL_API_KEY`)
