@@ -1,5 +1,14 @@
 # @nomadamas/k-skill
 
+## 0.4.1
+
+### Patch Changes
+
+- 23641ea: Remove the `yebigun-training` skill and its bundled CLI metadata.
+- 632742f: corporate-registration-consulting, iros-registry-automation, korean-jangbu-for에 법적 안전 운영 기준을 명시한다.
+- 1555b6c: mfds-drug-safety와 nhis-care-checkup-search에 공식 공개자료 조회 범위와 전문가 판단을 대체하지 않는다는 짧은 안내 문구를 추가한다.
+- af6de30: Remove the `local-election-candidate-search` skill from bundled CLI assets.
+
 ## 0.4.0
 
 ### Minor Changes
