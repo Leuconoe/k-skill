@@ -88,14 +88,6 @@ test("dolshoi and generic runtime rules differ for vault/browser skills", () => 
   assert.doesNotMatch(dolshoi, /Do not automate payment here/);
 });
 
-test("legal skill advances official auth but never bypasses controls", () => {
-  const dolshoi = assemble("yebigun-training", DOLSHOI);
-
-  assert.match(dolshoi, /supported identity verification/);
-  assert.match(dolshoi, /Do not evade CAPTCHA/);
-  assert.match(dolshoi, /legal effect/);
-});
-
 test("bundledFiles lists helper files for directory-package skills", () => {
   const files = bundledFiles("kosis-stats").map((file) => file.split(path.sep).join("/"));
 
@@ -148,10 +140,10 @@ test("all bundled assets are exposed through exec/read/path instructions", () =>
     }
   }
 
-  // 77 source skill directories own assets; srt-booking, ktx-booking,
+  // 79 source skill directories own assets; srt-booking, ktx-booking,
   // fine-dust-location, and k-skill-setup additionally bundle legacy root
   // helpers through skill.json mappings.
-  assert.equal(assetSkills, 81);
+  assert.equal(assetSkills, 83);
 });
 
 test("asset resolution rejects traversal and reads bundled references", () => {

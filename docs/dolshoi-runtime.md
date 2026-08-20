@@ -1,6 +1,6 @@
 # Dolshoi Runtime Contract
 
-이 문서는 k-skill의 돌쇠 우선 실행 계약과 portable fallback을 관리한다. 실제 설치된 각 스킬은 `docs/` 없이 단독으로 존재할 수 있으므로, 모든 top-level `SKILL.md`에는 `docs/adding-a-skill.md`의 짧은 `## Runtime contract (required)` 블록이 원문 그대로 들어간다.
+이 문서는 k-skill의 돌쇠 우선 실행 계약과 portable fallback을 관리한다. 실제 설치된 각 스킬은 `docs/` 없이 단독으로 존재할 수 있으므로, 생성된 `SKILL.md` stub이 `@nomadamas/k-skill instruct`로 런타임 profile 템플릿을 조립한다.
 
 ## 배포 제약
 

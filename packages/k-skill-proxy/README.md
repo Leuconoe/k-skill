@@ -2,9 +2,12 @@
 
 `k-skill`용 Fastify 기반 프록시 서버입니다. AirKorea 미세먼지 조회, 기상청 단기예보, 서울 지하철 실시간 도착정보, 한강홍수통제소 수위 정보를 감싸고, 이후 무료/공공 API adapter를 추가하는 베이스로 씁니다.
 
+개인정보 처리 기준은 공개 서비스의 [`/privacy`](https://k-skill-proxy.nomadamas.org/privacy)에서 확인할 수 있습니다. 모든 응답은 `Link: </privacy>; rel="privacy-policy"` 헤더로 같은 경로를 안내합니다.
+
 ## 현재 제공 엔드포인트
 
 - `GET /health`
+- `GET /privacy` — k-skill-proxy 개인정보 처리방침
 - `GET /v1/fine-dust/report`
 - `GET /v1/korea-weather/forecast`
 - `GET /v1/ask-seoul/weather-risk/bundle` — ASK 서울 기상 위험 단일 bundle (`ASK_SEOUL_SKILL_API_BASE_URL`, `ASK_SEOUL_KSKILL_API_KEY`)
@@ -96,7 +99,7 @@
 - `KSKILL_PROXY_RATE_LIMIT_WINDOW_MS` — 기본 `60000`
 - `KSKILL_PROXY_RATE_LIMIT_MAX` — 기본 `60`
 - `KSKILL_PROXY_RATE_LIMIT_MAX_CLIENTS` — 메모리에 유지할 client rate-limit bucket 상한, 기본 `10000`
-- `KSKILL_PROXY_TRUST_PROXY_HOPS` — Fastify가 신뢰할 reverse-proxy hop 수, 기본 `0`. loopback listener 앞에 Cloudflare Tunnel 한 홉만 있는 gpu01 배포는 배포 스크립트가 누락 시 `1`을 추가한다. 운영 구조에 맞는 최소 hop 수만 설정하고 직접 노출되는 서버에서는 설정하지 않는다.
+- `KSKILL_PROXY_TRUST_PROXY_HOPS` — Fastify가 신뢰할 reverse-proxy hop 수, 기본 `0`. loopback listener 앞에 Cloudflare Tunnel 한 홉만 있는 gpu01 배포는 **반드시 `1`**이며, 배포 스크립트가 누락 시 추가한다. 직접 노출되는 서버에서는 설정하지 않는다. hops가 1 이상이면 rate limiter는 `CF-Connecting-IP`를 `X-Forwarded-For`보다 우선한다.
 - `DATA_GO_KR_API_KEY` - 공공데이터포털 에서 쓰이는 API 인증키 (`household-waste`, `parking-lots`, `ev-charger/*`, `building-register/title`, `real-estate`, `nts-business`, `mfds-drug-safety`, `mfds-food-safety`, `lh-notice`, `nhis/*`, `kr-whois/*`). 각 서비스는 공공데이터포털에서 별도 "활용신청" 승인이 필요하다. 키를 발급받은 뒤에는 [LH 임대공고문 정보](https://www.data.go.kr/data/15058530/openapi.do), [국민건강보험공단 장기요양기관 검색 서비스](https://www.data.go.kr/data/15059029/openapi.do), [국민건강보험공단 검진기관 찾기 조회](https://www.data.go.kr/data/15154419/openapi.do), WHOIS 도메인/IP 정보 API(서비스 `15094277`) 페이지에서도 활용신청을 눌러 동일 키를 활성화해야 해당 라우트가 성공한다. EV 데이터셋 `15076352`와 건축물대장 데이터셋 `15134735`는 자동승인 대상이지만 각각 별도 신청해야 한다. 미활성 상태에서는 upstream이 HTTP 401/403 또는 data.go.kr 인증 오류 XML을 돌려주고 proxy는 upstream error로 변환한다.
 
 기본 정책은 **무료 API 공개 프록시 = 무인증** 이다. 대신 endpoint scope 를 좁게 유지하고, cache + rate limit 으로 남용을 늦춘다.

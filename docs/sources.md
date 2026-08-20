@@ -11,6 +11,11 @@
 - Kakao Local API endpoint host: https://dapi.kakao.com/v2/local/ — `k-skill-proxy`의 `/v1/kakao-local/geocode`가 `/search/address.json` → empty result 시 `/search/keyword.json` 순서로 중계한다. 같은 host의 `/search/keyword.json`, `/search/category.json`, `/geo/coord2address.json`, `/geo/coord2regioncode.json` 은 `kakao-map` 스킬용 `/v1/kakao-map/*` 라우트가 직접 중계한다.
 - Kakao Mobility Directions endpoint: https://apis-navi.kakaomobility.com/v1/directions — `k-skill-proxy`의 `/v1/kakao-mobility/directions`가 운영자 `KAKAO_REST_API_KEY`를 `Authorization: KakaoAK ...` 헤더로 주입해 자동차 길찾기를 중계한다.
 - 공공데이터포털 전기자동차 충전소 정보 API: https://www.data.go.kr/data/15076352/openapi.do — `k-skill-proxy`의 `/v1/ev-charger/info`와 `/v1/ev-charger/status`가 `getChargerInfo`, `getChargerStatus`를 중계한다. 기존 공공데이터포털 키와 별개로 데이터셋 활용신청이 필요하며 자동승인 대상이다.
+- 열린국회정보 Open API: https://open.assembly.go.kr/portal/openapi/openApiNaListPage.do — `k-skill-proxy`의 `/v1/assembly/bills`, `/v1/assembly/bill-detail`, `/v1/assembly/votes`가 `ALLBILLV2`, `BILLINFODETAIL`, 본회의 표결 API를 중계한다. 운영자 키는 `ASSEMBLY_API_KEY` 또는 `KSKILL_ASSEMBLY_API_KEY`.
+- KOPIS 공연예술통합전산망 Open API: https://kopis.or.kr/openApi/restful — `k-skill-proxy`의 `/v1/kopis/performances`, `/v1/kopis/facilities`와 ID 상세 route가 `pblprfr`/`prfplc`를 중계한다. canonical host는 `kopis.or.kr`. 운영자 키는 `KOPIS_API_KEY` 또는 `KSKILL_KOPIS_API_KEY`.
+- 공공데이터포털 한국천문연구원 특일 정보: https://www.data.go.kr/data/15012690/openapi.do — `/v1/korean-holiday/calendar`가 `SpcdeInfoService` operation(`rest`/`national`/`anniversary`/`solarTerm`/`sundry`)을 중계한다.
+- 공공데이터포털 WHOIS 도메인/IP 정보 API: https://www.data.go.kr/data/15094277/openapi.do — `/v1/kr-whois/domain`, `/v1/kr-whois/ip`, `/v1/kr-whois/as`가 `B551505/whois/{domain_name,ip_address,as_number}`를 중계한다.
+- 공공데이터포털 국민건강보험공단 장기요양기관 검색: https://www.data.go.kr/data/15059029/openapi.do — `/v1/nhis/long-term-care`가 중계한다. 검진기관 찾기 https://www.data.go.kr/data/15154419/openapi.do 는 `/v1/nhis/checkup/{list,by-region,by-checkup-type,holiday}`가 중계한다. 같은 `DATA_GO_KR_API_KEY`라도 서비스별 활용신청이 별도다.
 - 환경부 무공해차 통합누리집 구매보조금 지급현황: https://ev.or.kr/nportal/buySupprt/initSubsidyPaymentCheckAction.do — 로그인 없는 공개 POST 응답에서 지자체별 민간공고·접수·출고·출고잔여 대수와 비고를 제공한다. `pnp4web` 보호 응답은 공개 문자표만 파싱해 복원하며 원격 코드를 실행하지 않는다.
 - 환경부 무공해차 통합누리집 모델별 보조금: https://ev.or.kr/nportal/buySupprt/psPopupLocalCarModelPrice.do — `year`, `local_cd`, `car_type`을 받는 로그인 없는 공개 POST 표면으로 모델별 국비·지방비·합계와 전환지원금을 제공한다.
 - 공공데이터포털 건축물대장정보 서비스: https://www.data.go.kr/data/15134735/openapi.do — 공식 `https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo` XML을 `/v1/building-register/title`이 파싱한다. 주소 입력은 `/v1/kakao-local/geocode`의 10자리 법정동 `b_code`와 필지 번호를 먼저 사용한다. 기존 키와 별개로 데이터셋 활용신청이 필요하며 자동승인 대상이다.
@@ -145,12 +150,6 @@
 - 다이소몰 매장 픽업 재고: https://www.daisomall.co.kr/api/pd/pdh/selStrPkupStck (Authorization: Bearer 헤더 필요)
 - 다이소몰 매장 픽업 가능 여부 fallback: https://www.daisomall.co.kr/api/ms/msg/selPkupStr (Bearer 재고 조회가 401/403으로 계속 막힐 때 `pickupEligibility` 보조 정보로 사용)
 - 다이소몰 온라인 재고: https://www.daisomall.co.kr/api/pdo/selOnlStck
-- 러브버그.com 지도: https://xn--2i0bt2q2wd1wb.com/
-- 러브버그.com 구별 점수 JSON: https://xn--2i0bt2q2wd1wb.com/api/map/gu-score
-- 러브버그.com 주간 제보 수 JSON: https://xn--2i0bt2q2wd1wb.com/api/map/weekly-report-count
-- 러브버그.com 클러스터 JSON: https://xn--2i0bt2q2wd1wb.com/api/map/clusters?level=sigungu&historicalYear=2026
-- 러브버그.com 동네 snapshot JSON: https://xn--2i0bt2q2wd1wb.com/api/map/areas?historicalYear=2026&includePolygon=false
-- 러브버그.com 익명 제보 RPC: https://sewrbxfawkmusnyzjoab.supabase.co/rest/v1/rpc/submit_anonymous_report (public anon key, `p_gu_code`, `p_lng`, `p_lat`, `p_accuracy_m`, `p_level`, `p_device_hash`, `p_context`, `p_image_url`, `p_indoor` body)
 - 마켓컬리 검색 API(v4): https://api.kurly.com/search/v4/sites/market/normal-search
 - 마켓컬리 검색 개수 API(v3): https://api.kurly.com/search/v3/sites/market/normal-search/count
 - 마켓컬리 상품 상세 페이지 예시: https://www.kurly.com/goods/5063110
@@ -229,7 +228,7 @@
 - 우체국 배송조회: https://service.epost.go.kr/trace.RetrieveRegiPrclDeliv.postal?sid1=
 - 우체국 배송상세 HTML: https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm
 
-- `namefyi` npm package: https://www.npmjs.com/package/namefyi — MIT, ESM-only TypeScript package used by `naming-house` for Korean romanization, CJK stroke counts, stroke→오행, and 오행 compatibility; repository https://github.com/fyipedia/namefyi-js; homepage https://namefyi.com.
+- `hanja` npm package: https://www.npmjs.com/package/hanja — MIT TypeScript package used by `naming-house` for deterministic Hanja stroke-order strings; repository https://github.com/rockpicado/hanja. Its stroke data originates from Taiwan government open data and is not treated as Kangxi original-form or 81-numerology counts.
 - `korean-stroke` npm package: https://www.npmjs.com/package/korean-stroke — MIT CommonJS package used by `naming-house` for Hangul stroke fallback when Hanja is unavailable; repository https://github.com/hwahyeon/korean-stroke; depends on `korean-unpacker`.
 - Naver Shopping public BFF JSON: `https://ns-portal.shopping.naver.com/api/v2/shopping-paged-slot?query=<검색어>&source=shp_gui` (네이버 쇼핑 가격비교 스킬의 no-key fallback)
 - Naver Developers Search API shopping docs: https://developers.naver.com/docs/serviceapi/search/shopping/shopping.md
@@ -270,16 +269,6 @@
 - 상가(상권)정보 검증 미러 manifest(R2, 직접 원본 timeout 시 fallback): https://pub-c974105a1e4840bcaa264cb2a55d99a1.r2.dev/store-longevity-radar/latest.json
 - 잡코리아 기업 인재검색: https://www.jobkorea.co.kr/corp/person/find — 기업회원 로그인 세션에서 마스킹 이력서/목록을 읽는 브라우저 기반 경로. 유료 열람/마스킹 해제/포지션 제안은 수동 확인 대상.
 - 사람인 기업회원 인재풀 검색: https://www.saramin.co.kr/zf_user/memcom/talent-pool/main/search — 기업회원 로그인 및 첫 기기 2차 인증 후 현재 보이는 마스킹 후보 정보를 읽는 브라우저 기반 경로. 유료 열람/연락처 확인/제안 발송은 수동 확인 대상.
-- 예비군 홈페이지 메인: https://www.yebigun1.mil.kr/
-- 예비군 홈페이지 로그인: https://www.yebigun1.mil.kr/dmobis/rfh/main/login/LoginForm.do
-- 예비군 나의 훈련정보: https://www.yebigun1.mil.kr/dmobis/rfh/rgt/edutrasubjpsn/IvdTraScheDetail.do — 소속 정보 표와 올해(`#detailTb`)/과거 연도(`#detail2`, 이미 DOM에 로드됨) 훈련 기록을 같은 페이지에서 함께 제공. PASS/공동인증서/간편인증 로그인 필요, 도메인은 `mma.go.kr`이 아니라 `yebigun1.mil.kr`.
-- 예비군 훈련 연기신청: https://www.yebigun1.mil.kr/dmobis/rft/rgt/ivdTraDelayApplInForm.do
-- 예비군 보류 신청: https://www.yebigun1.mil.kr/dmobis/rfh/rrm/holdpsn/HoldPsnReqForm.do
-- 예비군 해소 신청: https://www.yebigun1.mil.kr/dmobis/rfh/rrm/holdpsn/HoldPsnCancelReqForm.do
-- 예비군 개인정보수정: https://www.yebigun1.mil.kr/dmobis/rfh/rrm/reserveforce/ReserveForceForm.do
-- 예비군 상훈: https://www.yebigun1.mil.kr/dmobis/rfh/rrm/reserveforce/ReserveForcePrzdcr.do
-- 예비군 사이트맵: https://www.yebigun1.mil.kr/dmobis/rfh/rgt/sitemap/sitemap.jsp
-- 병무청 디지털서비스개방 청년 동원훈련 일정조회(v1에서 비교 대상으로 시도하지 않음): https://openservice.go.kr/youthMilTrainSch
 - 국가유산청 국가유산 정보 Open API 안내: https://www.khs.go.kr/html/HtmlPage.do?mn=NS_04_04_03&pg=%2Fpublicinfo%2Fpbinfo3_0201.jsp — 국가유산 목록·상세·이미지·동영상·음성·행사 공개 endpoint를 안내한다.
 - 국가유산 목록 API: https://www.khs.go.kr/cha/SearchKindOpenapiList.do — `ccbaMnm1`, `ccbaCtcd`, `pageUnit`, `pageIndex`, `ccbaCncl` 기준 목록 조회. 2026-07-15 실측에서 `ccbaMnm1=경복궁`, `ccbaCtcd=11` 조건으로 XML 11건을 반환했다.
 - 국가유산 상세 API: https://www.khs.go.kr/cha/SearchKindOpenapiDt.do — `ccbaKdcd`, `ccbaAsno`, `ccbaCtcd`로 설명·주소·좌표·이미지를 조회한다. 2026-07-15 실측에서 서울 숭례문 상세 XML 응답을 확인했다.

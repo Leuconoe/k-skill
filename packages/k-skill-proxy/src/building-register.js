@@ -1,3 +1,5 @@
+const { fetchWithRetry } = require("./fetch-with-retry");
+
 const BUILDING_REGISTER_URL = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo";
 const AUTH_RESULT_CODES = new Set(["20", "21", "22", "30", "31", "32", "33"]);
 const PNU_LAND_CATEGORY_TO_PLAT_GB_CD = { 1: "0", 2: "1" };
@@ -180,7 +182,10 @@ async function fetchBuildingRegisterTitle({ params, serviceKey, fetchImpl = glob
 
   let response;
   try {
-    response = await fetchImpl(url.toString(), { signal: AbortSignal.timeout(20000) });
+    response = await fetchWithRetry(url.toString(), {
+      fetchImpl,
+      signal: AbortSignal.timeout(20000)
+    });
   } catch {
     return errorResult("upstream_unavailable", "Building register upstream request failed.");
   }

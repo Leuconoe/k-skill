@@ -33,7 +33,7 @@ matches, and otherwise:
 3. creates a timestamped backup of the current app;
 4. syncs the proxy and its local workspace dependency;
 5. installs production dependencies and restarts the systemd user service;
-6. checks local and public `/health`;
+6. checks local and public `/health` and `/privacy`;
 7. records `deployed-sha` only after all checks pass.
 
 Any failure after the backup performs an automatic rollback by restoring the
@@ -53,6 +53,8 @@ mosh gpu01
 /data/home/jeffrey/apps/k-skill-proxy/deploy-k-skill-proxy-gpu01.sh
 curl -fsS http://127.0.0.1:8080/health
 curl -fsS https://k-skill-proxy.nomadamas.org/health
+curl -fsS http://127.0.0.1:8080/privacy
+curl -fsS https://k-skill-proxy.nomadamas.org/privacy
 cat /data/home/jeffrey/apps/k-skill-proxy/deployed-sha
 ```
 
@@ -74,6 +76,23 @@ grep '^KSKILL_PROXY_TRUST_PROXY_HOPS=' /data/home/jeffrey/apps/k-skill-proxy/.en
 The expected production value is `KSKILL_PROXY_TRUST_PROXY_HOPS=1`. If the key is missing, the next deployment adds it and restarts the service. If the topology changes, update the explicit value only after recounting the trusted reverse-proxy hops.
 
 The `.env` file stays on `gpu01` and must not be copied into the repository.
+
+## Required runtime env (gpu01)
+
+Cloudflare Tunnel forwards to `127.0.0.1:8080`. Fastify must trust that one hop
+or every external client shares a single rate-limit bucket (`request.ip` becomes
+`127.0.0.1`). Keep these keys in `/data/home/jeffrey/apps/k-skill-proxy/.env`:
+
+```dotenv
+KSKILL_PROXY_TRUST_PROXY_HOPS=1
+KSKILL_PROXY_RATE_LIMIT_WINDOW_MS=60000
+KSKILL_PROXY_RATE_LIMIT_MAX=60
+```
+
+`KSKILL_PROXY_TRUST_PROXY_HOPS=1` is required in production. Leave it unset
+(default `0`) only for a locally bound process that is not behind a reverse
+proxy. When hops are trusted, the rate limiter prefers `CF-Connecting-IP` over
+`X-Forwarded-For` so clients cannot spoof extra XFF entries.
 
 ## ASK Seoul weather-risk route handoff
 

@@ -1,6 +1,6 @@
 ---
 name: kopis-performance-search
-description: KOPIS 공연 목록·상세·시설을 조회하고, 돌쇠에서는 공식 예매처의 좌석·예약·승인 기반 결제까지 이어간다.
+description: KOPIS 공연 목록·상세·시설을 조회한다. 조회 전용.
 license: MIT
 metadata:
   category: culture
@@ -27,6 +27,18 @@ npx -y @nomadamas/k-skill@0 files kopis-performance-search
 ```
 
 If `npx` is unavailable, install Node.js 18+ or follow https://github.com/NomaDamas/k-skill#readme, or read the source instructions at https://github.com/NomaDamas/k-skill/blob/main/kopis-performance-search/instruction.md.
+
+## Legal disclaimer (required)
+
+This skill is not an official feature of, officially supported by, affiliated with, sponsored by, approved by, or developed in collaboration with any third-party trademark owner or service operator it identifies. Third-party names are used only to describe the skill's function, lookup target, or compatibility.
+
+Any automated collection of publicly accessible information must be limited to personal, non-organizational lookup. Do not use this skill for systematic or bulk crawling, database building, access-control or block circumvention, or conduct that interferes with a third party's business or service.
+
+Read the full Korean legal disclaimer, including the cited Korean Supreme Court precedents and statutory limits, before use:
+
+```bash
+npx -y @nomadamas/k-skill@0 read kopis-performance-search references/DISCLAIMER.md
+```
 
 ## Hard rules even without the CLI
 

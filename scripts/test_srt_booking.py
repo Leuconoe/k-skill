@@ -8,7 +8,11 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
+from requests import ConnectionError as RequestsConnectionError
+from SRT.errors import SRTNetFunnelError
+
 SCRIPT_PATH = Path(__file__).with_name("srt_booking.py")
+CANONICAL_PATH = SCRIPT_PATH.parent.parent / "srt-booking" / "scripts" / "srt_booking.py"
 SPEC = importlib.util.spec_from_file_location("srt_booking", SCRIPT_PATH)
 assert SPEC and SPEC.loader
 srt_booking = importlib.util.module_from_spec(SPEC)
@@ -61,6 +65,15 @@ class NoisyFakeSRT(FakeSRT):
         return super().search_train(**kwargs)
 
 
+class FailingFakeSRT(FakeSRT):
+    def __init__(self, error):
+        super().__init__("", "", False)
+        self.error = error
+
+    def search_train(self, **kwargs):
+        raise self.error
+
+
 class SrtLiveReadOnlyTests(unittest.TestCase):
     def test_parser_exposes_only_search_and_source(self) -> None:
         parser = srt_booking.build_parser()
@@ -69,7 +82,7 @@ class SrtLiveReadOnlyTests(unittest.TestCase):
         self.assertEqual(set(subcommands), {"search", "source"})
 
     def test_helper_uses_live_srtrain_not_file_transport(self) -> None:
-        source = SCRIPT_PATH.read_text()
+        source = CANONICAL_PATH.read_text()
         self.assertIn("SRTrain", source)
         self.assertNotIn("kordoc", source)
         self.assertNotIn("downloadAttach", source)
@@ -186,6 +199,34 @@ class SrtLiveReadOnlyTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 2)
         self.assertIn("YYYYMMDD", result.stderr)
+
+    def test_cli_reports_upstream_failures_without_traceback(self) -> None:
+        failures = [
+            SRTNetFunnelError("queue down"),
+            RequestsConnectionError("network down"),
+        ]
+
+        for failure in failures:
+            with self.subTest(failure=type(failure).__name__):
+                stderr = io.StringIO()
+                client = FailingFakeSRT(failure)
+
+                with mock.patch.object(srt_booking, "build_client", return_value=client):
+                    with mock.patch("sys.stderr", stderr):
+                        with self.assertRaises(SystemExit) as raised:
+                            srt_booking.main([
+                                "search",
+                                "--dep",
+                                "수서",
+                                "--arr",
+                                "부산",
+                                "--date",
+                                "20260819",
+                            ])
+
+                self.assertEqual(raised.exception.code, 2)
+                self.assertIn("SRT timetable lookup unavailable", stderr.getvalue())
+                self.assertNotIn("Traceback", stderr.getvalue())
 
 
 if __name__ == "__main__":

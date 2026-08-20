@@ -40,6 +40,17 @@ ensure_env_default() {
   log "Added required runtime default: $key=$value"
 }
 
+privacy_check() {
+  local url="$1"
+  local output
+  output="$(curl -fsS --max-time 20 "$url")"
+  node -e '
+    if (!process.argv[1].includes("name=\"k-skill-privacy-policy-version\" content=\"2026-08-18\"")) {
+      process.exit(1);
+    }
+  ' "$output"
+}
+
 if [[ ! -d "$REPO_DIR/.git" ]]; then
   log "Cloning source repository"
   git clone "$REPO_URL" "$REPO_DIR"
@@ -98,6 +109,8 @@ for _ in 1 2 3 4 5; do
 done
 health_check http://127.0.0.1:8080/health
 health_check https://k-skill-proxy.nomadamas.org/health
+privacy_check http://127.0.0.1:8080/privacy
+privacy_check https://k-skill-proxy.nomadamas.org/privacy
 
 printf '%s\n' "$target_sha" > "$APP_DIR/deployed-sha"
 trap - ERR

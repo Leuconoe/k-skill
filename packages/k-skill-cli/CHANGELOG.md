@@ -1,5 +1,36 @@
 # @nomadamas/k-skill
 
+## 0.4.0
+
+### Minor Changes
+
+- 4b82040: `toss-securities` 스킬과 npm 패키지 이름을 `toss-investment`로 바꾼다. 조회 범위와 공식 Open API 경로는 그대로다.
+
+### Patch Changes
+
+- fc01be1: Fix proxy rate-limit buckets behind Cloudflare Tunnel, retry idempotent GET upstream failures, and accept mcp SDK 2.x in myrealtrip-search.
+- 1710b51: Remove the `lovebug-report` skill from bundled CLI assets.
+
+## 0.3.0
+
+### Minor Changes
+
+- a46fa66: Convert KTX to credential-free official public timetable lookup and SRT to credential-free live timetable and seat-availability lookup. Remove login, internal KTX mobile APIs, anti-bot bypasses, reservation, payment, cancellation, exact seat selection, and automated monitoring behavior.
+
+### Patch Changes
+
+- 30d8ed4: seoul-weather-risk helper를 hosted k-skill proxy 전용으로 고정하고, 등록 전 local-direct·Marketplace API key fallback을 제거한다.
+- 47e0922: seoul-weather-risk 일반 조회에 metadata 왕복을 생략하는 `query --fast` 경로를 추가해 hosted data 요청을 한 번으로 줄인다.
+- afc16a9: fix(k-skill-cli): honor Python runner overrides and use a Windows-compatible default
+
+## 0.2.5
+
+### Patch Changes
+
+- ed21f93: Rewrite the setup workflow around skill installation, Claude Code plugin support, the unified CLI runtime, credential resolution, verification, and strictly approved update checks.
+- e145763: Remove the deprecated `used-car-price-search` skill from bundled CLI assets.
+- 79e57d5: store-longevity-radar가 공공데이터포털 직접 다운로드 실패 시 SHA-256 검증된 R2 미러를 fallback으로 사용하도록 한다.
+
 ## 0.2.4
 
 ### Patch Changes

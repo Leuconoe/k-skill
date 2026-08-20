@@ -15,6 +15,7 @@ client/skill -> k-skill-proxy -> upstream public API
 현재 기본 엔드포인트는 아래와 같습니다.
 
 - `GET /health`
+- `GET /privacy` — 개인정보 보호법 제30조에 따른 k-skill-proxy 개인정보 처리방침
 - `GET /v1/fine-dust/report`
 - `GET /v1/korea-weather/forecast`
 - `GET /v1/ask-seoul/weather-risk/bundle` (ASK 서울 기상 위험 단일 bundle, `ASK_SEOUL_SKILL_API_BASE_URL` + `ASK_SEOUL_KSKILL_API_KEY`)
@@ -52,6 +53,16 @@ client/skill -> k-skill-proxy -> upstream public API
 - `GET /v1/kr-whois/domain` (KISA WHOIS `.kr`/`.한국` 도메인 조회, `DATA_GO_KR_API_KEY`)
 - `GET /v1/kr-whois/ip` (KISA WHOIS IPv4/IPv6 조회, `DATA_GO_KR_API_KEY`)
 - `GET /v1/kr-whois/as` (KISA WHOIS AS 번호 조회, `DATA_GO_KR_API_KEY`)
+- `GET /v1/assembly/bills` (열린국회정보 의안 검색, `ASSEMBLY_API_KEY`)
+- `GET /v1/assembly/bill-detail` (열린국회정보 의안 상세, `ASSEMBLY_API_KEY`)
+- `GET /v1/assembly/votes` (열린국회정보 본회의 표결, `ASSEMBLY_API_KEY`)
+- `GET /v1/kopis/performances` (KOPIS 공연 목록, `KOPIS_API_KEY`)
+- `GET /v1/kopis/performances/:id` (KOPIS 공연 상세, `KOPIS_API_KEY`)
+- `GET /v1/kopis/facilities` (KOPIS 공연시설 목록, `KOPIS_API_KEY`)
+- `GET /v1/kopis/facilities/:id` (KOPIS 공연시설 상세, `KOPIS_API_KEY`)
+- `GET /v1/korean-holiday/calendar` (한국천문연구원 특일 정보, `DATA_GO_KR_API_KEY`, 데이터셋 `15012690`)
+- `GET /v1/nhis/long-term-care` (국민건강보험공단 장기요양기관 검색, `DATA_GO_KR_API_KEY`, 데이터셋 `15059029`)
+- `GET /v1/nhis/checkup/:operation` (국민건강보험공단 검진기관 찾기 `list`/`by-region`/`by-checkup-type`/`holiday`, `DATA_GO_KR_API_KEY`, 데이터셋 `15154419`)
 - `GET /v1/vworld/search` (VWorld 단지명·지번 검색, 호출자 `x-k-skill-vworld-api-key` 헤더 필요)
 - `GET /v1/vworld/apartment-prices` (VWorld 공동주택 공시가격 조회, 호출자 `x-k-skill-vworld-api-key` 헤더 필요)
 - `GET /B552584/:service/:operation` (허용된 AirKorea route passthrough)
@@ -70,7 +81,9 @@ client/skill -> k-skill-proxy -> upstream public API
 - `SEOUL_OPEN_API_KEY=...`
 - `HRFCO_OPEN_API_KEY=...`
 - `OPINET_API_KEY=...`
-- `DATA_GO_KR_API_KEY=...` (WHOIS `15094277`, EV 충전소 `15076352`, 건축물대장 `15134735` 등 route별 공공데이터포털 활용신청 승인 필요)
+- `DATA_GO_KR_API_KEY=...` (WHOIS `15094277`, 특일 `15012690`, 장기요양 `15059029`, 검진기관 `15154419`, EV 충전소 `15076352`, 건축물대장 `15134735` 등 route별 공공데이터포털 활용신청 승인 필요)
+- `ASSEMBLY_API_KEY=...` 또는 `KSKILL_ASSEMBLY_API_KEY=...` (열린국회정보 Open API)
+- `KOPIS_API_KEY=...` 또는 `KSKILL_KOPIS_API_KEY=...` (KOPIS Open API)
 - `FOODSAFETYKOREA_API_KEY=...` (선택: 식품안전나라 회수 live 결과, 없으면 sample fallback)
 - `KEDU_INFO_KEY=...` (나이스 교육정보 개방 포털 Open API 인증키)
 - `DATA4LIBRARY_AUTH_KEY=...` (도서관 정보나루 Open API 인증키)

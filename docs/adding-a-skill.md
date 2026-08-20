@@ -177,6 +177,7 @@ npx -y @nomadamas/k-skill@0 read my-new-skill references/guide.md
 ```
 
 `npm run sync:cli-skills`가 helper와 reference를 통합 CLI 패키지에 동봉한다.
+루트 `scripts/`에서 `bundle[]`로 끌어오지 않는다. helper는 스킬 디렉터리의 `scripts/`에 둔다.
 
 ---
 
@@ -197,10 +198,10 @@ npx -y @nomadamas/k-skill@0 read my-new-skill references/guide.md
 2. **브라우저 동작을 관찰하기**: 화면을 직접 긁기 전에 검색/상세 화면이 어떤 공개 데이터 요청을 통해 채워지는지 확인한다.
 3. **안정적인 경로를 우선하기**: 화면 선택자보다 공개 데이터 호출, 문서화된 endpoint, RSS/sitemap처럼 구조가 덜 흔들리는 경로를 선호한다.
 4. **차단과 빈 응답을 실패로 분리하기**: HTTP 성공만으로 완료로 보지 말고, 실제 결과 본문이 있는지 확인한다. 로그인벽, 봇 검사, 빈 껍데기 페이지는 별도 실패 모드로 적는다.
-5. **site-dependent 방법을 명시적으로 패키징하기**: 탐색 과정에서 확인한 검색 URL, 필수 파라미터, 결과 해석 규칙, fallback 순서를 `SKILL.md`와 패키지 코드에 좁고 명확하게 기록한다.
+5. **site-dependent 방법을 명시적으로 패키징하기**: 탐색 과정에서 확인한 검색 URL, 필수 파라미터, 결과 해석 규칙, fallback 순서를 `instruction.md`와 패키지 코드에 좁고 명확하게 기록한다.
 6. **권한 경계를 지키기**: 돌쇠에서는 vault/CloakBrowser/`clarify` 계약을 이용해 지원되는 로그인·결제·제출을 수행한다. CAPTCHA, 본인인증, 전자서명, 법률상 제한, 사이트가 지원하지 않는 흐름은 우회하지 않는다.
 
-`SKILL.md`에는 최소한 아래 내용을 남긴다.
+`instruction.md`에는 최소한 아래 내용을 남긴다.
 
 - 어떤 공개 접근 경로를 선택했는지와 그 이유
 - 검색/상세 조회의 입력값과 출력값
@@ -270,16 +271,16 @@ npm run ci
 
 새 스킬을 PR 올리기 전에 확인한다.
 
-- [ ] `my-new-skill/SKILL.md` 작성 완료
-- [ ] 정확한 `## Runtime contract (required)` 블록을 원문 그대로 포함
+- [ ] `my-new-skill/skill.json`과 `instruction.md` 작성 완료
+- [ ] `npm run generate:skill-stubs`와 `npm run sync:cli-skills` 실행 (`SKILL.md`는 생성물이므로 직접 수정하지 않음)
 - [ ] frontmatter `name`이 디렉토리 이름과 일치
-- [ ] `npm run ci` 통과 (`./scripts/validate-skills.sh` 포함)
+- [ ] `npm run ci` 통과 (`./scripts/validate-skills.sh` 포함). Python/Node helper 테스트는 `scripts/test_*.py`, `<skill>/tests/`, `<skill>/scripts/test_*.py`에 두면 루트 `npm test`가 glob으로 수집한다. `package.json` 테스트 목록을 손으로 고치지 않는다.
 - [ ] npm 패키지라면 `packages/`에 구현체와 테스트 추가
 - [ ] npm 패키지라면 `.changeset/*.md` 파일 추가 (반드시 **기능 PR에서**, Version Packages PR에서 추가하지 말 것)
 - [ ] 프록시 경유라면 `k-skill-proxy/src/server.js`에 route 추가하고 gpu01 production `.env` 및 자동 배포 smoke 구성이 맞는지 확인
 - [ ] 크롤링/검색 스킬이라면 공개 접근 경로, fallback 순서, 차단/로그인/빈 결과 실패 모드 문서화
 - [ ] 시크릿이 있다면 `KSKILL_` 접두사 규칙 준수 및 `docs/setup.md` 업데이트
-- [ ] `docs/features/my-new-skill.md` 작성 (선택, 상세 가이드)
+- [ ] `docs/features/my-new-skill.md` 작성. `k-skill-setup`만 예외로 [공통 설정 가이드](setup.md)를 가리킨다.
 - [ ] 브라우저가 필요한 스킬이라면 돌쇠 CloakBrowser 우선, `k-skill-browser-runtime` semver fallback, typed stop rule, 직접 HTTP 우선, `workspace:` 미사용 확인 ([브라우저 런타임 문서](browser-runtime.md))
 - [ ] 액션 가능한 스킬이라면 돌쇠에서 조회 뒤 실제 액션 경로와 `clarify` 비가역 승인 경계를 문서화
 
@@ -292,4 +293,4 @@ npm run ci
 - [보안/시크릿 정책](security-and-secrets.md) — 인증 정보 취급 원칙
 - [브라우저 런타임](browser-runtime.md) — BrowserOS CDP 런타임과 stop rule
 - [돌쇠 런타임 계약](dolshoi-runtime.md) — vault, CloakBrowser, action, approval, fallback 계약
-- [전체 런타임 액션 감사표](runtime-action-audit.md) — 121개 스킬의 action mode와 완료 목표
+- [전체 런타임 액션 감사표](runtime-action-audit.md) — 119개 스킬의 action mode와 완료 목표

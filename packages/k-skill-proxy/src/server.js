@@ -1,5 +1,7 @@
 // allow: SIZE_OK - Central Fastify composition root; provider logic is split into route modules.
 const crypto = require("node:crypto");
+const fs = require("node:fs");
+const path = require("node:path");
 const Fastify = require("fastify");
 const { LogController } = Fastify;
 const {
@@ -91,6 +93,11 @@ const {
   normalizeAskSeoulWeatherRiskQuery,
   proxyAskSeoulWeatherRiskRequest
 } = require("./ask-seoul");
+const PRIVACY_POLICY_HTML = fs.readFileSync(
+  path.join(__dirname, "..", "privacy-policy.html"),
+  "utf8"
+);
+const PRIVACY_POLICY_LINK = '</privacy>; rel="privacy-policy"';
 const AIR_KOREA_UPSTREAM_BASE_URL = "http://apis.data.go.kr";
 const DATA_GO_KR_UPSTREAM_BASE_URL = "https://apis.data.go.kr";
 const DATA4LIBRARY_UPSTREAM_BASE_URL = "https://data4library.kr/api";
@@ -351,6 +358,16 @@ function createMemoryCache({
   };
 }
 
+function clientRateLimitKey(request, config) {
+  if (config.trustProxyHops > 0) {
+    const cfConnectingIp = request.headers["cf-connecting-ip"];
+    if (typeof cfConnectingIp === "string" && cfConnectingIp.trim()) {
+      return cfConnectingIp.trim();
+    }
+  }
+  return request.ip || "unknown";
+}
+
 function buildRateLimiter(config, { now = Date.now } = {}) {
   const state = new Map();
 
@@ -378,7 +395,7 @@ function buildRateLimiter(config, { now = Date.now } = {}) {
       return true;
     }
 
-    const key = request.ip || "unknown";
+    const key = clientRateLimitKey(request, config);
     const currentTime = now();
     const current = state.get(key);
 
@@ -2137,6 +2154,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     app.log.info({ routeUsage: true, route, statusCode: reply.statusCode }, "route usage");
   });
 
+  app.addHook("onSend", async (_request, reply, payload) => {
+    reply.header("link", PRIVACY_POLICY_LINK);
+    return payload;
+  });
+
   app.get("/health", async () => {
     const naverSearchKeysPresent = Boolean(config.naverSearchClientId && config.naverSearchClientSecret);
     return {
@@ -2180,8 +2202,19 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
       auth: {
         tokenRequired: false
       },
+      privacy_policy: "/privacy",
       timestamp: new Date().toISOString()
     };
+  });
+
+  app.get("/privacy", async (_request, reply) => {
+    reply
+      .type("text/html; charset=utf-8")
+      .header("cache-control", "public, max-age=300")
+      .header("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'")
+      .header("referrer-policy", "no-referrer")
+      .header("x-content-type-options", "nosniff");
+    return PRIVACY_POLICY_HTML;
   });
 
   async function handleVWorldRoute({ operation, normalize, cacheRoute, request, reply }) {
