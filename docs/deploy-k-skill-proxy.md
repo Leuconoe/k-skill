@@ -18,7 +18,7 @@ domain is served by a Cloudflare Tunnel that forwards to the Fastify process on
 | Deployed revision | `/data/home/jeffrey/apps/k-skill-proxy/deployed-sha` |
 | Deploy script | `scripts/deploy-k-skill-proxy-gpu01.sh` |
 
-The production listener is bound to `127.0.0.1` and receives public traffic through exactly one local Cloudflare Tunnel hop. The deployment script therefore ensures the runtime env contains `KSKILL_PROXY_TRUST_PROXY_HOPS=1` before restarting the service. It only adds the value when the key is absent, so an explicit operator value is preserved. `KSKILL_PROXY_ENV_FILE` may point the script at a non-default runtime env path.
+The production listener is bound to `127.0.0.1` and receives public traffic through exactly one local Cloudflare Tunnel hop. Only when the gpu01 deployment script is running with `KSKILL_PROXY_DEPLOY_ENVIRONMENT=production` and `KSKILL_PROXY_DEPLOY_HOST=gpu01` does it ensure the runtime env contains `KSKILL_PROXY_TRUST_PROXY_HOPS=1` before restarting the service. Those values are the script defaults on the production host. Non-production or non-gpu01 executions leave the application default at `0`. An explicit operator value is preserved, and `KSKILL_PROXY_ENV_FILE` may point the script at a non-default runtime env path.
 
 Do not use this setting for a directly exposed listener. Trusting one hop is safe here because the Fastify port is loopback-only; making that port externally reachable would allow clients to supply a forged `X-Forwarded-For` value.
 
@@ -73,7 +73,7 @@ Verify the trust-proxy setting without printing the rest of the secret-bearing e
 grep '^KSKILL_PROXY_TRUST_PROXY_HOPS=' /data/home/jeffrey/apps/k-skill-proxy/.env
 ```
 
-The expected production value is `KSKILL_PROXY_TRUST_PROXY_HOPS=1`. If the key is missing, the next deployment adds it and restarts the service. If the topology changes, update the explicit value only after recounting the trusted reverse-proxy hops.
+The expected production value is `KSKILL_PROXY_TRUST_PROXY_HOPS=1`. If the key is missing, the next gpu01 production deployment adds it and restarts the service. Staging, local, and other-host executions do not add it. If the topology changes, update the explicit value only after recounting the trusted reverse-proxy hops.
 
 The `.env` file stays on `gpu01` and must not be copied into the repository.
 

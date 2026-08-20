@@ -7,9 +7,11 @@ APP_DIR="${KSKILL_PROXY_APP_DIR:-/data/home/jeffrey/apps/k-skill-proxy}"
 SERVICE_NAME="${KSKILL_PROXY_SERVICE_NAME:-k-skill-proxy.service}"
 DEPLOY_REF="${KSKILL_PROXY_DEPLOY_REF:-origin/main}"
 ENV_FILE="${KSKILL_PROXY_ENV_FILE:-$APP_DIR/.env}"
+DEPLOY_ENVIRONMENT="${KSKILL_PROXY_DEPLOY_ENVIRONMENT:-production}"
+DEPLOY_HOST="${KSKILL_PROXY_DEPLOY_HOST:-$(hostname -s)}"
 
 log() {
-  printf '[%s] %s\n' "$(date -Is)" "$*"
+  printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"
 }
 
 health_check() {
@@ -40,6 +42,18 @@ ensure_env_default() {
   log "Added required runtime default: $key=$value"
 }
 
+ensure_gpu01_production_defaults() {
+  local env_file="$1"
+  local deploy_environment="$2"
+  local deploy_host="$3"
+
+  if [[ "$deploy_environment" != "production" || "$deploy_host" != "gpu01" ]]; then
+    return
+  fi
+
+  ensure_env_default "$env_file" "KSKILL_PROXY_TRUST_PROXY_HOPS" "1"
+}
+
 privacy_check() {
   local url="$1"
   local output
@@ -50,6 +64,10 @@ privacy_check() {
     }
   ' "$output"
 }
+
+if [[ "${KSKILL_PROXY_DEPLOY_LIB_ONLY:-0}" == "1" ]]; then
+  return 0 2>/dev/null || exit 0
+fi
 
 if [[ ! -d "$REPO_DIR/.git" ]]; then
   log "Cloning source repository"
@@ -98,7 +116,7 @@ install -m 0644 "$REPO_DIR/package-lock.json" "$APP_DIR/package-lock.json"
 
 npm --prefix "$APP_DIR" ci --omit=dev --workspace k-skill-proxy \
   --include-workspace-root=false --no-audit --no-fund
-ensure_env_default "$ENV_FILE" "KSKILL_PROXY_TRUST_PROXY_HOPS" "1"
+ensure_gpu01_production_defaults "$ENV_FILE" "$DEPLOY_ENVIRONMENT" "$DEPLOY_HOST"
 systemctl --user restart "$SERVICE_NAME"
 
 for _ in 1 2 3 4 5; do
