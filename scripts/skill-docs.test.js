@@ -1009,6 +1009,10 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   const proxyPackage = JSON.parse(read(path.join("packages", "k-skill-proxy", "package.json")));
 
   assert.match(deployScript, /DEPLOY_REF="\$\{KSKILL_PROXY_DEPLOY_REF:-origin\/main\}"/);
+  assert.match(deployScript, /KSKILL_PROXY_ENV_FILE/);
+  assert.match(deployScript, /KSKILL_PROXY_DEPLOY_ENVIRONMENT:-production/);
+  assert.match(deployScript, /KSKILL_PROXY_DEPLOY_HOST:-\$\(hostname -s\)/);
+  assert.match(deployScript, /ensure_gpu01_production_defaults "\$ENV_FILE" "\$DEPLOY_ENVIRONMENT" "\$DEPLOY_HOST"/);
   assert.match(deployScript, /npm --prefix "\$REPO_DIR" run test --workspace k-skill-proxy/);
   assert.match(deployScript, /tar -C "\$APP_DIR" -czf "\$backup"/);
   assert.match(deployScript, /systemctl --user restart "\$SERVICE_NAME"/);
@@ -1032,8 +1036,47 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   assert.match(deployDoc, /rollback/i);
   assert.match(deployDoc, /deployed-sha/);
   assert.match(deployDoc, /KSKILL_PROXY_TRUST_PROXY_HOPS=1/);
+  assert.match(deployDoc, /Cloudflare Tunnel/);
   assert.match(packageReadme, /KSKILL_PROXY_TRUST_PROXY_HOPS/);
   assert.match(deployScript, /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+});
+
+test("proxy deployment defaults trust-proxy only for gpu01 production", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "k-skill-proxy-deploy-env-"));
+  const deployScript = path.join(repoRoot, "scripts", "deploy-k-skill-proxy-gpu01.sh");
+  const runDefault = (envFile, deployEnvironment, deployHost) =>
+    childProcess.execFileSync(
+      "bash",
+      [
+        "-c",
+        'KSKILL_PROXY_DEPLOY_LIB_ONLY=1 source "$1"; ensure_gpu01_production_defaults "$2" "$3" "$4"',
+        "bash",
+        deployScript,
+        envFile,
+        deployEnvironment,
+        deployHost,
+      ],
+      { encoding: "utf8" },
+    );
+
+  const productionEnv = path.join(tmpDir, "production.env");
+  const stagingEnv = path.join(tmpDir, "staging.env");
+  const otherHostEnv = path.join(tmpDir, "other-host.env");
+  const explicitEnv = path.join(tmpDir, "explicit.env");
+  for (const envFile of [productionEnv, stagingEnv, otherHostEnv]) {
+    fs.writeFileSync(envFile, "KSKILL_PROXY_RATE_LIMIT_MAX=60\n");
+  }
+  fs.writeFileSync(explicitEnv, "KSKILL_PROXY_TRUST_PROXY_HOPS=2\n");
+
+  runDefault(productionEnv, "production", "gpu01");
+  runDefault(stagingEnv, "staging", "gpu01");
+  runDefault(otherHostEnv, "production", "developer-mac");
+  runDefault(explicitEnv, "production", "gpu01");
+
+  assert.match(fs.readFileSync(productionEnv, "utf8"), /^KSKILL_PROXY_TRUST_PROXY_HOPS=1$/m);
+  assert.doesNotMatch(fs.readFileSync(stagingEnv, "utf8"), /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+  assert.doesNotMatch(fs.readFileSync(otherHostEnv, "utf8"), /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+  assert.match(fs.readFileSync(explicitEnv, "utf8"), /^KSKILL_PROXY_TRUST_PROXY_HOPS=2$/m);
 });
 
 test("kakaotalk-mac skill documents katok archive search usage", () => {
