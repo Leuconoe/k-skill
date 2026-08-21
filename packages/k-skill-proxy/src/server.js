@@ -3645,7 +3645,19 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     });
 
     if (result.error) {
-      reply.code(502);
+      const logUpstreamError = result.error === "upstream_configuration_error"
+        ? request.log.error.bind(request.log)
+        : request.log.warn.bind(request.log);
+      logUpstreamError({
+        route: "/v1/real-estate/:assetType/:dealType",
+        upstreamError: result.error,
+        upstreamMessage: result.message,
+        upstreamCode: result.upstream_code
+      }, "real estate upstream error");
+      reply.code(result.status_code || 502);
+      if (result.retry_after) {
+        reply.header("retry-after", String(result.retry_after));
+      }
       return {
         ...result,
         proxy: {
@@ -3734,6 +3746,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         serviceKey: config.molitApiKey
       });
     } catch (error) {
+      request.log.warn({
+        route: "/v1/korean-stock/search",
+        upstreamError: error.code || "proxy_error",
+        upstreamMessage: error.message
+      }, "KRX upstream error");
       reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
       return {
         error: error.upstreamCode ? "upstream_error" : "proxy_error",
@@ -3917,6 +3934,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         filters: normalized
       });
     } catch (error) {
+      request.log.warn({
+        route: "/v1/korean-stock/base-info",
+        upstreamError: error.code || "proxy_error",
+        upstreamMessage: error.message
+      }, "KRX upstream error");
       reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
       return {
         error: error.code || "proxy_error",
@@ -3998,6 +4020,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         filters: normalized
       });
     } catch (error) {
+      request.log.warn({
+        route: "/v1/korean-stock/trade-info",
+        upstreamError: error.code || "proxy_error",
+        upstreamMessage: error.message
+      }, "KRX upstream error");
       reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
       return {
         error: error.code || "proxy_error",
