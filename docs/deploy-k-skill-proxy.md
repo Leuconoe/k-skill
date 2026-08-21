@@ -87,12 +87,19 @@ or every external client shares a single rate-limit bucket (`request.ip` becomes
 KSKILL_PROXY_TRUST_PROXY_HOPS=1
 KSKILL_PROXY_RATE_LIMIT_WINDOW_MS=60000
 KSKILL_PROXY_RATE_LIMIT_MAX=60
+COUPANG_ACCESS_KEY=<coupang-partners-access-key>
+COUPANG_SECRET_KEY=<coupang-partners-secret-key>
 ```
 
 `KSKILL_PROXY_TRUST_PROXY_HOPS=1` is required in production. Leave it unset
 (default `0`) only for a locally bound process that is not behind a reverse
 proxy. When hops are trusted, the rate limiter prefers `CF-Connecting-IP` over
 `X-Forwarded-For` so clients cannot spoof extra XFF entries.
+
+The Coupang keys enable `GET /v1/coupang/products/search`. Store them only in
+the gpu01 runtime `.env`; never pass them in query strings, shell arguments,
+issues, or logs. Verify activation through
+`/health` → `upstreams.coupangConfigured=true`.
 
 ## ASK Seoul weather-risk route handoff
 

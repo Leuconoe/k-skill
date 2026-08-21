@@ -172,10 +172,7 @@
 - Lotte Cinema seats API: https://mcp.aka.page/api/lottecinema/seats
 - hola-poke-yeoksam reference repo: https://github.com/mnspkm/hola-poke-yeoksam-skill
 - hola-poke-yeoksam remote MCP endpoint: https://hola-poke-yeoksam-skill.onrender.com/mcp
-- retention-corp/coupang_partners (Coupang Partners client and local MCP-compatible layer): https://github.com/retention-corp/coupang_partners
-- coupang_partners local MCP contract: local://coupang-mcp
-- coupang_partners hosted fallback (credentialless, allowlist-gated): https://a.retn.kr/v1/public/assist
-- coupang_partners hosted fallback PR (merged): https://github.com/retention-corp/coupang_partners/pull/1
+- Coupang Partners Open API HMAC signature documentation: https://developers.coupangcorp.com/hc/en-us/articles/360033461914-Creating-HMAC-Signature
 - 오늘의집 오늘의딜 공개 페이지: https://ohou.se/commerces/today_deals
 - 오늘의집 오늘의딜 canonical/OG URL: https://store.ohou.se/today_deals
 - 오늘의집 오늘의딜 데이터 표면: HTML `__NEXT_DATA__`의 `today-deal-feed`

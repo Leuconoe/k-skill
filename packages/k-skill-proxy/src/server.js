@@ -58,6 +58,10 @@ const {
   proxyKstartupRequest
 } = require("./kstartup");
 const { fetchNearbyParkingLots } = require("./parking-lots");
+const {
+  normalizeCoupangProductSearchQuery,
+  searchCoupangProducts
+} = require("./coupang");
 const { searchRegionCode } = require("./region-lookup");
 const { resolveEducationOfficeFromNaturalLanguage } = require("./neis-office-codes");
 const { normalizeNationalPensionQuery, fetchNationalPensionWorkplace } = require("./national-pension");
@@ -248,6 +252,8 @@ function buildConfig(env = process.env) {
     lawUserAgent: trimOrNull(env.LAW_USER_AGENT),
     askSeoulSkillApiBaseUrl: trimOrNull(env.ASK_SEOUL_SKILL_API_BASE_URL),
     askSeoulKskillApiKey: trimOrNull(env.ASK_SEOUL_KSKILL_API_KEY),
+    coupangAccessKey: trimOrNull(env.COUPANG_ACCESS_KEY),
+    coupangSecretKey: trimOrNull(env.COUPANG_SECRET_KEY),
     cacheTtlMs: parseInteger(env.KSKILL_PROXY_CACHE_TTL_MS, 300000),
     cacheMaxEntries: Math.max(1, parseInteger(env.KSKILL_PROXY_CACHE_MAX_ENTRIES, 1000)),
     rateLimitWindowMs: parseInteger(env.KSKILL_PROXY_RATE_LIMIT_WINDOW_MS, 60000),
@@ -2197,7 +2203,8 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         evChargerConfigured: Boolean(config.evChargerApiKey),
         buildingRegisterConfigured: Boolean(config.buildingRegisterApiKey),
         koreanLawConfigured: Boolean(config.lawOc),
-        askSeoulWeatherRiskConfigured: Boolean(config.askSeoulSkillApiBaseUrl && config.askSeoulKskillApiKey)
+        askSeoulWeatherRiskConfigured: Boolean(config.askSeoulSkillApiBaseUrl && config.askSeoulKskillApiKey),
+        coupangConfigured: Boolean(config.coupangAccessKey && config.coupangSecretKey)
       },
       auth: {
         tokenRequired: false
@@ -5059,6 +5066,91 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     return payload;
   });
 
+  app.get("/v1/coupang/products/search", async (request, reply) => {
+    let normalized;
+
+    try {
+      normalized = normalizeCoupangProductSearchQuery(request.query || {});
+    } catch (error) {
+      reply.code(400);
+      return {
+        error: "bad_request",
+        message: error.message
+      };
+    }
+
+    const cacheKey = makeCacheKey({
+      route: "coupang-products-search",
+      keyword: normalized.keyword.toLowerCase(),
+      limit: normalized.limit,
+      subId: normalized.subId
+    });
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return {
+        ...cached,
+        proxy: {
+          ...cached.proxy,
+          cache: {
+            hit: true,
+            ttl_ms: config.cacheTtlMs
+          }
+        }
+      };
+    }
+
+    let result;
+    try {
+      result = await searchCoupangProducts({
+        ...normalized,
+        accessKey: config.coupangAccessKey,
+        secretKey: config.coupangSecretKey,
+        now
+      });
+    } catch (error) {
+      reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
+      const payload = {
+        error: error.code || "proxy_error",
+        message: error.message,
+        proxy: {
+          name: config.proxyName,
+          cache: {
+            hit: false,
+            ttl_ms: config.cacheTtlMs
+          }
+        }
+      };
+      if (error.upstreamStatusCode) {
+        payload.upstream = {
+          status_code: error.upstreamStatusCode,
+          body_snippet: error.upstreamBodySnippet || null
+        };
+      }
+      return payload;
+    }
+
+    const payload = {
+      items: result.items,
+      query: {
+        keyword: normalized.keyword,
+        limit: normalized.limit,
+        sub_id: normalized.subId
+      },
+      upstream: result.upstream,
+      proxy: {
+        name: config.proxyName,
+        cache: {
+          hit: false,
+          ttl_ms: config.cacheTtlMs
+        },
+        requested_at: new Date().toISOString()
+      }
+    };
+
+    cache.set(cacheKey, payload, config.cacheTtlMs);
+    return payload;
+  });
+
 
   app.get("/v1/naver-news/search", async (request, reply) => {
     let normalized;
@@ -5923,6 +6015,7 @@ module.exports = {
   normalizeAssemblyBillDetailQuery,
   normalizeAssemblyBillSearchQuery,
   normalizeAssemblyVoteQuery,
+  normalizeCoupangProductSearchQuery,
   normalizeData4LibraryBookDetailQuery,
   normalizeData4LibraryBookExistsQuery,
   normalizeData4LibraryBookSearchQuery,
