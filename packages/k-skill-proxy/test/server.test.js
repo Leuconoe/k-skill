@@ -46,6 +46,7 @@ const {
   proxySeoulCityDataRequest,
   proxySeoulSubwayRequest
 } = require("../src/server");
+const { parseXmlItems } = require("../src/molit");
 const { resolveEducationOfficeFromNaturalLanguage } = require("../src/neis-office-codes");
 
 test("makeCacheKey requires a non-empty route to prevent cross-route collisions", () => {
@@ -4419,6 +4420,63 @@ test("real estate transaction endpoint retries a single upstream 502 then succee
   assert.equal(response.statusCode, 200);
   assert.equal(fetchCalls, 2);
   assert.equal(response.json().items[0].name, "래미안");
+});
+
+test("MOLIT resultCode 22 is a non-retryable quota error", () => {
+  const result = parseXmlItems(`
+    <response>
+      <header>
+        <resultCode>22</resultCode>
+        <resultMsg>LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS</resultMsg>
+      </header>
+    </response>
+  `);
+
+  assert.deepEqual(result, {
+    error: "upstream_quota_exceeded",
+    message: "LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS",
+    status_code: 503,
+    retry_after: 3600,
+    upstream_code: "22"
+  });
+});
+
+test("real estate quota response returns 503 with Retry-After", async (t) => {
+  const originalFetch = global.fetch;
+  let fetchCalls = 0;
+  global.fetch = async () => {
+    fetchCalls += 1;
+    return new Response(`
+      <response>
+        <header>
+          <resultCode>22</resultCode>
+          <resultMsg>LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS</resultMsg>
+        </header>
+      </response>
+    `, {
+      status: 200,
+      headers: { "content-type": "text/xml;charset=UTF-8" }
+    });
+  };
+
+  const app = buildServer({
+    env: { DATA_GO_KR_API_KEY: "test-key" }
+  });
+
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const response = await app.inject({
+    method: "GET",
+    url: "/v1/real-estate/apartment/trade?lawd_cd=11680&deal_ymd=202403"
+  });
+
+  assert.equal(response.statusCode, 503);
+  assert.equal(response.headers["retry-after"], "3600");
+  assert.equal(response.json().error, "upstream_quota_exceeded");
+  assert.equal(fetchCalls, 1);
 });
 
 test("real estate transaction endpoint caches successful responses", async (t) => {

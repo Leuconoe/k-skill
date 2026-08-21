@@ -3740,12 +3740,19 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     });
 
     if (result.error) {
-      request.log.warn({
+      const logUpstreamError = result.error === "upstream_configuration_error"
+        ? request.log.error.bind(request.log)
+        : request.log.warn.bind(request.log);
+      logUpstreamError({
         route: "/v1/real-estate/:assetType/:dealType",
         upstreamError: result.error,
-        upstreamMessage: result.message
+        upstreamMessage: result.message,
+        upstreamCode: result.upstream_code
       }, "real estate upstream error");
-      reply.code(502);
+      reply.code(result.status_code || 502);
+      if (result.retry_after) {
+        reply.header("retry-after", String(result.retry_after));
+      }
       return {
         ...result,
         proxy: {
