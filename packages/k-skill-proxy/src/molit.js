@@ -80,6 +80,25 @@ function parseXmlItems(xmlText) {
   if (resultCode !== "000") {
     const msgMatch = xmlText.match(/<resultMsg>([^<]*)<\/resultMsg>/);
     const resultMsg = msgMatch ? msgMatch[1].trim() : `API error code ${resultCode}`;
+    if (resultCode === "22") {
+      return {
+        error: "upstream_quota_exceeded",
+        message: resultMsg,
+        status_code: 503,
+        retry_after: 3600,
+        upstream_code: resultCode
+      };
+    }
+
+    if (["20", "30", "31"].includes(resultCode)) {
+      return {
+        error: "upstream_configuration_error",
+        message: resultMsg,
+        status_code: 502,
+        upstream_code: resultCode
+      };
+    }
+
     return { error: `molit_api_${resultCode}`, message: resultMsg };
   }
 

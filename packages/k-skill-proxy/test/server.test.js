@@ -5,7 +5,9 @@ const assert = require("node:assert/strict");
 const {
   buildServer,
   buildRateLimiter,
+  buildRouteUsageFields,
   createMemoryCache,
+  getErrorLogLevel,
   isFailureResponse,
   makeCacheKey,
   normalizeAssemblyBillSearchQuery,
@@ -33,6 +35,7 @@ const {
   normalizeNhisLongTermCareQuery,
   normalizeNtsBusinessStatusQuery,
   normalizeNtsBusinessValidateQuery,
+  normalizeUnmatchedPath,
   proxyAirKoreaRequest,
   proxyData4LibraryRequest,
   proxyHrfcoWaterLevelRequest,
@@ -49,6 +52,7 @@ const {
   buildCoupangSignedDate,
   normalizeCoupangProducts
 } = require("../src/coupang");
+const { parseXmlItems } = require("../src/molit");
 const { resolveEducationOfficeFromNaturalLanguage } = require("../src/neis-office-codes");
 
 test("makeCacheKey requires a non-empty route to prevent cross-route collisions", () => {
@@ -322,6 +326,48 @@ test("route usage stats count endpoint calls by route pattern and skip /health",
   assert.equal(notFound.statusCode, 404);
   await app.inject({ method: "GET", url: "/another/arbitrary/missing/path" });
   assert.equal(app.routeUsageStats.get("__unmatched__"), 2, "unmatched paths must use one bounded aggregation key");
+});
+
+test("route usage attribution normalizes unmatched paths and excludes query values", () => {
+  assert.equal(
+    normalizeUnmatchedPath("/users/123/550e8400-e29b-41d4-a716-446655440000/aabbccddeeff"),
+    "/users/:n/:n/:n"
+  );
+
+  const fields = buildRouteUsageFields({
+    route: "/v1/example",
+    statusCode: 400,
+    query: { secret: "must-not-leak", page: "1" },
+    clientIp: "203.0.113.10",
+    attributionSalt: "test-salt",
+    errorCode: "bad_request"
+  });
+
+  assert.deepEqual(fields.queryKeys, ["page", "secret"]);
+  assert.match(fields.queryHash, /^[a-f0-9]{8}$/);
+  assert.match(fields.clientHash, /^[a-f0-9]{8}$/);
+  assert.equal(fields.errorCode, "bad_request");
+  assert.doesNotMatch(JSON.stringify(fields), /must-not-leak|203\.0\.113\.10/);
+});
+
+test("error handler uses warn for 4xx and error for 5xx", () => {
+  assert.equal(getErrorLogLevel(400), "warn");
+  assert.equal(getErrorLogLevel(499), "warn");
+  assert.equal(getErrorLogLevel(500), "error");
+  assert.equal(getErrorLogLevel(503), "error");
+});
+
+test("unmatched path attribution stays bounded", async (t) => {
+  const app = buildServer({ env: {} });
+  t.after(async () => {
+    await app.close();
+  });
+
+  for (let index = 0; index < 105; index += 1) {
+    await app.inject({ method: "GET", url: `/missing/path-${index}` });
+  }
+
+  assert.equal(app.unmatchedPathStats.size, 100);
 });
 
 test("privacy policy is publicly readable and linked from every response", async (t) => {
@@ -3061,6 +3107,26 @@ test("proxyAirKoreaRequest redacts service keys echoed with URLSearchParams enco
   }
 });
 
+test("proxyAirKoreaRequest preserves AirKorea 403 operation context", async () => {
+  await assert.rejects(
+    () => proxyAirKoreaRequest({
+      service: "ArpltnInforInqireSvc",
+      operation: "getMsrstnAcctoRltmMesureDnsty",
+      query: { returnType: "json", stationName: "강남구" },
+      serviceKey: "airkorea-key",
+      fetchImpl: async () => new Response("forbidden", { status: 403 })
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 403);
+      assert.equal(error.code, "upstream_forbidden");
+      assert.equal(error.service, "ArpltnInforInqireSvc");
+      assert.equal(error.operation, "getMsrstnAcctoRltmMesureDnsty");
+      assert.match(error.message, /getMsrstnAcctoRltmMesureDnsty/);
+      return true;
+    }
+  );
+});
+
 test("AirKorea fetch rejections do not expose credential-bearing URLs", async (t) => {
   const originalFetch = global.fetch;
   global.fetch = async (url) => {
@@ -4510,6 +4576,63 @@ test("real estate transaction endpoint retries a single upstream 502 then succee
   assert.equal(response.statusCode, 200);
   assert.equal(fetchCalls, 2);
   assert.equal(response.json().items[0].name, "래미안");
+});
+
+test("MOLIT resultCode 22 is a non-retryable quota error", () => {
+  const result = parseXmlItems(`
+    <response>
+      <header>
+        <resultCode>22</resultCode>
+        <resultMsg>LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS</resultMsg>
+      </header>
+    </response>
+  `);
+
+  assert.deepEqual(result, {
+    error: "upstream_quota_exceeded",
+    message: "LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS",
+    status_code: 503,
+    retry_after: 3600,
+    upstream_code: "22"
+  });
+});
+
+test("real estate quota response returns 503 with Retry-After", async (t) => {
+  const originalFetch = global.fetch;
+  let fetchCalls = 0;
+  global.fetch = async () => {
+    fetchCalls += 1;
+    return new Response(`
+      <response>
+        <header>
+          <resultCode>22</resultCode>
+          <resultMsg>LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS</resultMsg>
+        </header>
+      </response>
+    `, {
+      status: 200,
+      headers: { "content-type": "text/xml;charset=UTF-8" }
+    });
+  };
+
+  const app = buildServer({
+    env: { DATA_GO_KR_API_KEY: "test-key" }
+  });
+
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const response = await app.inject({
+    method: "GET",
+    url: "/v1/real-estate/apartment/trade?lawd_cd=11680&deal_ymd=202403"
+  });
+
+  assert.equal(response.statusCode, 503);
+  assert.equal(response.headers["retry-after"], "3600");
+  assert.equal(response.json().error, "upstream_quota_exceeded");
+  assert.equal(fetchCalls, 1);
 });
 
 test("real estate transaction endpoint caches successful responses", async (t) => {
