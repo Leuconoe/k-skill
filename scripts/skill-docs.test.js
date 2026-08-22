@@ -1009,6 +1009,10 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   const proxyPackage = JSON.parse(read(path.join("packages", "k-skill-proxy", "package.json")));
 
   assert.match(deployScript, /DEPLOY_REF="\$\{KSKILL_PROXY_DEPLOY_REF:-origin\/main\}"/);
+  assert.match(deployScript, /KSKILL_PROXY_ENV_FILE/);
+  assert.match(deployScript, /KSKILL_PROXY_DEPLOY_ENVIRONMENT:-production/);
+  assert.match(deployScript, /KSKILL_PROXY_DEPLOY_HOST:-\$\(hostname -s\)/);
+  assert.match(deployScript, /ensure_gpu01_production_defaults "\$ENV_FILE" "\$DEPLOY_ENVIRONMENT" "\$DEPLOY_HOST"/);
   assert.match(deployScript, /npm --prefix "\$REPO_DIR" run test --workspace k-skill-proxy/);
   assert.match(deployScript, /tar -C "\$APP_DIR" -czf "\$backup"/);
   assert.match(deployScript, /systemctl --user restart "\$SERVICE_NAME"/);
@@ -1032,8 +1036,47 @@ test("proxy deployment script and docs stay aligned with gpu01 automation", () =
   assert.match(deployDoc, /rollback/i);
   assert.match(deployDoc, /deployed-sha/);
   assert.match(deployDoc, /KSKILL_PROXY_TRUST_PROXY_HOPS=1/);
+  assert.match(deployDoc, /Cloudflare Tunnel/);
   assert.match(packageReadme, /KSKILL_PROXY_TRUST_PROXY_HOPS/);
   assert.match(deployScript, /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+});
+
+test("proxy deployment defaults trust-proxy only for gpu01 production", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "k-skill-proxy-deploy-env-"));
+  const deployScript = path.join(repoRoot, "scripts", "deploy-k-skill-proxy-gpu01.sh");
+  const runDefault = (envFile, deployEnvironment, deployHost) =>
+    childProcess.execFileSync(
+      "bash",
+      [
+        "-c",
+        'KSKILL_PROXY_DEPLOY_LIB_ONLY=1 source "$1"; ensure_gpu01_production_defaults "$2" "$3" "$4"',
+        "bash",
+        deployScript,
+        envFile,
+        deployEnvironment,
+        deployHost,
+      ],
+      { encoding: "utf8" },
+    );
+
+  const productionEnv = path.join(tmpDir, "production.env");
+  const stagingEnv = path.join(tmpDir, "staging.env");
+  const otherHostEnv = path.join(tmpDir, "other-host.env");
+  const explicitEnv = path.join(tmpDir, "explicit.env");
+  for (const envFile of [productionEnv, stagingEnv, otherHostEnv]) {
+    fs.writeFileSync(envFile, "KSKILL_PROXY_RATE_LIMIT_MAX=60\n");
+  }
+  fs.writeFileSync(explicitEnv, "KSKILL_PROXY_TRUST_PROXY_HOPS=2\n");
+
+  runDefault(productionEnv, "production", "gpu01");
+  runDefault(stagingEnv, "staging", "gpu01");
+  runDefault(otherHostEnv, "production", "developer-mac");
+  runDefault(explicitEnv, "production", "gpu01");
+
+  assert.match(fs.readFileSync(productionEnv, "utf8"), /^KSKILL_PROXY_TRUST_PROXY_HOPS=1$/m);
+  assert.doesNotMatch(fs.readFileSync(stagingEnv, "utf8"), /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+  assert.doesNotMatch(fs.readFileSync(otherHostEnv, "utf8"), /KSKILL_PROXY_TRUST_PROXY_HOPS/);
+  assert.match(fs.readFileSync(explicitEnv, "utf8"), /^KSKILL_PROXY_TRUST_PROXY_HOPS=2$/m);
 });
 
 test("kakaotalk-mac skill documents katok archive search usage", () => {
@@ -1804,60 +1847,36 @@ test("repository docs advertise the coupang-product-search skill", () => {
   assert.match(install, /--skill coupang-product-search/);
 });
 
-test("coupang-product-search skill and docs use retention-corp coupang_partners MCP layer", () => {
+test("coupang-product-search skill and docs use the hosted proxy route", () => {
   const skillPath = path.join(repoRoot, "coupang-product-search", "SKILL.md");
-  const wrapperPath = path.join(repoRoot, "coupang-product-search", "scripts", "coupang_partners_mcp.py");
   const featureDoc = read(path.join("docs", "features", "coupang-product-search.md"));
   const sources = read(path.join("docs", "sources.md"));
 
   assert.ok(fs.existsSync(skillPath), "expected coupang-product-search/SKILL.md to exist");
-  assert.ok(fs.existsSync(wrapperPath), "expected retention-corp wrapper script to exist");
 
   const skill = read(path.join("coupang-product-search", "SKILL.md"));
 
   for (const doc of [skill, featureDoc]) {
-    assert.match(doc, /retention-corp\/coupang_partners/);
-    assert.match(doc, /local:\/\/coupang-mcp/);
-    assert.match(doc, /coupang_partners_mcp\.py/);
-    assert.match(doc, /--repo-dir/);
-    assert.match(doc, /--no-clone/);
-    assert.match(doc, /--update/);
-    assert.match(doc, /coupang_partners_mcp\.py --\s+tools/);
-    assert.match(doc, /coupang_partners_mcp\.py --\s+init/);
-    assert.match(doc, /search_coupang_products/);
+    assert.match(doc, /\/v1\/coupang\/products\/search/);
+    assert.match(doc, /COUPANG_ACCESS_KEY/);
+    assert.match(doc, /COUPANG_SECRET_KEY/);
     assert.match(doc, /로켓배송/);
-    assert.match(doc, /a\.retn\.kr\/v1\/public\/assist/);
-    assert.match(doc, /OPENCLAW_SHOPPING_/);
     assert.match(doc, /(파트너스|어필리에이트|affiliate)/i);
-    assert.match(doc, /(hosted\s*fallback|호스티드\s*폴백|호스티드\s*fallback)/i);
-    assert.doesNotMatch(doc, /yuju777-coupang-mcp\.hf\.space\/mcp/);
-    assert.doesNotMatch(doc, /github\.com\/uju777\/coupang-mcp/);
+    assert.doesNotMatch(doc, /a\.retn\.kr\/v1\/public\/assist/);
+    assert.doesNotMatch(doc, /local:\/\/coupang-mcp/);
   }
 
-  assert.match(sources, /retention-corp\/coupang_partners/);
-  assert.match(sources, /a\.retn\.kr\/v1\/public\/assist/);
-  assert.doesNotMatch(sources, /yuju777-coupang-mcp\.hf\.space\/mcp/);
+  assert.match(featureDoc, /proxy 서버/);
+  assert.match(featureDoc, /HMAC/i);
+  assert.match(featureDoc, /caller/);
+  assert.match(featureDoc, /키를 볼 수도, 전달할 필요도 없다/);
+  assert.match(sources, /developers\.coupangcorp\.com/);
 });
 
-test("coupang-product-search docs drop non-allowlisted coupang-mcp-fallback and document openclaw-skill as the allowlisted hosted fallback client-id", () => {
-  // Direct probes against https://a.retn.kr/v1/public/assist on 2026-04-21 show that
-  // `X-OpenClaw-Client-Id: coupang-mcp-fallback` returns HTTP 403 ("Client is not
-  // allowlisted"), while `openclaw-skill` (the upstream default that ships with
-  // retention-corp/coupang_partners) returns HTTP 200. Until Retention Corp
-  // re-allowlists `coupang-mcp-fallback`, k-skill docs must not recommend it and
-  // must document `openclaw-skill` as the value the hosted fallback path uses.
-  const skill = read(path.join("coupang-product-search", "SKILL.md"));
-  const featureDoc = read(path.join("docs", "features", "coupang-product-search.md"));
-  const wrapper = read(path.join("coupang-product-search", "scripts", "coupang_partners_mcp.py"));
-  const sources = read(path.join("docs", "sources.md"));
-
-  for (const doc of [skill, featureDoc, wrapper, sources]) {
-    assert.doesNotMatch(doc, /coupang-mcp-fallback/);
-  }
-
-  for (const doc of [skill, featureDoc, wrapper]) {
-    assert.match(doc, /openclaw-skill/);
-  }
+test("coupang-product-search generated stub carries the affiliate disclosure", () => {
+  const stub = readRaw(path.join("coupang-product-search", "SKILL.md"));
+  assert.match(stub, /Affiliate disclosure \(required\)/);
+  assert.match(stub, /쿠팡 파트너스 활동을 통해 일정액의 수수료를 제공받을 수 있습니다\./);
 });
 
 test("repository docs advertise the ohou-today-deal skill", () => {

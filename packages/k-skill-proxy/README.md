@@ -50,6 +50,7 @@
 - `GET /v1/kstartup/contents` — 창업진흥원 K-Startup 창업 콘텐츠 정보(`DATA_GO_KR_API_KEY`)
 - `GET /v1/kstartup/statistics` — 창업진흥원 K-Startup 통계보고서 정보(`DATA_GO_KR_API_KEY`)
 - `GET /v1/naver-shopping/search` — 네이버 검색 Open API 쇼핑 검색 우선, 키가 없으면 네이버 쇼핑 공개 BFF JSON 기반 상품/가격 후보 조회
+- `GET /v1/coupang/products/search` — 쿠팡 파트너스 상품검색(`COUPANG_ACCESS_KEY`, `COUPANG_SECRET_KEY`; `keyword`/`q`, `limit` 최대 10, 선택 `subId`)
 - `GET /v1/naver-news/search` — 네이버 검색 Open API 뉴스 검색(`news.json`) 기반 최신 뉴스 기사 제목/요약/링크/발행시각 조회(`NAVER_SEARCH_CLIENT_ID`, `NAVER_SEARCH_CLIENT_SECRET` 필요)
 - `GET /v1/vworld/search` — VWorld 단지명·지번 검색(호출자가 `x-k-skill-vworld-api-key` 헤더로 자기 키를 위임)
 - `GET /v1/vworld/apartment-prices` — VWorld 공동주택가격 속성 조회(면적별 범위·동호 조회용, 호출자가 `x-k-skill-vworld-api-key` 헤더로 자기 키를 위임)
@@ -93,13 +94,14 @@
 - `ASK_SEOUL_SKILL_API_BASE_URL` — 프록시 서버 쪽 ASK Seoul `/skill/v1` HTTPS origin (기상 위험 route 전용)
 - `ASK_SEOUL_KSKILL_API_KEY` — 프록시 서버 쪽 ASK Seoul 전용·회수 가능한 서비스 키. 사용자 환경·로그·응답에는 넣지 않는다.
 - `NAVER_SEARCH_CLIENT_ID`, `NAVER_SEARCH_CLIENT_SECRET` — 네이버 검색 Open API 키(`shop.json`, `news.json` 공통). 네이버 뉴스 route(`naver-news/search`)는 이 키가 **필수**이며 없으면 `503 upstream_not_configured` 를 돌려준다. 네이버 쇼핑 route(`naver-shopping/search`)는 **선택**이며 설정되면 공식 API 를 우선 사용하고, 없으면 공개 BFF JSON 파서로 fallback 한다. 공식 쇼핑 API 는 `review` 정렬을 지원하지 않아 `meta.sort_applied: "unsupported"`로 표시한다. no-key 쇼핑 fallback 은 `page`를 BFF에 전달해 해당 페이지를 고르고, `price_asc`/`price_dsc`/`review`는 선택 페이지 안에서 로컬 정렬하며, `date`는 `meta.sort_applied: "unsupported"`로 표시
+- `COUPANG_ACCESS_KEY`, `COUPANG_SECRET_KEY` — 쿠팡 파트너스 API 키. 두 값이 모두 있어야 `/v1/coupang/products/search`가 활성화되며 HMAC 서명은 proxy 서버 안에서만 생성된다.
 - `KSKILL_PROXY_HOST` — 기본 `127.0.0.1`
 - `KSKILL_PROXY_PORT` — local development listen port. Set it explicitly in your shell.
 - `KSKILL_PROXY_CACHE_TTL_MS` — 기본 `300000`
 - `KSKILL_PROXY_RATE_LIMIT_WINDOW_MS` — 기본 `60000`
 - `KSKILL_PROXY_RATE_LIMIT_MAX` — 기본 `60`
 - `KSKILL_PROXY_RATE_LIMIT_MAX_CLIENTS` — 메모리에 유지할 client rate-limit bucket 상한, 기본 `10000`
-- `KSKILL_PROXY_TRUST_PROXY_HOPS` — Fastify가 신뢰할 reverse-proxy hop 수, 기본 `0`. gpu01 Cloudflare Tunnel 배포는 **반드시 `1`**. 직접 노출되는 로컬 서버에서는 설정하지 않는다. hops가 1 이상이면 rate limiter는 `CF-Connecting-IP`를 `X-Forwarded-For`보다 우선한다.
+- `KSKILL_PROXY_TRUST_PROXY_HOPS` — Fastify가 신뢰할 reverse-proxy hop 수, 애플리케이션 기본값 `0`. gpu01 production 배포에서만 배포 스크립트가 누락된 값을 `1`로 추가한다. staging·로컬·다른 호스트와 직접 노출되는 서버에는 이 production 기본값을 적용하지 않는다. hops가 1 이상이면 rate limiter는 `CF-Connecting-IP`를 `X-Forwarded-For`보다 우선한다.
 - `DATA_GO_KR_API_KEY` - 공공데이터포털 에서 쓰이는 API 인증키 (`household-waste`, `parking-lots`, `ev-charger/*`, `building-register/title`, `real-estate`, `nts-business`, `mfds-drug-safety`, `mfds-food-safety`, `lh-notice`, `nhis/*`, `kr-whois/*`). 각 서비스는 공공데이터포털에서 별도 "활용신청" 승인이 필요하다. 키를 발급받은 뒤에는 [LH 임대공고문 정보](https://www.data.go.kr/data/15058530/openapi.do), [국민건강보험공단 장기요양기관 검색 서비스](https://www.data.go.kr/data/15059029/openapi.do), [국민건강보험공단 검진기관 찾기 조회](https://www.data.go.kr/data/15154419/openapi.do), WHOIS 도메인/IP 정보 API(서비스 `15094277`) 페이지에서도 활용신청을 눌러 동일 키를 활성화해야 해당 라우트가 성공한다. EV 데이터셋 `15076352`와 건축물대장 데이터셋 `15134735`는 자동승인 대상이지만 각각 별도 신청해야 한다. 미활성 상태에서는 upstream이 HTTP 401/403 또는 data.go.kr 인증 오류 XML을 돌려주고 proxy는 upstream error로 변환한다.
 
 기본 정책은 **무료 API 공개 프록시 = 무인증** 이다. 대신 endpoint scope 를 좁게 유지하고, cache + rate limit 으로 남용을 늦춘다.
@@ -180,6 +182,17 @@ curl -fsS --get "${LOCAL_PROXY_BASE_URL}/v1/vworld/apartment-prices" \
 ```
 
 나이스 학교 검색·급식 식단 예시 (`KEDU_INFO_KEY` 필요). 급식은 교육청 코드(`ATPT_OFCDC_SC_CODE`)와 학교 코드(`SD_SCHUL_CODE`)가 필요하므로 보통 아래 순서로 호출한다.
+
+쿠팡 상품검색 예시 (`COUPANG_ACCESS_KEY`, `COUPANG_SECRET_KEY` 필요):
+
+```bash
+curl -fsS --get "${LOCAL_PROXY_BASE_URL}/v1/coupang/products/search" \
+  --data-urlencode 'keyword=무선청소기' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'subId=k-skill'
+```
+
+응답의 상품 링크는 쿠팡 파트너스 제휴 링크일 수 있으므로 사용자에게 제공할 때 파트너스 활동 고지를 함께 표시해야 한다.
 
 학교 검색:
 

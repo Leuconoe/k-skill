@@ -26,7 +26,16 @@
 
 - 인터넷 연결
 - `node` 18+
-- 이 저장소의 `daiso-product-search` package 또는 동일 로직
+- `daiso-product-search` npm package
+
+설치:
+
+```bash
+npm install daiso-product-search
+```
+
+이 저장소에서 개발할 때는 루트에서 `npm install` 후 `packages/daiso-product-search`를 쓴다.
+package 설치가 막히면 표면을 직접 호출해 우회하지 말고 설치를 먼저 해결한다. 직접 호출은 실패가 성공처럼 보이는 응답을 준다(Failure modes 참고).
 
 ## Required inputs
 
@@ -161,6 +170,7 @@ console.log(result.pickupStock)
 - 현재 확인된 공식 표면은 **매장 내 aisle/진열 위치**를 직접 주지 않을 수 있다.
 - `selStrPkupStck` 403 → `/api/auth/request` 재호출 후 Bearer를 새로 빌드해 재시도한다.
 - Bearer 재시도 후에도 401/403이면 재고 수량은 `retrievalStatus: "blocked"` 로 표시하고, `selPkupStr` 기반 `pickupEligibility`(픽업 가능 여부)만 보조 정보로 제공한다.
+- **package 없이 표면을 직접 호출하면 조용히 틀린다.** `SearchGoods`는 검색어 파라미터명이 틀려도 400이 아니라 200에 전체 카탈로그를 돌려준다. 검색어는 JSON 바디가 아니라 쿼리스트링 `searchTerm`으로 보내야 하고, `selStr`도 바디 키가 틀리면 무관한 매장 1건만 준다. 둘 다 실패가 성공처럼 보이므로 반드시 package를 경유한다.
 
 ## Notes
 

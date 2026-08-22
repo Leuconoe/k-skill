@@ -46,7 +46,15 @@ Runtime mode: dolshoi (CloakBrowser available)
 
 - 인터넷 연결
 - `node` 18+
-- 이 저장소의 `market-kurly-search` package 또는 동일 로직
+- `market-kurly-search` npm package
+
+설치:
+
+```bash
+npm install market-kurly-search
+```
+
+이 저장소에서 개발할 때는 루트에서 `npm install` 후 `packages/market-kurly-search`를 쓴다.
 
 ## Required inputs
 

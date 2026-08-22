@@ -5,11 +5,14 @@ const assert = require("node:assert/strict");
 const {
   buildServer,
   buildRateLimiter,
+  buildRouteUsageFields,
   createMemoryCache,
+  getErrorLogLevel,
   isFailureResponse,
   makeCacheKey,
   normalizeAssemblyBillSearchQuery,
   normalizeAssemblyVoteQuery,
+  normalizeCoupangProductSearchQuery,
   normalizeData4LibraryBookDetailQuery,
   normalizeData4LibraryBookExistsQuery,
   normalizeData4LibraryBookSearchQuery,
@@ -32,6 +35,7 @@ const {
   normalizeNhisLongTermCareQuery,
   normalizeNtsBusinessStatusQuery,
   normalizeNtsBusinessValidateQuery,
+  normalizeUnmatchedPath,
   proxyAirKoreaRequest,
   proxyData4LibraryRequest,
   proxyHrfcoWaterLevelRequest,
@@ -43,6 +47,12 @@ const {
   proxySeoulCityDataRequest,
   proxySeoulSubwayRequest
 } = require("../src/server");
+const {
+  buildCoupangAuthorization,
+  buildCoupangSignedDate,
+  normalizeCoupangProducts
+} = require("../src/coupang");
+const { parseXmlItems } = require("../src/molit");
 const { resolveEducationOfficeFromNaturalLanguage } = require("../src/neis-office-codes");
 
 test("makeCacheKey requires a non-empty route to prevent cross-route collisions", () => {
@@ -57,6 +67,156 @@ test("makeCacheKey requires a non-empty route to prevent cross-route collisions"
 
   const duplicate = makeCacheKey({ route: "alpha", q: "x" });
   assert.equal(sameShapeA, duplicate, "same input must produce same key");
+});
+
+test("Coupang normalizer and HMAC signer produce stable API inputs", () => {
+  assert.deepEqual(normalizeCoupangProductSearchQuery({
+    q: "  무선청소기 ",
+    limit: "99",
+    sub_id: "skill-test"
+  }), {
+    keyword: "무선청소기",
+    limit: 10,
+    subId: "skill-test"
+  });
+  assert.throws(() => normalizeCoupangProductSearchQuery({ q: "a" }), /at least 2/);
+
+  const signedDate = buildCoupangSignedDate(new Date("2026-08-21T00:00:00.000Z"));
+  assert.equal(signedDate, "260821T000000Z");
+  assert.match(buildCoupangAuthorization({
+    accessKey: "access",
+    secretKey: "secret",
+    method: "GET",
+    pathWithQuery: "/v2/test?keyword=%EB%AC%B4%EC%84%A0",
+    signedDate
+  }), /^CEA algorithm=HmacSHA256, access-key=access, signed-date=260821T000000Z, signature=[0-9a-f]{64}$/);
+});
+
+test("normalizeCoupangProducts maps the documented productData shape", () => {
+  assert.deepEqual(normalizeCoupangProducts({
+    data: {
+      productData: [{
+        productId: 123,
+        productName: "무선청소기",
+        productPrice: 109000,
+        productUrl: "https://www.coupang.com/vp/products/123",
+        productImage: "https://image.example/123.jpg",
+        reviewCount: 42,
+        ratingAverage: 4.7,
+        isRocket: true
+      }]
+    }
+  }), [{
+    rank: 1,
+    product_id: "123",
+    title: "무선청소기",
+    price: 109000,
+    price_text: "109,000원",
+    url: "https://www.coupang.com/vp/products/123",
+    image_url: "https://image.example/123.jpg",
+    mall_name: null,
+    review_count: 42,
+    score: 4.7,
+    is_rocket: true,
+    is_free_shipping: false
+  }]);
+});
+
+test("Coupang product search route rejects missing credentials and invalid queries", async (t) => {
+  const app = buildServer({ env: {} });
+  t.after(async () => {
+    await app.close();
+  });
+
+  const invalid = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=a"
+  });
+  assert.equal(invalid.statusCode, 400);
+  assert.equal(invalid.json().error, "bad_request");
+
+  const missing = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=%EB%AC%B4%EC%84%A0%EC%B2%AD%EC%86%8C%EA%B8%B0"
+  });
+  assert.equal(missing.statusCode, 503);
+  assert.equal(missing.json().error, "upstream_not_configured");
+});
+
+test("Coupang product search signs upstream requests and caches normalized results", async (t) => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url, options) => {
+    calls.push({ url: String(url), options });
+    return new Response(JSON.stringify({
+      rCode: "0",
+      data: {
+        productData: [{
+          productId: 123,
+          productName: "저소음 무선청소기",
+          productPrice: 109000,
+          productUrl: "https://www.coupang.com/vp/products/123",
+          isRocket: true
+        }]
+      }
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  };
+
+  const app = buildServer({
+    env: {
+      COUPANG_ACCESS_KEY: "test-access",
+      COUPANG_SECRET_KEY: "test-secret",
+      KSKILL_PROXY_CACHE_TTL_MS: "60000"
+    },
+    now: () => new Date("2026-08-21T00:00:00.000Z")
+  });
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const first = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=%EB%AC%B4%EC%84%A0%EC%B2%AD%EC%86%8C%EA%B8%B0&limit=5&subId=k-skill"
+  });
+  assert.equal(first.statusCode, 200);
+  assert.equal(first.json().items[0].title, "저소음 무선청소기");
+  assert.equal(first.json().items[0].is_rocket, true);
+  assert.equal(first.json().proxy.cache.hit, false);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].url, /products\/search\?keyword=/);
+  assert.match(calls[0].url, /limit=5/);
+  assert.match(calls[0].url, /subId=k-skill/);
+  assert.match(calls[0].options.headers.Authorization, /access-key=test-access/);
+  assert.doesNotMatch(first.body, /test-access|test-secret/);
+
+  const second = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=%EB%AC%B4%EC%84%A0%EC%B2%AD%EC%86%8C%EA%B8%B0&limit=5&subId=k-skill"
+  });
+  assert.equal(second.statusCode, 200);
+  assert.equal(second.json().proxy.cache.hit, true);
+  assert.equal(calls.length, 1);
+});
+
+test("health reports Coupang configuration only when both keys are present", async (t) => {
+  const missing = buildServer({ env: { COUPANG_ACCESS_KEY: "access-only" } });
+  const configured = buildServer({
+    env: {
+      COUPANG_ACCESS_KEY: "access",
+      COUPANG_SECRET_KEY: "secret"
+    }
+  });
+  t.after(async () => {
+    await missing.close();
+    await configured.close();
+  });
+
+  assert.equal((await missing.inject({ method: "GET", url: "/health" })).json().upstreams.coupangConfigured, false);
+  assert.equal((await configured.inject({ method: "GET", url: "/health" })).json().upstreams.coupangConfigured, true);
 });
 
 test("isFailureResponse flags explicit errors, upstream degradation, and empty-items-with-warnings", () => {
@@ -166,6 +326,48 @@ test("route usage stats count endpoint calls by route pattern and skip /health",
   assert.equal(notFound.statusCode, 404);
   await app.inject({ method: "GET", url: "/another/arbitrary/missing/path" });
   assert.equal(app.routeUsageStats.get("__unmatched__"), 2, "unmatched paths must use one bounded aggregation key");
+});
+
+test("route usage attribution normalizes unmatched paths and excludes query values", () => {
+  assert.equal(
+    normalizeUnmatchedPath("/users/123/550e8400-e29b-41d4-a716-446655440000/aabbccddeeff"),
+    "/users/:n/:n/:n"
+  );
+
+  const fields = buildRouteUsageFields({
+    route: "/v1/example",
+    statusCode: 400,
+    query: { secret: "must-not-leak", page: "1" },
+    clientIp: "203.0.113.10",
+    attributionSalt: "test-salt",
+    errorCode: "bad_request"
+  });
+
+  assert.deepEqual(fields.queryKeys, ["page", "secret"]);
+  assert.match(fields.queryHash, /^[a-f0-9]{8}$/);
+  assert.match(fields.clientHash, /^[a-f0-9]{8}$/);
+  assert.equal(fields.errorCode, "bad_request");
+  assert.doesNotMatch(JSON.stringify(fields), /must-not-leak|203\.0\.113\.10/);
+});
+
+test("error handler uses warn for 4xx and error for 5xx", () => {
+  assert.equal(getErrorLogLevel(400), "warn");
+  assert.equal(getErrorLogLevel(499), "warn");
+  assert.equal(getErrorLogLevel(500), "error");
+  assert.equal(getErrorLogLevel(503), "error");
+});
+
+test("unmatched path attribution stays bounded", async (t) => {
+  const app = buildServer({ env: {} });
+  t.after(async () => {
+    await app.close();
+  });
+
+  for (let index = 0; index < 105; index += 1) {
+    await app.inject({ method: "GET", url: `/missing/path-${index}` });
+  }
+
+  assert.equal(app.unmatchedPathStats.size, 100);
 });
 
 test("privacy policy is publicly readable and linked from every response", async (t) => {
@@ -2905,6 +3107,26 @@ test("proxyAirKoreaRequest redacts service keys echoed with URLSearchParams enco
   }
 });
 
+test("proxyAirKoreaRequest preserves AirKorea 403 operation context", async () => {
+  await assert.rejects(
+    () => proxyAirKoreaRequest({
+      service: "ArpltnInforInqireSvc",
+      operation: "getMsrstnAcctoRltmMesureDnsty",
+      query: { returnType: "json", stationName: "강남구" },
+      serviceKey: "airkorea-key",
+      fetchImpl: async () => new Response("forbidden", { status: 403 })
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 403);
+      assert.equal(error.code, "upstream_forbidden");
+      assert.equal(error.service, "ArpltnInforInqireSvc");
+      assert.equal(error.operation, "getMsrstnAcctoRltmMesureDnsty");
+      assert.match(error.message, /getMsrstnAcctoRltmMesureDnsty/);
+      return true;
+    }
+  );
+});
+
 test("AirKorea fetch rejections do not expose credential-bearing URLs", async (t) => {
   const originalFetch = global.fetch;
   global.fetch = async (url) => {
@@ -4354,6 +4576,63 @@ test("real estate transaction endpoint retries a single upstream 502 then succee
   assert.equal(response.statusCode, 200);
   assert.equal(fetchCalls, 2);
   assert.equal(response.json().items[0].name, "래미안");
+});
+
+test("MOLIT resultCode 22 is a non-retryable quota error", () => {
+  const result = parseXmlItems(`
+    <response>
+      <header>
+        <resultCode>22</resultCode>
+        <resultMsg>LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS</resultMsg>
+      </header>
+    </response>
+  `);
+
+  assert.deepEqual(result, {
+    error: "upstream_quota_exceeded",
+    message: "LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS",
+    status_code: 503,
+    retry_after: 3600,
+    upstream_code: "22"
+  });
+});
+
+test("real estate quota response returns 503 with Retry-After", async (t) => {
+  const originalFetch = global.fetch;
+  let fetchCalls = 0;
+  global.fetch = async () => {
+    fetchCalls += 1;
+    return new Response(`
+      <response>
+        <header>
+          <resultCode>22</resultCode>
+          <resultMsg>LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS</resultMsg>
+        </header>
+      </response>
+    `, {
+      status: 200,
+      headers: { "content-type": "text/xml;charset=UTF-8" }
+    });
+  };
+
+  const app = buildServer({
+    env: { DATA_GO_KR_API_KEY: "test-key" }
+  });
+
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const response = await app.inject({
+    method: "GET",
+    url: "/v1/real-estate/apartment/trade?lawd_cd=11680&deal_ymd=202403"
+  });
+
+  assert.equal(response.statusCode, 503);
+  assert.equal(response.headers["retry-after"], "3600");
+  assert.equal(response.json().error, "upstream_quota_exceeded");
+  assert.equal(fetchCalls, 1);
 });
 
 test("real estate transaction endpoint caches successful responses", async (t) => {
@@ -6939,12 +7218,43 @@ test("fsc corp-outline route returns name-matched candidates and cross-checks bz
   assert.equal(body.candidate_count, 1);
   assert.equal(body.b_no_cross_check.checked, true);
   assert.equal(body.b_no_cross_check.matched_candidates.length, 1);
+  assert.equal(body.coverage.scope, "fsc-corporate-outline-dataset");
+  assert.equal(body.coverage.match_basis, "corporate-name-candidates-with-optional-business-number-cross-check");
+  assert.ok(body.coverage.checked_at);
   const cached = await app.inject({
     method: "GET",
     url: "/v1/fsc/corp-outline?name=" + encodeURIComponent("테스트") + "&b_no=1234567890"
   });
   assert.equal(cached.json().proxy.cache.hit, true);
   assert.equal(fetchCalls, 1);
+});
+
+test("fsc corp-outline zero result explains dataset and naming limits", async (t) => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response(
+    JSON.stringify({
+      response: {
+        header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+        body: { items: "" }
+      }
+    }),
+    { status: 200, headers: { "content-type": "application/json" } }
+  );
+  const app = buildServer({ env: { DATA_GO_KR_API_KEY: "data-go-key" } });
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const res = await app.inject({
+    method: "GET",
+    url: "/v1/fsc/corp-outline?name=" + encodeURIComponent("없는법인")
+  });
+  const body = res.json();
+  assert.equal(res.statusCode, 200);
+  assert.equal(body.candidate_count, 0);
+  assert.ok(body.coverage.zero_result_meaning);
+  assert.ok(body.coverage.exclusions.includes("candidates-missed-by-corporate-name-variation-or-mismatch"));
 });
 
 test("fsc corp-outline route maps upstream 403 to a 502 forbidden error", async (t) => {
@@ -7004,6 +7314,9 @@ test("g2b sanctioned-supplier route returns active sanctions and uses capital-S 
   assert.equal(res.statusCode, 200);
   assert.equal(body.total_count, 1);
   assert.equal(body.active_sanctions[0].bizNm, "갑");
+  assert.equal(body.coverage.scope, "currently-effective-g2b-sanctions");
+  assert.equal(body.coverage.match_basis, "exact-business-number");
+  assert.ok(body.coverage.checked_at);
   assert.match(seenUrls[0], /ServiceKey=data-go-key/);
   assert.match(seenUrls[0], /inqryDiv=1/);
 
@@ -7018,6 +7331,31 @@ test("g2b sanctioned-supplier route returns active sanctions and uses capital-S 
   const missing = await noKey.inject({ method: "GET", url: "/v1/g2b/sanctioned-supplier?bizno=1234567890" });
   assert.equal(missing.statusCode, 503);
 
+});
+
+test("g2b sanctioned-supplier zero result explains excluded historical sanctions", async (t) => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response(
+    JSON.stringify({
+      response: {
+        header: { resultCode: "00" },
+        body: { items: "", totalCount: 0 }
+      }
+    }),
+    { status: 200, headers: { "content-type": "application/json" } }
+  );
+  const app = buildServer({ env: { DATA_GO_KR_API_KEY: "data-go-key" } });
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const res = await app.inject({ method: "GET", url: "/v1/g2b/sanctioned-supplier?bizno=1234567890" });
+  const body = res.json();
+  assert.equal(res.statusCode, 200);
+  assert.equal(body.total_count, 0);
+  assert.ok(body.coverage.zero_result_meaning);
+  assert.ok(body.coverage.exclusions.includes("expired-or-lifted-sanctions"));
 });
 
 test("korean-law search endpoint proxies law.go.kr with the server OC and browser headers", async (t) => {

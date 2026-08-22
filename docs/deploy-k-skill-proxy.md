@@ -18,6 +18,10 @@ domain is served by a Cloudflare Tunnel that forwards to the Fastify process on
 | Deployed revision | `/data/home/jeffrey/apps/k-skill-proxy/deployed-sha` |
 | Deploy script | `scripts/deploy-k-skill-proxy-gpu01.sh` |
 
+The production listener is bound to `127.0.0.1` and receives public traffic through exactly one local Cloudflare Tunnel hop. Only when the gpu01 deployment script is running with `KSKILL_PROXY_DEPLOY_ENVIRONMENT=production` and `KSKILL_PROXY_DEPLOY_HOST=gpu01` does it ensure the runtime env contains `KSKILL_PROXY_TRUST_PROXY_HOPS=1` before restarting the service. Those values are the script defaults on the production host. Non-production or non-gpu01 executions leave the application default at `0`. An explicit operator value is preserved, and `KSKILL_PROXY_ENV_FILE` may point the script at a non-default runtime env path.
+
+Do not use this setting for a directly exposed listener. Trusting one hop is safe here because the Fastify port is loopback-only; making that port externally reachable would allow clients to supply a forged `X-Forwarded-For` value.
+
 ## Automatic deployment
 
 The `gpu01` user crontab runs the deployment script every five minutes under
@@ -63,6 +67,14 @@ systemctl --user status k-skill-proxy.service
 systemctl --user status k-skill-proxy-tunnel.service
 ```
 
+Verify the trust-proxy setting without printing the rest of the secret-bearing env file:
+
+```bash
+grep '^KSKILL_PROXY_TRUST_PROXY_HOPS=' /data/home/jeffrey/apps/k-skill-proxy/.env
+```
+
+The expected production value is `KSKILL_PROXY_TRUST_PROXY_HOPS=1`. If the key is missing, the next gpu01 production deployment adds it and restarts the service. Staging, local, and other-host executions do not add it. If the topology changes, update the explicit value only after recounting the trusted reverse-proxy hops.
+
 The `.env` file stays on `gpu01` and must not be copied into the repository.
 
 ## Required runtime env (gpu01)
@@ -75,12 +87,19 @@ or every external client shares a single rate-limit bucket (`request.ip` becomes
 KSKILL_PROXY_TRUST_PROXY_HOPS=1
 KSKILL_PROXY_RATE_LIMIT_WINDOW_MS=60000
 KSKILL_PROXY_RATE_LIMIT_MAX=60
+COUPANG_ACCESS_KEY=<coupang-partners-access-key>
+COUPANG_SECRET_KEY=<coupang-partners-secret-key>
 ```
 
 `KSKILL_PROXY_TRUST_PROXY_HOPS=1` is required in production. Leave it unset
 (default `0`) only for a locally bound process that is not behind a reverse
 proxy. When hops are trusted, the rate limiter prefers `CF-Connecting-IP` over
 `X-Forwarded-For` so clients cannot spoof extra XFF entries.
+
+The Coupang keys enable `GET /v1/coupang/products/search`. Store them only in
+the gpu01 runtime `.env`; never pass them in query strings, shell arguments,
+issues, or logs. Verify activation through
+`/health` → `upstreams.coupangConfigured=true`.
 
 ## ASK Seoul weather-risk route handoff
 

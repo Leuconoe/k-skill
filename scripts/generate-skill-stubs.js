@@ -33,6 +33,9 @@ npx -y @nomadamas/k-skill@0 read ${skillName} references/DISCLAIMER.md
 
 function renderStub(manifest, hasLegalDisclaimer = false) {
   const skillName = manifest.name;
+  const stubNotice = manifest.stub_notice
+    ? `## ${manifest.stub_notice.heading}\n\n${manifest.stub_notice.body}\n\n`
+    : "";
   const legalDisclaimer = hasLegalDisclaimer ? `${legalDisclaimerSection(skillName)}\n\n` : "";
 
   return `---
@@ -59,7 +62,7 @@ npx -y @nomadamas/k-skill@0 files ${skillName}
 
 If \`npx\` is unavailable, install Node.js 18+ or follow https://github.com/NomaDamas/k-skill#readme, or read the source instructions at https://github.com/NomaDamas/k-skill/blob/main/${skillName}/instruction.md.
 
-${legalDisclaimer}${SAFETY_FLOOR}
+${stubNotice}${legalDisclaimer}${SAFETY_FLOOR}
 `;
 }
 

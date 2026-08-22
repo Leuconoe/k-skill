@@ -58,6 +58,10 @@ const {
   proxyKstartupRequest
 } = require("./kstartup");
 const { fetchNearbyParkingLots } = require("./parking-lots");
+const {
+  normalizeCoupangProductSearchQuery,
+  searchCoupangProducts
+} = require("./coupang");
 const { searchRegionCode } = require("./region-lookup");
 const { resolveEducationOfficeFromNaturalLanguage } = require("./neis-office-codes");
 const { normalizeNationalPensionQuery, fetchNationalPensionWorkplace } = require("./national-pension");
@@ -248,6 +252,8 @@ function buildConfig(env = process.env) {
     lawUserAgent: trimOrNull(env.LAW_USER_AGENT),
     askSeoulSkillApiBaseUrl: trimOrNull(env.ASK_SEOUL_SKILL_API_BASE_URL),
     askSeoulKskillApiKey: trimOrNull(env.ASK_SEOUL_KSKILL_API_KEY),
+    coupangAccessKey: trimOrNull(env.COUPANG_ACCESS_KEY),
+    coupangSecretKey: trimOrNull(env.COUPANG_SECRET_KEY),
     cacheTtlMs: parseInteger(env.KSKILL_PROXY_CACHE_TTL_MS, 300000),
     cacheMaxEntries: Math.max(1, parseInteger(env.KSKILL_PROXY_CACHE_MAX_ENTRIES, 1000)),
     rateLimitWindowMs: parseInteger(env.KSKILL_PROXY_RATE_LIMIT_WINDOW_MS, 60000),
@@ -264,6 +270,56 @@ function makeCacheKey(payload) {
     );
   }
   return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
+
+function shortHash(value, salt = "") {
+  return crypto.createHash("sha256").update(`${salt}:${value}`).digest("hex").slice(0, 8);
+}
+
+function normalizeUnmatchedPath(rawPath) {
+  return String(rawPath || "/")
+    .split("?")[0]
+    .split("/")
+    .map((segment) => {
+      if (
+        /^\d+$/.test(segment)
+        || /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(segment)
+        || /^[0-9a-f]{12,}$/i.test(segment)
+      ) {
+        return ":n";
+      }
+      return segment;
+    })
+    .join("/");
+}
+
+function buildRouteUsageFields({
+  route,
+  statusCode,
+  query = {},
+  clientIp = null,
+  attributionSalt = null,
+  errorCode = null
+}) {
+  const fields = { routeUsage: true, route, statusCode };
+  if (statusCode >= 400) {
+    const queryKeys = Object.keys(query).sort();
+    if (queryKeys.length > 0) {
+      fields.queryKeys = queryKeys;
+      fields.queryHash = shortHash(JSON.stringify(query));
+    }
+    if (clientIp && attributionSalt) {
+      fields.clientHash = shortHash(clientIp, attributionSalt);
+    }
+    if (errorCode) {
+      fields.errorCode = errorCode;
+    }
+  }
+  return fields;
+}
+
+function getErrorLogLevel(statusCode) {
+  return statusCode >= 500 ? "error" : "warn";
 }
 
 function isFailureResponse(value) {
@@ -1482,6 +1538,14 @@ async function proxyAirKoreaRequest({ service, operation, query, serviceKey, fet
     error.code = "upstream_fetch_failed";
     throw error;
   }
+  if (response.status === 403) {
+    const error = new Error(`AirKorea upstream returned HTTP 403 for ${service}/${operation}.`);
+    error.statusCode = 403;
+    error.code = "upstream_forbidden";
+    error.service = service;
+    error.operation = operation;
+    throw error;
+  }
   const body = await response.text();
   return {
     statusCode: response.status,
@@ -2140,7 +2204,9 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
   // per request so daily/weekly/monthly totals can be derived from the server logs.
   // /health is excluded because health checks are operational noise, not usage.
   const routeUsageStats = new Map();
+  const unmatchedPathStats = new Map();
   app.decorate("routeUsageStats", routeUsageStats);
+  app.decorate("unmatchedPathStats", unmatchedPathStats);
   app.addHook("onResponse", async (request, reply) => {
     const matchedRoute = request.routeOptions && request.routeOptions.url;
     if (matchedRoute === "/health") {
@@ -2151,10 +2217,32 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     // without bound.
     const route = matchedRoute || "__unmatched__";
     routeUsageStats.set(route, (routeUsageStats.get(route) || 0) + 1);
-    app.log.info({ routeUsage: true, route, statusCode: reply.statusCode }, "route usage");
+    if (!matchedRoute) {
+      const normalizedPath = normalizeUnmatchedPath(request.url);
+      if (unmatchedPathStats.has(normalizedPath)) {
+        unmatchedPathStats.set(normalizedPath, unmatchedPathStats.get(normalizedPath) + 1);
+      } else if (unmatchedPathStats.size < 100) {
+        unmatchedPathStats.set(normalizedPath, 1);
+      }
+    }
+    app.log.info(buildRouteUsageFields({
+      route,
+      statusCode: reply.statusCode,
+      query: request.query || {},
+      clientIp: config.trustProxyHops > 0 ? request.ip : null,
+      attributionSalt: trimOrNull(env.KSKILL_PROXY_ATTRIBUTION_SALT),
+      errorCode: reply.errorCode
+    }), "route usage");
   });
 
   app.addHook("onSend", async (_request, reply, payload) => {
+    if (reply.statusCode >= 400 && typeof payload === "string") {
+      try {
+        reply.errorCode = JSON.parse(payload).error || null;
+      } catch {
+        reply.errorCode = null;
+      }
+    }
     reply.header("link", PRIVACY_POLICY_LINK);
     return payload;
   });
@@ -2197,7 +2285,8 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         evChargerConfigured: Boolean(config.evChargerApiKey),
         buildingRegisterConfigured: Boolean(config.buildingRegisterApiKey),
         koreanLawConfigured: Boolean(config.lawOc),
-        askSeoulWeatherRiskConfigured: Boolean(config.askSeoulSkillApiBaseUrl && config.askSeoulKskillApiKey)
+        askSeoulWeatherRiskConfigured: Boolean(config.askSeoulSkillApiBaseUrl && config.askSeoulKskillApiKey),
+        coupangConfigured: Boolean(config.coupangAccessKey && config.coupangSecretKey)
       },
       auth: {
         tokenRequired: false
@@ -2281,12 +2370,25 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
 
   app.get("/B552584/:service/:operation", async (request, reply) => {
     const { service, operation } = request.params;
-    const upstream = await proxyAirKoreaRequest({
-      service,
-      operation,
-      query: request.query,
-      serviceKey: config.airKoreaApiKey
-    });
+    let upstream;
+    try {
+      upstream = await proxyAirKoreaRequest({
+        service,
+        operation,
+        query: request.query,
+        serviceKey: config.airKoreaApiKey
+      });
+    } catch (error) {
+      request.log.error({
+        route: "/B552584/:service/:operation",
+        service,
+        operation,
+        upstreamStatus: error.statusCode || 502,
+        upstreamError: error.code || "upstream_error",
+        upstreamMessage: error.message
+      }, "AirKorea upstream error");
+      throw error;
+    }
 
     reply.code(upstream.statusCode);
     reply.header("content-type", upstream.contentType);
@@ -3645,7 +3747,19 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     });
 
     if (result.error) {
-      reply.code(502);
+      const logUpstreamError = result.error === "upstream_configuration_error"
+        ? request.log.error.bind(request.log)
+        : request.log.warn.bind(request.log);
+      logUpstreamError({
+        route: "/v1/real-estate/:assetType/:dealType",
+        upstreamError: result.error,
+        upstreamMessage: result.message,
+        upstreamCode: result.upstream_code
+      }, "real estate upstream error");
+      reply.code(result.status_code || 502);
+      if (result.retry_after) {
+        reply.header("retry-after", String(result.retry_after));
+      }
       return {
         ...result,
         proxy: {
@@ -3734,6 +3848,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         serviceKey: config.molitApiKey
       });
     } catch (error) {
+      request.log.warn({
+        route: "/v1/korean-stock/search",
+        upstreamError: error.code || "proxy_error",
+        upstreamMessage: error.message
+      }, "KRX upstream error");
       reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
       return {
         error: error.upstreamCode ? "upstream_error" : "proxy_error",
@@ -3917,6 +4036,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         filters: normalized
       });
     } catch (error) {
+      request.log.warn({
+        route: "/v1/korean-stock/base-info",
+        upstreamError: error.code || "proxy_error",
+        upstreamMessage: error.message
+      }, "KRX upstream error");
       reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
       return {
         error: error.code || "proxy_error",
@@ -3998,6 +4122,11 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
         filters: normalized
       });
     } catch (error) {
+      request.log.warn({
+        route: "/v1/korean-stock/trade-info",
+        upstreamError: error.code || "proxy_error",
+        upstreamMessage: error.message
+      }, "KRX upstream error");
       reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
       return {
         error: error.code || "proxy_error",
@@ -5059,6 +5188,91 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     return payload;
   });
 
+  app.get("/v1/coupang/products/search", async (request, reply) => {
+    let normalized;
+
+    try {
+      normalized = normalizeCoupangProductSearchQuery(request.query || {});
+    } catch (error) {
+      reply.code(400);
+      return {
+        error: "bad_request",
+        message: error.message
+      };
+    }
+
+    const cacheKey = makeCacheKey({
+      route: "coupang-products-search",
+      keyword: normalized.keyword.toLowerCase(),
+      limit: normalized.limit,
+      subId: normalized.subId
+    });
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return {
+        ...cached,
+        proxy: {
+          ...cached.proxy,
+          cache: {
+            hit: true,
+            ttl_ms: config.cacheTtlMs
+          }
+        }
+      };
+    }
+
+    let result;
+    try {
+      result = await searchCoupangProducts({
+        ...normalized,
+        accessKey: config.coupangAccessKey,
+        secretKey: config.coupangSecretKey,
+        now
+      });
+    } catch (error) {
+      reply.code(error.statusCode && error.statusCode >= 400 ? error.statusCode : 502);
+      const payload = {
+        error: error.code || "proxy_error",
+        message: error.message,
+        proxy: {
+          name: config.proxyName,
+          cache: {
+            hit: false,
+            ttl_ms: config.cacheTtlMs
+          }
+        }
+      };
+      if (error.upstreamStatusCode) {
+        payload.upstream = {
+          status_code: error.upstreamStatusCode,
+          body_snippet: error.upstreamBodySnippet || null
+        };
+      }
+      return payload;
+    }
+
+    const payload = {
+      items: result.items,
+      query: {
+        keyword: normalized.keyword,
+        limit: normalized.limit,
+        sub_id: normalized.subId
+      },
+      upstream: result.upstream,
+      proxy: {
+        name: config.proxyName,
+        cache: {
+          hit: false,
+          ttl_ms: config.cacheTtlMs
+        },
+        requested_at: new Date().toISOString()
+      }
+    };
+
+    cache.set(cacheKey, payload, config.cacheTtlMs);
+    return payload;
+  });
+
 
   app.get("/v1/naver-news/search", async (request, reply) => {
     let normalized;
@@ -5873,8 +6087,8 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
   });
 
   app.setErrorHandler((error, request, reply) => {
-    request.log.error(error);
     const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
+    request.log[getErrorLogLevel(statusCode)](error);
     const payload = {
       error: error.code || (statusCode >= 500 ? "proxy_error" : "request_error"),
       message: error.message
@@ -5913,16 +6127,19 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildRouteUsageFields,
   buildConfig,
   buildRateLimiter,
   buildServer,
   convertLatLonToKmaGrid,
   createMemoryCache,
+  getErrorLogLevel,
   isFailureResponse,
   makeCacheKey,
   normalizeAssemblyBillDetailQuery,
   normalizeAssemblyBillSearchQuery,
   normalizeAssemblyVoteQuery,
+  normalizeCoupangProductSearchQuery,
   normalizeData4LibraryBookDetailQuery,
   normalizeData4LibraryBookExistsQuery,
   normalizeData4LibraryBookSearchQuery,
@@ -5962,6 +6179,7 @@ module.exports = {
   normalizeNaverShoppingSearchQuery,
   normalizeNtsBusinessStatusQuery,
   normalizeNtsBusinessValidateQuery,
+  normalizeUnmatchedPath,
   normalizeParkingLotSearchQuery,
   normalizeRealEstateQuery,
   normalizeRegionCodeQuery,
