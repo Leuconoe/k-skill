@@ -37,6 +37,7 @@ client/skill -> k-skill-proxy -> upstream public API
 - `GET /v1/korean-stock/base-info`
 - `GET /v1/korean-stock/trade-info`
 - `GET /v1/naver-shopping/search` (네이버 검색 Open API 쇼핑 검색 우선, 키가 없으면 공개 BFF JSON 기반 상품/가격 후보 조회)
+- `GET /v1/coupang/products/search` (쿠팡 파트너스 상품검색, `COUPANG_ACCESS_KEY` + `COUPANG_SECRET_KEY`)
 - `GET /v1/opinet/around`
 - `GET /v1/opinet/detail`
 - `GET /v1/neis/school-search` (나이스 학교기본정보, `KEDU_INFO_KEY`)
@@ -89,6 +90,7 @@ client/skill -> k-skill-proxy -> upstream public API
 - `DATA4LIBRARY_AUTH_KEY=...` (도서관 정보나루 Open API 인증키)
 - `KRX_API_KEY=...`
 - `NAVER_SEARCH_CLIENT_ID=...`, `NAVER_SEARCH_CLIENT_SECRET=...` (선택: 네이버 검색 Open API 쇼핑 검색)
+- `COUPANG_ACCESS_KEY=...`, `COUPANG_SECRET_KEY=...` (쿠팡 파트너스 상품검색; HMAC 서명은 proxy 서버에서만 생성)
 - `ASK_SEOUL_SKILL_API_BASE_URL=...`, `ASK_SEOUL_KSKILL_API_KEY=...` (ASK 서울 기상 위험 route 전용; `k-skill-proxy:seoul-weather-risk`의 `skill:seoul-weather-risk:read` 서비스 키를 proxy 서버에만 둔다)
 - `KSKILL_PROXY_PORT` (local development only; choose it in your shell)
 
@@ -118,6 +120,18 @@ VWorld 두 경로는 Cloudflare Worker와 VWorld 사이의 네트워크 호환 �
 일반 경로는 필요한 쿼리를 그대로 프록시에 넣으면 프록시가 upstream API key를 서버에서 주입합니다. VWorld BYOK 경로만 호출자가 `x-k-skill-vworld-api-key` 헤더를 제공합니다.
 
 ASK 서울 기상 위험 route는 사용자 API Key를 받지 않는다. 세 route와 허용 query field만 upstream `/skill/v1`에 전달하고, 서비스 키는 proxy 서버 환경에서만 `Authorization: Bearer`로 주입한다. Marketplace는 이 키를 `k-skill-proxy:seoul-weather-risk` / `skill:seoul-weather-risk:read`로 등록해 세 개의 read API 이외의 API를 거부한다. 교체 키 smoke test가 성공한 뒤에만 이전 키를 회수하며, 유출·침해 의심 시에는 이전 키를 즉시 회수한다. `GET /health`의 `upstreams.askSeoulWeatherRiskConfigured`가 `true`인지 먼저 확인한다.
+
+쿠팡 상품검색 route는 호출자에게 쿠팡 키를 받지 않는다. `keyword` 또는 `q`, 최대 10의 `limit`, 선택 `subId`만 받고 서버의 키로 공식 Coupang Partners API 요청을 HMAC 서명한다.
+
+```bash
+BASE="${KSKILL_PROXY_BASE_URL:-https://k-skill-proxy.nomadamas.org}"
+curl -fsS --get "${BASE}/v1/coupang/products/search" \
+  --data-urlencode 'keyword=무선청소기' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'subId=k-skill'
+```
+
+반환 링크를 사용자에게 제공할 때는 쿠팡 파트너스 활동을 통해 수수료를 받을 수 있다는 고지를 함께 표시한다.
 
 요약 endpoint:
 

@@ -12,6 +12,7 @@ const {
   makeCacheKey,
   normalizeAssemblyBillSearchQuery,
   normalizeAssemblyVoteQuery,
+  normalizeCoupangProductSearchQuery,
   normalizeData4LibraryBookDetailQuery,
   normalizeData4LibraryBookExistsQuery,
   normalizeData4LibraryBookSearchQuery,
@@ -46,6 +47,11 @@ const {
   proxySeoulCityDataRequest,
   proxySeoulSubwayRequest
 } = require("../src/server");
+const {
+  buildCoupangAuthorization,
+  buildCoupangSignedDate,
+  normalizeCoupangProducts
+} = require("../src/coupang");
 const { parseXmlItems } = require("../src/molit");
 const { resolveEducationOfficeFromNaturalLanguage } = require("../src/neis-office-codes");
 
@@ -61,6 +67,156 @@ test("makeCacheKey requires a non-empty route to prevent cross-route collisions"
 
   const duplicate = makeCacheKey({ route: "alpha", q: "x" });
   assert.equal(sameShapeA, duplicate, "same input must produce same key");
+});
+
+test("Coupang normalizer and HMAC signer produce stable API inputs", () => {
+  assert.deepEqual(normalizeCoupangProductSearchQuery({
+    q: "  무선청소기 ",
+    limit: "99",
+    sub_id: "skill-test"
+  }), {
+    keyword: "무선청소기",
+    limit: 10,
+    subId: "skill-test"
+  });
+  assert.throws(() => normalizeCoupangProductSearchQuery({ q: "a" }), /at least 2/);
+
+  const signedDate = buildCoupangSignedDate(new Date("2026-08-21T00:00:00.000Z"));
+  assert.equal(signedDate, "260821T000000Z");
+  assert.match(buildCoupangAuthorization({
+    accessKey: "access",
+    secretKey: "secret",
+    method: "GET",
+    pathWithQuery: "/v2/test?keyword=%EB%AC%B4%EC%84%A0",
+    signedDate
+  }), /^CEA algorithm=HmacSHA256, access-key=access, signed-date=260821T000000Z, signature=[0-9a-f]{64}$/);
+});
+
+test("normalizeCoupangProducts maps the documented productData shape", () => {
+  assert.deepEqual(normalizeCoupangProducts({
+    data: {
+      productData: [{
+        productId: 123,
+        productName: "무선청소기",
+        productPrice: 109000,
+        productUrl: "https://www.coupang.com/vp/products/123",
+        productImage: "https://image.example/123.jpg",
+        reviewCount: 42,
+        ratingAverage: 4.7,
+        isRocket: true
+      }]
+    }
+  }), [{
+    rank: 1,
+    product_id: "123",
+    title: "무선청소기",
+    price: 109000,
+    price_text: "109,000원",
+    url: "https://www.coupang.com/vp/products/123",
+    image_url: "https://image.example/123.jpg",
+    mall_name: null,
+    review_count: 42,
+    score: 4.7,
+    is_rocket: true,
+    is_free_shipping: false
+  }]);
+});
+
+test("Coupang product search route rejects missing credentials and invalid queries", async (t) => {
+  const app = buildServer({ env: {} });
+  t.after(async () => {
+    await app.close();
+  });
+
+  const invalid = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=a"
+  });
+  assert.equal(invalid.statusCode, 400);
+  assert.equal(invalid.json().error, "bad_request");
+
+  const missing = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=%EB%AC%B4%EC%84%A0%EC%B2%AD%EC%86%8C%EA%B8%B0"
+  });
+  assert.equal(missing.statusCode, 503);
+  assert.equal(missing.json().error, "upstream_not_configured");
+});
+
+test("Coupang product search signs upstream requests and caches normalized results", async (t) => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url, options) => {
+    calls.push({ url: String(url), options });
+    return new Response(JSON.stringify({
+      rCode: "0",
+      data: {
+        productData: [{
+          productId: 123,
+          productName: "저소음 무선청소기",
+          productPrice: 109000,
+          productUrl: "https://www.coupang.com/vp/products/123",
+          isRocket: true
+        }]
+      }
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  };
+
+  const app = buildServer({
+    env: {
+      COUPANG_ACCESS_KEY: "test-access",
+      COUPANG_SECRET_KEY: "test-secret",
+      KSKILL_PROXY_CACHE_TTL_MS: "60000"
+    },
+    now: () => new Date("2026-08-21T00:00:00.000Z")
+  });
+  t.after(async () => {
+    global.fetch = originalFetch;
+    await app.close();
+  });
+
+  const first = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=%EB%AC%B4%EC%84%A0%EC%B2%AD%EC%86%8C%EA%B8%B0&limit=5&subId=k-skill"
+  });
+  assert.equal(first.statusCode, 200);
+  assert.equal(first.json().items[0].title, "저소음 무선청소기");
+  assert.equal(first.json().items[0].is_rocket, true);
+  assert.equal(first.json().proxy.cache.hit, false);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].url, /products\/search\?keyword=/);
+  assert.match(calls[0].url, /limit=5/);
+  assert.match(calls[0].url, /subId=k-skill/);
+  assert.match(calls[0].options.headers.Authorization, /access-key=test-access/);
+  assert.doesNotMatch(first.body, /test-access|test-secret/);
+
+  const second = await app.inject({
+    method: "GET",
+    url: "/v1/coupang/products/search?q=%EB%AC%B4%EC%84%A0%EC%B2%AD%EC%86%8C%EA%B8%B0&limit=5&subId=k-skill"
+  });
+  assert.equal(second.statusCode, 200);
+  assert.equal(second.json().proxy.cache.hit, true);
+  assert.equal(calls.length, 1);
+});
+
+test("health reports Coupang configuration only when both keys are present", async (t) => {
+  const missing = buildServer({ env: { COUPANG_ACCESS_KEY: "access-only" } });
+  const configured = buildServer({
+    env: {
+      COUPANG_ACCESS_KEY: "access",
+      COUPANG_SECRET_KEY: "secret"
+    }
+  });
+  t.after(async () => {
+    await missing.close();
+    await configured.close();
+  });
+
+  assert.equal((await missing.inject({ method: "GET", url: "/health" })).json().upstreams.coupangConfigured, false);
+  assert.equal((await configured.inject({ method: "GET", url: "/health" })).json().upstreams.coupangConfigured, true);
 });
 
 test("isFailureResponse flags explicit errors, upstream degradation, and empty-items-with-warnings", () => {

@@ -1,6 +1,6 @@
 ---
 name: coupang-product-search
-description: retention-corp/coupang_partners의 로컬 Coupang MCP 호환 레이어로 쿠팡 상품 검색, 로켓배송 필터, 가격대 검색, 상품 비교, 베스트 상품, 골드박스 특가를 조회한다. 돌쇠에서는 공식 표면을 통한 후속 액션까지 진행한다.
+description: k-skill-proxy의 공식 Coupang Partners API 경로로 쿠팡 상품을 검색하고 로켓배송·가격 후보를 비교한다. 돌쇠에서는 공식 표면을 통한 후속 액션까지 진행한다.
 license: MIT
 metadata:
   category: retail
@@ -27,6 +27,10 @@ npx -y @nomadamas/k-skill@0 files coupang-product-search
 ```
 
 If `npx` is unavailable, install Node.js 18+ or follow https://github.com/NomaDamas/k-skill#readme, or read the source instructions at https://github.com/NomaDamas/k-skill/blob/main/coupang-product-search/instruction.md.
+
+## Affiliate disclosure (required)
+
+상품 링크를 안내할 때는 반드시 "쿠팡 파트너스 활동을 통해 일정액의 수수료를 제공받을 수 있습니다."라고 고지한다.
 
 ## Legal disclaimer (required)
 
