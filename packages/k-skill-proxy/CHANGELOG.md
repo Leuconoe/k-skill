@@ -1,5 +1,11 @@
 # k-skill-proxy
 
+## 0.11.0
+
+### Minor Changes
+
+- 8453959: Add a hosted read-only Coupang Partners product-search route with server-side HMAC signing, normalized results, caching, rate limiting, usage logging, and health configuration reporting.
+
 ## 0.10.2
 
 ### Patch Changes
