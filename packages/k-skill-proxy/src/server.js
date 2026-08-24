@@ -57,6 +57,10 @@ const {
   normalizeKstartupQuery,
   proxyKstartupRequest
 } = require("./kstartup");
+const {
+  fetchGovernmentSupportSurvey,
+  normalizeGovernmentSupportQuery
+} = require("./government-support");
 const { fetchNearbyParkingLots } = require("./parking-lots");
 const {
   normalizeCoupangProductSearchQuery,
@@ -4597,6 +4601,55 @@ function buildServer({ env = process.env, provider = null, now = () => new Date(
     reply
   }));
 
+  app.get("/v1/government-support/survey", async (request, reply) => {
+    let normalized;
+    try {
+      normalized = normalizeGovernmentSupportQuery(request.query || {});
+    } catch (error) {
+      reply.code(400);
+      return { error: "bad_request", message: error.message };
+    }
+
+    const cacheKey = makeCacheKey({ route: "government-support-survey", ...normalized });
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return {
+        ...cached,
+        proxy: {
+          ...cached.proxy,
+          cache: { hit: true, ttl_ms: config.cacheTtlMs }
+        }
+      };
+    }
+
+    const survey = await fetchGovernmentSupportSurvey({
+      query: normalized,
+      serviceKey: config.molitApiKey
+    });
+    const payload = {
+      ...survey,
+      query: normalized,
+      attribution: {
+        software: "https://github.com/djfksjd/ir-search (MIT)",
+        sources: [
+          "https://www.data.go.kr/data/15125364/openapi.do",
+          "https://www.bizinfo.go.kr/",
+          "https://www.nipa.kr/home/2-2",
+          "https://www.kocca.kr/kocca/pims/list.do",
+          "https://www.smtech.go.kr/front/ifg/no/notice02_list.do"
+        ],
+        redistribution: "Structured metadata and official links only; announcement bodies and attachments are not mirrored."
+      },
+      proxy: {
+        name: config.proxyName,
+        cache: { hit: false, ttl_ms: config.cacheTtlMs },
+        requested_at: new Date().toISOString()
+      }
+    };
+    cache.set(cacheKey, payload, config.cacheTtlMs);
+    return payload;
+  });
+
   async function handleKoreanLawRoute({ endpoint, normalize, cacheRoute, request, reply }) {
     let normalized;
 
@@ -6163,6 +6216,7 @@ module.exports = {
   normalizeKopisDetailQuery,
   normalizeKopisListQuery,
   normalizeKstartupQuery,
+  normalizeGovernmentSupportQuery,
   normalizeKrWhoisAsQuery,
   normalizeKrWhoisDomainQuery,
   normalizeKrWhoisIpQuery,
