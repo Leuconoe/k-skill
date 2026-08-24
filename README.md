@@ -73,6 +73,7 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 | 인허가 영업상태 조회 | `localdata-business-status` | 상호+시군구로 동네 사업장(208업종)의 영업/휴업/폐업·업력·주소 조회(LOCALDATA 무인증) | 불필요 | [인허가 영업상태 조회 가이드](docs/features/localdata-business-status.md) |
 | 장수 점포 레이더 | `store-longevity-radar` | 상가(상권)정보 공개파일(무인증)로 업종·상호 키워드 점포 전수를 뽑고, 과거 스냅샷과 상호+좌표 매칭해 장수 점포 추출 | 불필요 | [장수 점포 레이더 가이드](docs/features/store-longevity-radar.md) |
 | 창업진흥원 K-Startup 조회 | `kstartup-search` | 창업진흥원 K-Startup 통합공고 사업·지원사업 공고·창업 콘텐츠·통계보고서 조회 (공공데이터포털 15125364, 프록시 경유) | 불필요 | [창업진흥원 K-Startup 조회 가이드](docs/features/kstartup-search.md) |
+| 정부지원 전수조사 | `government-support-survey` | K-Startup·기업마당·NIPA·KOCCA·SMTECH 공개 공고를 통합 조회하고 소스별 완전성·공식 링크와 함께 프로젝트 적합성을 보수적으로 검토 | 불필요 | [정부지원 전수조사 가이드](docs/features/government-support-survey.md) |
 | 국회 의안·표결 조회 | `assembly-bill-vote-search` | 열린국회정보 Open API로 의안 검색·상세와 국회의원 본회의 표결 조회 (프록시 경유, 조회 전용) | 불필요 | [국회 의안·표결 조회 가이드](docs/features/assembly-bill-vote-search.md) |
 | 공무국외출장 보고서 조회 | `gov-overseas-trip-report` | 선관위·권익위·정보공개포털·대구/대전/경기/경북 의회 등 공개 표면에서 국외출장/훈련 보고서·현황을 조회하고, 표 밖 기관은 discover로 능동 탐색(로그인 벽 제외, 판정 아님) | 불필요 | [공무국외출장 보고서 조회 가이드](docs/features/gov-overseas-trip-report.md) |
 | 한국 사업자 장부 자동화 | `korean-jangbu-for` | `kimlawtech/korean-jangbu-for` 기반 카드·은행·영수증·세금계산서 입력 → 표준 거래내역·계정과목·세무사 전달 CSV·경영 리포트 생성 thin wrapper | 선택사항(CODEF BYOK 자동 수집 시 필요) | [한국 사업자 장부 자동화 가이드](docs/features/korean-jangbu-for.md) |

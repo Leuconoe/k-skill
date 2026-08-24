@@ -49,4 +49,4 @@ npx -y @nomadamas/k-skill@0 exec government-support-survey scripts/run_survey.py
 
 ## Legal and redistribution boundary
 
-이 스킬의 조사 로직은 `djfksjd/ir-search`의 MIT 라이선스 구현을 참고해 재작성했으며 저작권·라이선스 고지는 `references/NOTICE.md`에 보존한다. 정부 포털 공고 원문과 첨부는 포털별 이용조건이 다르므로 k-skill은 이를 미러링하거나 재배포하지 않고 구조화 메타데이터와 공식 링크만 제공한다.
+이 스킬의 조사 로직은 `djfksjd/ir-search`의 MIT 라이선스 구현을 참고해 재작성했으며 저작권·라이선스 고지는 `npx -y @nomadamas/k-skill@0 read government-support-survey references/NOTICE.md`에 보존한다. 정부 포털 공고 원문과 첨부는 포털별 이용조건이 다르므로 k-skill은 이를 미러링하거나 재배포하지 않고 구조화 메타데이터와 공식 링크만 제공한다.
