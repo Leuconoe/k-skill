@@ -9,6 +9,7 @@
   "repository": "https://github.com/NomaDamas/k-skill",
   "license": "MIT",
   "skills": [
+    "./animal-pharmacy-search",
     "./assembly-bill-vote-search",
     "./biz-health-check",
     "./bok-ecos-stats",
