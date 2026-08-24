@@ -113,6 +113,7 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 | 고속도로 교통량·소통·CCTV 조회 | `highway-traffic-status` | 한국도로공사·ITS 공개 API로 고속도로 구간별 실시간 속도/교통량/정체 등급과 CCTV 스트림 메타데이터 조회 | 불필요 | [고속도로 교통량·소통·CCTV 조회 가이드](docs/features/highway-traffic-status.md) |
 | 근처 응급실 병상 상태 확인 | `emergency-room-beds` | 현재 위치 기준 가까운 응급실 운영·입원실/병상 운영 플래그와 갱신시각 조회 (정확한 잔여 병상 수/가동률은 공개 E-Gen nearby 목록에 없음) | 불필요 | [근처 응급실 병상 상태 확인 가이드](docs/features/emergency-room-beds.md) |
 | 장기요양·건강검진기관 조회 | `nhis-care-checkup-search` | 국민건강보험공단 장기요양기관·건강검진기관 공개 후보 조회 (공공데이터포털 15059029·15154419, 프록시 경유) | 불필요 | [장기요양·건강검진기관 조회 가이드](docs/features/nhis-care-checkup-search.md) |
+| 동물약국·동물용의약품 취급 약국 조회 | `animal-pharmacy-search` | 홍익메디케어 공개 MCP로 지역별 동물약국, 제품 검색, 최근 6개월 구매 이력 기반 취급 약국 조회 | 불필요 | [동물약국·동물용의약품 취급 약국 조회 가이드](docs/features/animal-pharmacy-search.md) |
 | 한국 마라톤 일정 조회 | `korean-marathon-schedule` | 고러닝 공개 페이지와 대한철인3종협회 일정에서 마라톤·철인3종 대회 일정, 장소, 신청 마감일, 종목 조회 | 불필요 | [한국 마라톤 일정 조회 가이드](docs/features/korean-marathon-schedule.md) |
 | KBO 경기 결과 조회 | `kbo-results` | 날짜별 KBO 경기 일정, 결과, 팀별 필터링 | 불필요 | [KBO 결과 가이드](docs/features/kbo-results.md) |
 | KBL 경기 결과 조회 | `kbl-results` | 날짜별 KBL 경기 일정, 결과, 팀별 필터링, 현재 순위 확인 | 불필요 | [KBL 경기 결과 가이드](docs/features/kbl-results.md) |
@@ -256,6 +257,7 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 - [전기차 보조금 현황 조회 가이드](docs/features/ev-subsidy-status.md)
 - [근처 응급실 병상 상태 확인 가이드](docs/features/emergency-room-beds.md)
 - [장기요양·건강검진기관 조회 가이드](docs/features/nhis-care-checkup-search.md)
+- [동물약국·동물용의약품 취급 약국 조회 가이드](docs/features/animal-pharmacy-search.md)
 - [한국 마라톤 일정 조회 가이드](docs/features/korean-marathon-schedule.md)
 - [KBO 경기 결과 조회](docs/features/kbo-results.md)
 - [KBL 경기 결과 가이드](docs/features/kbl-results.md)
