@@ -73,7 +73,7 @@ test("KAMIS live E2E reaches the official endpoint when explicitly enabled", { s
   try {
     const response = await app.inject({
       method: "GET",
-      url: "/v1/kamis/food-price/daily-category?p_product_cls_code=01&p_country_code=1101&p_item_category_code=200"
+      url: "/v1/kamis/food-price/daily-category?p_product_cls_code=01&p_country_code=1101&p_item_category_code=200&p_regday=2026-08-24"
     });
     assert.equal(response.statusCode, 200);
     assert.equal(response.json().upstream.error_code, "000");
