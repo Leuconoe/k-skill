@@ -1,12 +1,12 @@
 # Runtime Action Audit
 
-2026-08-25 기준 top-level `SKILL.md` 121개를 돌쇠 우선 실행 계약으로 전수 검토한 결과다. 이 표는 스킬 선택/분류용이며 실제 portable 계약은 각 `SKILL.md`의 `## Runtime contract (required)` 블록이 담당한다.
+2026-08-25 기준 top-level `SKILL.md` 122개를 돌쇠 우선 실행 계약으로 전수 검토한 결과다. 이 표는 스킬 선택/분류용이며 실제 portable 계약은 각 `SKILL.md`의 `## Runtime contract (required)` 블록이 담당한다.
 
 ## Mode definitions
 
 - **commerce** (12): 공식 상품 선택 → 장바구니/checkout 준비 → `clarify` 후 주문·결제
 - **booking** (12): 공식 일정/좌석 선택 → 예약·선점 → `clarify` 후 필요한 결제
-- **submission** (11): 공식 폼·첨부 준비 → `clarify` 후 제출/지원/결제/취소
+- **submission** (12): 공식 폼·첨부 준비 → `clarify` 후 제출/지원/결제/취소
 - **recruiting** (2): 기업 인재검색 → shortlist → 유료 열람/제안 직전 `clarify`
 - **account** (2): 지원되는 계정 작업 수행 → 비가역 변경 직전 `clarify`
 - **legal** (7): 공식 법률·정부 표면의 로그인/인증/서류 준비를 진행하고 `clarify` 후 제출·입찰·수수료 결제
@@ -52,6 +52,7 @@
 | `geeknews-search` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `gongsijiga-search` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `gov-overseas-trip-report` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
+| `government-support-survey` | `submission` | 정부지원 공고 전수조사와 신청 요건 확인 후 공식 신청서·첨부를 준비하고 `clarify` 후 제출 |
 | `han-river-water-level` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `hankookilbo-news` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
 | `highway-traffic-status` | `lookup` | 요청한 조회를 완료하고, 별도 후속 행동 요청 시 지원되는 공식 표면으로 연결 |
