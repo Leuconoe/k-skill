@@ -1,5 +1,11 @@
 # naming-house
 
+## 0.2.1
+
+### Patch Changes
+
+- ca4c7d8: Replace the broken `namefyi` Hanja placeholder with official stroke-sequence data so Hanja candidates receive real per-character stroke counts.
+
 ## 0.2.0
 
 ### Minor Changes
