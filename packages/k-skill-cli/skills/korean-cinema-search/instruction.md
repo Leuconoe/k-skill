@@ -165,7 +165,7 @@ npx --yes daiso get /api/lottecinema/seats --keyword 월드타워 --playDate <YY
 
 ## Failure modes
 
-- public endpoint는 upstream 상태에 따라 간헐적인 5xx를 줄 수 있다.
+- CGV 공개 endpoint가 CGV 원본 서비스의 봇 차단·접속 제한을 받으면 `503 CGV_UPSTREAM_UNAVAILABLE`을 반환할 수 있다. 이 응답은 skill 또는 CLI 입력 오류가 아니라 upstream 접근 실패이므로 재시도만 하며, CAPTCHA·브라우저 검증·접근 제한 우회는 하지 않는다.
 - 지역 키워드가 넓으면 다른 지점이 섞일 수 있다.
 - 시간표와 잔여석은 시점에 따라 달라진다.
 - 일부 체인은 상영작, 시간표, 잔여석 endpoint의 입력값이 다르므로 theaterId, movieId가 있으면 그 값을 우선 사용한다.

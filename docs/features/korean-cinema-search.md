@@ -75,7 +75,7 @@ node dist/bin.js get /api/lottecinema/seats --keyword 월드타워 --playDate <Y
 
 ## 실패 모드
 
-- public endpoint가 일시적으로 5xx를 줄 수 있다.
+- CGV 공개 endpoint가 CGV 원본 서비스의 봇 차단·접속 제한을 받으면 `503 CGV_UPSTREAM_UNAVAILABLE`을 반환할 수 있다. 이 응답은 skill 또는 CLI 입력 오류가 아니라 upstream 접근 실패이므로 재시도만 하며, CAPTCHA·브라우저 검증·접근 제한 우회는 하지 않는다.
 - 넓은 지역 키워드는 여러 지점을 섞을 수 있다.
 - 시간표와 잔여석은 빠르게 바뀔 수 있다.
 - theaterId, movieId가 있으면 keyword보다 그 값을 우선한다.
