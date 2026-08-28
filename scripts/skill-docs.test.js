@@ -1805,6 +1805,14 @@ test("korean-cinema-search skill documents the upstream daiso CLI flow for Korea
     assert.match(doc, /\/api\/lottecinema\/seats/);
     assert.match(doc, /예매|결제/);
   }
+
+  assert.match(featureDoc, /CGV_UPSTREAM_UNAVAILABLE/);
+  assert.match(featureDoc, /봇 차단|접속 제한/);
+  assert.match(featureDoc, /CAPTCHA.*우회|접근 제한 우회/);
+  assert.match(featureDoc, /https:\/\/www\.cgv\.co\.kr/);
+  assert.match(featureDoc, /브라우저 사용 스킬/);
+  assert.match(featureDoc, /로그인·예매·결제[\s\S]*진행하지 않는다/);
+  assert.match(featureDoc, /공식 웹사이트에서도[\s\S]*우회하지/);
 });
 
 test("repository docs advertise the bunjang-search skill across the documented surfaces", () => {
