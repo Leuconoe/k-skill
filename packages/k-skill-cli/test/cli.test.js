@@ -88,6 +88,15 @@ test("dolshoi and generic runtime rules differ for vault/browser skills", () => 
   assert.doesNotMatch(dolshoi, /Do not automate payment here/);
 });
 
+test("generic browser instructions publish the platform-aware auto provider order", () => {
+  const generic = runtimeRulesSection(assemble("foresttrip-vacancy", GENERIC));
+
+  assert.match(generic, /On macOS it tries Aside Browser first/);
+  assert.match(generic, /then BrowserOS CDP/);
+  assert.match(generic, /then user-launched Chrome\/Chromium CDP/);
+  assert.match(generic, /on other platforms it tries BrowserOS CDP/);
+});
+
 test("bundledFiles lists helper files for directory-package skills", () => {
   const files = bundledFiles("kosis-stats").map((file) => file.split(path.sep).join("/"));
 
@@ -140,10 +149,10 @@ test("all bundled assets are exposed through exec/read/path instructions", () =>
     }
   }
 
-  // 79 source skill directories own assets; srt-booking, ktx-booking,
+  // 82 source skill directories own assets; srt-booking, ktx-booking,
   // fine-dust-location, and k-skill-setup additionally bundle legacy root
   // helpers through skill.json mappings.
-  assert.equal(assetSkills, 83);
+  assert.equal(assetSkills, 87);
 });
 
 test("asset resolution rejects traversal and reads bundled references", () => {
