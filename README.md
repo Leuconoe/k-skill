@@ -113,6 +113,7 @@ npx --yes skills add NomaDamas/k-skill --skill srt-booking -g
 | 근처 공영주차장 찾기 | `parking-lot-search` | 현재 위치 기준 근처 공영주차장 위치·요금·운영시간 조회 | 불필요 | [근처 공영주차장 찾기 가이드](docs/features/parking-lot-search.md) |
 | 전기차 충전소 위치·상태 조회 | `ev-charger-nearby` | 지역·충전소 기준 전기차 충전소 정보와 충전기 현재 상태 조회 (공공데이터포털 15076352, 프록시 경유) | 불필요 | [전기차 충전소 위치·상태 조회 가이드](docs/features/ev-charger-nearby.md) |
 | 전기차 보조금 현황 조회 | `ev-subsidy-status` | 지자체별 전기차 민간공고·접수·출고·출고잔여 대수와 모델별 보조금 조회 | 불필요 | [전기차 보조금 현황 조회 가이드](docs/features/ev-subsidy-status.md) |
+| 소비자 가격·리콜정보 조회 | `consumer-price-safety-search` | 참가격 가격정보와 소비자24 물품·리콜정보 조회 | 서비스별 인증키 필요 | [소비자 가격·리콜정보 조회 가이드](docs/features/consumer-price-safety-search.md) |
 | 고속도로 교통량·소통·CCTV 조회 | `highway-traffic-status` | 한국도로공사·ITS 공개 API로 고속도로 구간별 실시간 속도/교통량/정체 등급과 CCTV 스트림 메타데이터 조회 | 불필요 | [고속도로 교통량·소통·CCTV 조회 가이드](docs/features/highway-traffic-status.md) |
 | 근처 응급실 병상 상태 확인 | `emergency-room-beds` | 현재 위치 기준 가까운 응급실 운영·입원실/병상 운영 플래그와 갱신시각 조회 (정확한 잔여 병상 수/가동률은 공개 E-Gen nearby 목록에 없음) | 불필요 | [근처 응급실 병상 상태 확인 가이드](docs/features/emergency-room-beds.md) |
 | 장기요양·건강검진기관 조회 | `nhis-care-checkup-search` | 국민건강보험공단 장기요양기관·건강검진기관 공개 후보 조회 (공공데이터포털 15059029·15154419, 프록시 경유) | 불필요 | [장기요양·건강검진기관 조회 가이드](docs/features/nhis-care-checkup-search.md) |
